@@ -58,7 +58,7 @@
                         </ListBoxItem>
                         <ListBoxItem>
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Teach" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <materialDesign:PackIcon Kind="Teacher" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
                                 <TextBlock Text="Luyện thi JLPT" VerticalAlignment="Center"/>
                             </StackPanel>
                         </ListBoxItem>

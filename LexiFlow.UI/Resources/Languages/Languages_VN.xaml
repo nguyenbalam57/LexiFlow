@@ -3,16 +3,81 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <!-- Login Screen -->
     <sys:String x:Key="Login_Title">LexiFlow - Ứng dụng Học Tiếng Nhật</sys:String>
-    <sys:String x:Key="Login_Header">Đăng Nhập Tài Khoản</sys:String>
+    <sys:String x:Key="Login_Header">Đăng Nhập</sys:String>
+    <sys:String x:Key="Login_Subtitle">Học tiếng Nhật hiệu quả với phương pháp khoa học</sys:String>
+    <sys:String x:Key="Login_Welcome">Chào mừng bạn trở lại! Vui lòng đăng nhập để tiếp tục.</sys:String>
     <sys:String x:Key="Login_Username">Tên đăng nhập</sys:String>
     <sys:String x:Key="Login_Password">Mật khẩu</sys:String>
     <sys:String x:Key="Login_RememberMe">Ghi nhớ đăng nhập</sys:String>
     <sys:String x:Key="Login_Button">Đăng Nhập</sys:String>
     <sys:String x:Key="Login_ForgotPassword">Quên mật khẩu?</sys:String>
+    <sys:String x:Key="Login_NoAccount">Chưa có tài khoản?</sys:String>
+    <sys:String x:Key="Login_Register">Đăng ký ngay</sys:String>
+    <sys:String x:Key="Login_Authenticating">Đang xác thực...</sys:String>
+
+    <!-- Error Messages -->
     <sys:String x:Key="Login_InvalidCredentials">Tên đăng nhập hoặc mật khẩu không chính xác</sys:String>
+    <sys:String x:Key="Login_UsernameRequired">Vui lòng nhập tên đăng nhập</sys:String>
+    <sys:String x:Key="Login_PasswordRequired">Vui lòng nhập mật khẩu</sys:String>
+    <sys:String x:Key="Login_UsernameMinLength">Tên đăng nhập phải có ít nhất 3 ký tự</sys:String>
+    <sys:String x:Key="Login_PasswordMinLength">Mật khẩu phải có ít nhất 6 ký tự</sys:String>
+    <sys:String x:Key="Login_InvalidUsername">Tên đăng nhập chứa ký tự không hợp lệ</sys:String>
+    <sys:String x:Key="Login_DatabaseError">Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.</sys:String>
+    <sys:String x:Key="Login_AccessDenied">Quyền truy cập bị từ chối</sys:String>
+    <sys:String x:Key="Login_Timeout">Kết nối hết thời gian chờ. Vui lòng thử lại.</sys:String>
+    <sys:String x:Key="Login_GeneralError">Lỗi đăng nhập: {0}</sys:String>
+    <sys:String x:Key="Login_LanguageChangeError">Không thể thay đổi ngôn ngữ</sys:String>
+
+    <!-- Success Messages -->
+    <sys:String x:Key="Login_Success">Đăng nhập thành công!</sys:String>
+    <sys:String x:Key="Login_Connecting">Đang kết nối...</sys:String>
+    <sys:String x:Key="Login_LanguageChanged">Đã thay đổi ngôn ngữ</sys:String>
 
     <!-- Language Selection -->
     <sys:String x:Key="Language_Vietnamese">Tiếng Việt</sys:String>
     <sys:String x:Key="Language_English">Tiếng Anh</sys:String>
     <sys:String x:Key="Language_Japanese">Tiếng Nhật</sys:String>
+
+    <!-- Features -->
+    <sys:String x:Key="Feature_Vocabulary">Học từ vựng thông minh</sys:String>
+    <sys:String x:Key="Feature_JLPT">Luyện thi JLPT hiệu quả</sys:String>
+    <sys:String x:Key="Feature_Progress">Theo dõi tiến độ chi tiết</sys:String>
+
+    <!-- Demo Accounts -->
+    <sys:String x:Key="Login_DemoAccounts">Tài khoản demo</sys:String>
+    <sys:String x:Key="Login_AdminAccount">Quản trị viên</sys:String>
+    <sys:String x:Key="Login_UserAccount">Học viên</sys:String>
+
+    <!-- Dialog Messages -->
+    <sys:String x:Key="Login_ForgotPasswordTitle">Quên Mật Khẩu</sys:String>
+    <sys:String x:Key="Login_ForgotPasswordMessage">Vui lòng liên hệ quản trị viên hệ thống để được hỗ trợ khôi phục mật khẩu.</sys:String>
+    <sys:String x:Key="Login_RegisterTitle">Đăng Ký Tài Khoản</sys:String>
+    <sys:String x:Key="Login_RegisterMessage">Vui lòng liên hệ quản trị viên hệ thống để được tạo tài khoản mới.</sys:String>
+
+    <!-- Main Application -->
+    <sys:String x:Key="App_Name">LexiFlow</sys:String>
+    <sys:String x:Key="Menu_Home">Trang chủ</sys:String>
+    <sys:String x:Key="Menu_Vocabulary">Học từ vựng</sys:String>
+    <sys:String x:Key="Menu_JLPT">Luyện thi JLPT</sys:String>
+    <sys:String x:Key="Menu_Progress">Tiến độ học tập</sys:String>
+    <sys:String x:Key="Menu_Ranking">Xếp hạng</sys:String>
+    <sys:String x:Key="Menu_UserManagement">Quản lý người dùng</sys:String>
+    <sys:String x:Key="Menu_Settings">Cài đặt</sys:String>
+    <sys:String x:Key="Menu_Logout">Đăng xuất</sys:String>
+
+    <!-- Common -->
+    <sys:String x:Key="Common_OK">Đồng ý</sys:String>
+    <sys:String x:Key="Common_Cancel">Hủy bỏ</sys:String>
+    <sys:String x:Key="Common_Yes">Có</sys:String>
+    <sys:String x:Key="Common_No">Không</sys:String>
+    <sys:String x:Key="Common_Save">Lưu</sys:String>
+    <sys:String x:Key="Common_Delete">Xóa</sys:String>
+    <sys:String x:Key="Common_Edit">Sửa</sys:String>
+    <sys:String x:Key="Common_Add">Thêm</sys:String>
+    <sys:String x:Key="Common_Search">Tìm kiếm</sys:String>
+    <sys:String x:Key="Common_Loading">Đang tải...</sys:String>
+    <sys:String x:Key="Common_Error">Lỗi</sys:String>
+    <sys:String x:Key="Common_Success">Thành công</sys:String>
+    <sys:String x:Key="Common_Warning">Cảnh báo</sys:String>
+    <sys:String x:Key="Common_Information">Thông tin</sys:String>
 </ResourceDictionary>

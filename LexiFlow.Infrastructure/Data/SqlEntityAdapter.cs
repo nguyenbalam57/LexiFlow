@@ -80,7 +80,9 @@ namespace LexiFlow.Infrastructure.Data
 
             command.Parameters.AddWithValue("@Username", username);
 
-            var count = (int)await command.ExecuteScalarAsync();
+            object? result = await command.ExecuteScalarAsync();
+            int count = Convert.ToInt32(result);
+
             return count > 0;
         }
 

@@ -18,38 +18,54 @@ namespace LexiFlow.Application.Services
         {
             try
             {
-                // Đầu tiên thử dùng SQL adapter
+                // Log login attempt
+                _logger.LogInformation($"Login attempt for user: {username}");
+
+                // Existing authentication logic...
                 var user = await _sqlAdapter.GetUserByUsernameAsync(username);
 
                 if (user == null || !user.IsActive)
+                {
+                    // Update failed login attempts
+                    UpdateFailedLoginAttempts();
                     return null;
+                }
 
-                // Verify password hash using BCrypt
                 if (!VerifyPassword(password, user.PasswordHash))
+                {
+                    UpdateFailedLoginAttempts();
                     return null;
+                }
+
+                // Reset failed attempts on successful login
+                ResetFailedLoginAttempts();
 
                 // Update last login time
                 await _sqlAdapter.UpdateUserLastLoginAsync(user.Id);
 
+                _logger.LogInformation($"Successful login for user: {username}");
                 return user;
             }
             catch
             {
-                // Nếu có lỗi, thử dùng Entity Framework
-                var user = await _userRepository.GetByUsernameAsync(username);
-
-                if (user == null || !user.IsActive)
-                    return null;
-
-                // Verify password hash
-                if (!VerifyPassword(password, user.PasswordHash))
-                    return null;
-
-                // Update last login time
-                await UpdateLastLoginAsync(user.Id);
-
-                return user;
+                _logger.LogError(ex, $"Authentication error for user: {username}");
+                throw;
             }
+        }
+
+        private void UpdateFailedLoginAttempts()
+        {
+            var settings = Properties.Settings.Default;
+            settings.LoginAttempts++;
+            settings.LastFailedLogin = DateTime.Now;
+            settings.Save();
+        }
+
+        private void ResetFailedLoginAttempts()
+        {
+            var settings = Properties.Settings.Default;
+            settings.LoginAttempts = 0;
+            settings.Save();
         }
 
         public async Task<bool> ValidateCredentialsAsync(string username, string password)

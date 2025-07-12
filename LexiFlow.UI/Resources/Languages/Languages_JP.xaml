@@ -3,16 +3,81 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <!-- Login Screen -->
     <sys:String x:Key="Login_Title">LexiFlow - 日本語学習アプリ</sys:String>
-    <sys:String x:Key="Login_Header">アカウントにログイン</sys:String>
+    <sys:String x:Key="Login_Header">ログイン</sys:String>
+    <sys:String x:Key="Login_Subtitle">科学的な方法で効果的に日本語を学ぶ</sys:String>
+    <sys:String x:Key="Login_Welcome">おかえりなさい！続行するにはログインしてください。</sys:String>
     <sys:String x:Key="Login_Username">ユーザー名</sys:String>
     <sys:String x:Key="Login_Password">パスワード</sys:String>
     <sys:String x:Key="Login_RememberMe">ログイン情報を保存</sys:String>
     <sys:String x:Key="Login_Button">ログイン</sys:String>
     <sys:String x:Key="Login_ForgotPassword">パスワードをお忘れですか？</sys:String>
+    <sys:String x:Key="Login_NoAccount">アカウントをお持ちでないですか？</sys:String>
+    <sys:String x:Key="Login_Register">今すぐ登録</sys:String>
+    <sys:String x:Key="Login_Authenticating">認証中...</sys:String>
+
+    <!-- Error Messages -->
     <sys:String x:Key="Login_InvalidCredentials">ユーザー名またはパスワードが無効です</sys:String>
+    <sys:String x:Key="Login_UsernameRequired">ユーザー名を入力してください</sys:String>
+    <sys:String x:Key="Login_PasswordRequired">パスワードを入力してください</sys:String>
+    <sys:String x:Key="Login_UsernameMinLength">ユーザー名は3文字以上である必要があります</sys:String>
+    <sys:String x:Key="Login_PasswordMinLength">パスワードは6文字以上である必要があります</sys:String>
+    <sys:String x:Key="Login_InvalidUsername">ユーザー名に無効な文字が含まれています</sys:String>
+    <sys:String x:Key="Login_DatabaseError">データベース接続エラーです。後でもう一度試してください。</sys:String>
+    <sys:String x:Key="Login_AccessDenied">アクセスが拒否されました</sys:String>
+    <sys:String x:Key="Login_Timeout">接続がタイムアウトしました。もう一度試してください。</sys:String>
+    <sys:String x:Key="Login_GeneralError">ログインエラー: {0}</sys:String>
+    <sys:String x:Key="Login_LanguageChangeError">言語を変更できません</sys:String>
+
+    <!-- Success Messages -->
+    <sys:String x:Key="Login_Success">ログイン成功！</sys:String>
+    <sys:String x:Key="Login_Connecting">接続中...</sys:String>
+    <sys:String x:Key="Login_LanguageChanged">言語が変更されました</sys:String>
 
     <!-- Language Selection -->
     <sys:String x:Key="Language_Vietnamese">ベトナム語</sys:String>
     <sys:String x:Key="Language_English">英語</sys:String>
     <sys:String x:Key="Language_Japanese">日本語</sys:String>
+
+    <!-- Features -->
+    <sys:String x:Key="Feature_Vocabulary">スマート語彙学習</sys:String>
+    <sys:String x:Key="Feature_JLPT">効果的なJLPT練習</sys:String>
+    <sys:String x:Key="Feature_Progress">詳細な進捗追跡</sys:String>
+
+    <!-- Demo Accounts -->
+    <sys:String x:Key="Login_DemoAccounts">デモアカウント</sys:String>
+    <sys:String x:Key="Login_AdminAccount">管理者</sys:String>
+    <sys:String x:Key="Login_UserAccount">学習者</sys:String>
+
+    <!-- Dialog Messages -->
+    <sys:String x:Key="Login_ForgotPasswordTitle">パスワードを忘れた</sys:String>
+    <sys:String x:Key="Login_ForgotPasswordMessage">パスワードの回復については、システム管理者にお問い合わせください。</sys:String>
+    <sys:String x:Key="Login_RegisterTitle">アカウント登録</sys:String>
+    <sys:String x:Key="Login_RegisterMessage">新しいアカウントを作成するには、システム管理者にお問い合わせください。</sys:String>
+
+    <!-- Main Application -->
+    <sys:String x:Key="App_Name">LexiFlow</sys:String>
+    <sys:String x:Key="Menu_Home">ホーム</sys:String>
+    <sys:String x:Key="Menu_Vocabulary">語彙</sys:String>
+    <sys:String x:Key="Menu_JLPT">JLPT練習</sys:String>
+    <sys:String x:Key="Menu_Progress">進捗</sys:String>
+    <sys:String x:Key="Menu_Ranking">ランキング</sys:String>
+    <sys:String x:Key="Menu_UserManagement">ユーザー管理</sys:String>
+    <sys:String x:Key="Menu_Settings">設定</sys:String>
+    <sys:String x:Key="Menu_Logout">ログアウト</sys:String>
+
+    <!-- Common -->
+    <sys:String x:Key="Common_OK">OK</sys:String>
+    <sys:String x:Key="Common_Cancel">キャンセル</sys:String>
+    <sys:String x:Key="Common_Yes">はい</sys:String>
+    <sys:String x:Key="Common_No">いいえ</sys:String>
+    <sys:String x:Key="Common_Save">保存</sys:String>
+    <sys:String x:Key="Common_Delete">削除</sys:String>
+    <sys:String x:Key="Common_Edit">編集</sys:String>
+    <sys:String x:Key="Common_Add">追加</sys:String>
+    <sys:String x:Key="Common_Search">検索</sys:String>
+    <sys:String x:Key="Common_Loading">読み込み中...</sys:String>
+    <sys:String x:Key="Common_Error">エラー</sys:String>
+    <sys:String x:Key="Common_Success">成功</sys:String>
+    <sys:String x:Key="Common_Warning">警告</sys:String>
+    <sys:String x:Key="Common_Information">情報</sys:String>
 </ResourceDictionary>

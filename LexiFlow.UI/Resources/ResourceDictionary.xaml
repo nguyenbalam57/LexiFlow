@@ -2,22 +2,39 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Merge all resource dictionaries -->
     <ResourceDictionary.MergedDictionaries>
-        <!-- Styles -->
+        <!-- Material Design -->
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Indigo.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Purple.xaml" />
 
-        <!-- Language Resources -->
+        <!-- Default Language -->
         <ResourceDictionary Source="/LexiFlow.UI;component/Resources/Languages/Languages_VN.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Custom Colors -->
     <Color x:Key="PrimaryColor">#4338ca</Color>
+    <!-- Indigo -->
     <Color x:Key="SecondaryColor">#8b5cf6</Color>
-    <Color x:Key="BackgroundColor">#f5f5f5</Color>
-    <Color x:Key="TextColor">#333333</Color>
-    <Color x:Key="AccentColor">#6d28d9</Color>
+    <!-- Purple -->
+    <Color x:Key="AccentColor">#06b6d4</Color>
+    <!-- Cyan -->
+    <Color x:Key="SuccessColor">#10b981</Color>
+    <!-- Green -->
+    <Color x:Key="ErrorColor">#ef4444</Color>
+    <!-- Red -->
+    <Color x:Key="WarningColor">#f59e0b</Color>
+    <!-- Yellow -->
+
+    <!-- Custom Fonts -->
+    <FontFamily x:Key="PrimaryFont">Segoe UI</FontFamily>
+    <FontFamily x:Key="JapaneseFont">Meiryo, Yu Gothic UI</FontFamily>
+    <FontFamily x:Key="CodeFont">Consolas, Courier New</FontFamily>
+
+    <!-- Animation Durations -->
+    <Duration x:Key="FastAnimation">0:0:0.2</Duration>
+    <Duration x:Key="NormalAnimation">0:0:0.4</Duration>
+    <Duration x:Key="SlowAnimation">0:0:0.6</Duration>
 
     <!-- Custom Brushes -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />

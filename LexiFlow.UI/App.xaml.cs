@@ -1,5 +1,6 @@
 ﻿using LexiFlow.Application;
 using LexiFlow.Infrastructure;
+using LexiFlow.UI.Helpers;
 using LexiFlow.UI.Views.Login;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,9 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        // Initialize language system
+        LanguageHelper.InitializeLanguage();
+
         await _host.StartAsync();
 
         // Initialize the database using the SQL script
@@ -51,12 +55,9 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Lỗi khởi tạo cơ sở dữ liệu: {ex.Message}", "Lỗi",
+            var errorMsg = LanguageHelper.GetLocalizedString("Login_DatabaseInitError");
+            MessageBox.Show($"{errorMsg}: {ex.Message}", "Error",
                 MessageBoxButton.OK, MessageBoxImage.Error);
-
-            // Log the full exception for debugging
-            System.Diagnostics.Debug.WriteLine($"Database initialization error: {ex}");
-
             Shutdown();
             return;
         }
