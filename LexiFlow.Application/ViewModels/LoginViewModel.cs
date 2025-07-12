@@ -117,6 +117,27 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
+        public string SuccessMessage
+        {
+            get => _successMessage;
+            set
+            {
+                if (_successMessage != value)
+                {
+                    _successMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string _successMessage = string.Empty;
+
+        private void ClearMessages()
+        {
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+        }
+
         public List<string> AvailableLanguages { get; } = new List<string> { "VN", "EN", "JP" };
 
         public ICommand LoginCommand { get; }
@@ -333,6 +354,97 @@ namespace LexiFlow.Application.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private void ShowForgotPassword()
+        {
+            var message = GetLocalizedString("Login_ForgotPasswordMessage");
+            var title = GetLocalizedString("Login_ForgotPasswordTitle");
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ShowRegister()
+        {
+            var message = GetLocalizedString("Login_RegisterMessage");
+            var title = GetLocalizedString("Login_RegisterTitle");
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void LoadSavedCredentials()
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+                if (settings.RememberMe && !string.IsNullOrEmpty(settings.SavedUsername))
+                {
+                    Username = settings.SavedUsername;
+                    RememberMe = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading saved credentials: {ex.Message}");
+            }
+        }
+
+        private void SaveLoginCredentials()
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+                settings.SavedUsername = RememberMe ? Username : string.Empty;
+                settings.RememberMe = RememberMe;
+                settings.LastLoginDate = DateTime.Now;
+                settings.Save();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving credentials: {ex.Message}");
+            }
+        }
+
+        private void ClearSavedCredentials()
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+                settings.SavedUsername = string.Empty;
+                settings.RememberMe = false;
+                settings.Save();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error clearing saved credentials: {ex.Message}");
+            }
+        }
+
+        private void SaveLanguagePreference()
+        {
+            try
+            {
+                Properties.Settings.Default.PreferredLanguage = SelectedLanguage;
+                Properties.Settings.Default.Save();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving language preference: {ex.Message}");
+            }
+        }
+
+        private string GetLocalizedString(string key)
+        {
+            try
+            {
+                var resource = Application.Current.TryFindResource(key);
+                return resource?.ToString() ?? key;
+            }
+            catch
+            {
+                return key;
+            }
+        }
+
+
+
     }
 
     // Simple implementation of ICommand for the ViewModel
@@ -362,7 +474,14 @@ namespace LexiFlow.Application.ViewModels
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
+
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
+
+
 
     public class RelayCommand<T> : ICommand
     {

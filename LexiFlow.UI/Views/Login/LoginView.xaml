@@ -286,22 +286,19 @@
                     </Border>
 
                     <!-- Login Button -->
-                    <Button Content="{DynamicResource Login_Button}" 
-                           Style="{StaticResource LoginButtonStyle}"
+                    <Button Style="{StaticResource LoginButtonStyle}"
                            Command="{Binding LoginCommand}"
                            IsEnabled="{Binding IsNotLoading}">
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <materialDesign:PackIcon Kind="Login" Width="20" Height="20" 
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Login" Width="20" Height="20" 
                                                        Margin="0,0,10,0" VerticalAlignment="Center"
                                                        Visibility="{Binding IsNotLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
                                            Value="0" IsIndeterminate="True" Width="20" Height="20" 
                                            Margin="0,0,10,0" Foreground="White"
                                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                <TextBlock Text="{DynamicResource Login_Button}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button.Content>
+                            <TextBlock Text="{DynamicResource Login_Button}" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
 
                     <!-- Additional Options -->

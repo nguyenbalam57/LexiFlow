@@ -26,7 +26,7 @@ public static class DependencyInjection
         services.AddSingleton<SqlDatabaseInitializer>();
 
         // Register SQL Entity Adapter
-        services.AddSingleton<SqlEntityAdapter>();
+        services.AddScoped<SqlEntityAdapter>();
 
         // Configure Serilog
         Log.Logger = new LoggerConfiguration()

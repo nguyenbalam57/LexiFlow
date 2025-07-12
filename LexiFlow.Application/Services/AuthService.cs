@@ -1,5 +1,7 @@
 ﻿using LexiFlow.Core.Entities;
 using LexiFlow.Core.Interfaces;
+using Microsoft.Extensions.Logging;
+using LexiFlow.UI.Properties;
 
 namespace LexiFlow.Application.Services
 {
@@ -7,11 +9,13 @@ namespace LexiFlow.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly SqlEntityAdapter _sqlAdapter;
+        private readonly ILogger<AuthService>? _logger;
 
-        public AuthService(IUserRepository userRepository, SqlEntityAdapter sqlAdapter)
+        public AuthService(IUserRepository userRepository, SqlEntityAdapter sqlAdapter, ILogger<AuthService>? logger = null)
         {
             _userRepository = userRepository;
             _sqlAdapter = sqlAdapter;
+            _logger = logger;
         }
 
         public async Task<User?> AuthenticateAsync(string username, string password)
@@ -46,7 +50,7 @@ namespace LexiFlow.Application.Services
                 _logger.LogInformation($"Successful login for user: {username}");
                 return user;
             }
-            catch
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"Authentication error for user: {username}");
                 throw;
@@ -55,7 +59,7 @@ namespace LexiFlow.Application.Services
 
         private void UpdateFailedLoginAttempts()
         {
-            var settings = Properties.Settings.Default;
+            var settings = Settings.Default;
             settings.LoginAttempts++;
             settings.LastFailedLogin = DateTime.Now;
             settings.Save();
@@ -63,7 +67,7 @@ namespace LexiFlow.Application.Services
 
         private void ResetFailedLoginAttempts()
         {
-            var settings = Properties.Settings.Default;
+            var settings = Settings.Default;
             settings.LoginAttempts = 0;
             settings.Save();
         }

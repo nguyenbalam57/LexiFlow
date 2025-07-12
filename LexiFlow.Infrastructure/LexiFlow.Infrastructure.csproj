@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
@@ -23,12 +23,12 @@
 	  <Folder Include="Repositories\" />
   </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\..\SQLQueryLexiFlow.sql" CopyToOutputDirectory="PreserveNewest" />
-	</ItemGroup>
+  <ItemGroup>
+	  <None Include="..\SQLQueryLexiFlow.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
