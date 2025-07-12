@@ -1,19 +1,18 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
-    <sys:String x:Key="Hello">こんにちは</sys:String>
-    <sys:String x:Key="Login">ログイン</sys:String>
-    <sys:String x:Key="SignUp">サインアップ</sys:String>
-    <sys:String x:Key="Username">ユーザー名</sys:String>
-    <sys:String x:Key="Password">パスワード</sys:String>
-    <sys:String x:Key="RememberMe">ログイン情報を保存</sys:String>
-    <sys:String x:Key="Language">言語</sys:String>
-    <sys:String x:Key="Vietnamese">ベトナム語</sys:String>
-    <sys:String x:Key="English">英語</sys:String>
-    <sys:String x:Key="Japanese">日本語</sys:String>
-    <sys:String x:Key="LoginFailed">ログインに失敗しました。資格情報を確認してください。</sys:String>
-    <sys:String x:Key="LoginError">ログインエラー</sys:String>
-    <sys:String x:Key="LoggingIn">ログイン中...</sys:String>
-    <sys:String x:Key="AppName">LexiFlow</sys:String>
-    <sys:String x:Key="AppDescription">社内日本語語彙学習アプリ</sys:String>
+    <!-- Login Screen -->
+    <sys:String x:Key="Login_Title">LexiFlow - 日本語学習アプリ</sys:String>
+    <sys:String x:Key="Login_Header">アカウントにログイン</sys:String>
+    <sys:String x:Key="Login_Username">ユーザー名</sys:String>
+    <sys:String x:Key="Login_Password">パスワード</sys:String>
+    <sys:String x:Key="Login_RememberMe">ログイン情報を保存</sys:String>
+    <sys:String x:Key="Login_Button">ログイン</sys:String>
+    <sys:String x:Key="Login_ForgotPassword">パスワードをお忘れですか？</sys:String>
+    <sys:String x:Key="Login_InvalidCredentials">ユーザー名またはパスワードが無効です</sys:String>
+
+    <!-- Language Selection -->
+    <sys:String x:Key="Language_Vietnamese">ベトナム語</sys:String>
+    <sys:String x:Key="Language_English">英語</sys:String>
+    <sys:String x:Key="Language_Japanese">日本語</sys:String>
 </ResourceDictionary>

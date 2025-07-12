@@ -2,20 +2,27 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
+	  <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="ViewModels\" />
+		<Folder Include="Services\" />
+	</ItemGroup>
 
-  <PropertyGroup>
+	<ItemGroup>
+		<Reference Include="PresentationCore" />
+	</ItemGroup>
+
+
+	<PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

@@ -15,9 +15,7 @@
 
   <ItemGroup>
     <Folder Include="Controls\" />
-    <Folder Include="Helpers\" />
     <Folder Include="ViewModels\" />
-    <Folder Include="Resources\Images\" />
     <Folder Include="Resources\Styles\" />
     <Folder Include="Resources\Themes\" />
     <Folder Include="Views\Home\" />

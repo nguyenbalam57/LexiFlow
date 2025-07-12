@@ -2,10 +2,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
-    <ProjectReference Include="..\LexiFlow.Application\LexiFlow.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
@@ -17,9 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Repositories\" />
+	  <Folder Include="Data\" />
+	  <Folder Include="Repositories\" />
   </ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\SQLQueryLexiFlow.sql" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

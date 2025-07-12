@@ -4,9 +4,99 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LexiFlow.UI"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="LexiFlow - Ứng dụng học từ vựng tiếng Nhật" 
+        Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
+        <!-- Top AppBar -->
+        <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryDark" Padding="16" materialDesign:ShadowAssist.ShadowDepth="Depth2">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <materialDesign:PackIcon Kind="Book" Width="32" Height="32" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBlock Text="LexiFlow - 日本語学習アプリ" VerticalAlignment="Center" FontSize="24"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Text="Xin chào, Admin" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <Button Style="{StaticResource MaterialDesignIconButton}" ToolTip="Đăng xuất">
+                        <materialDesign:PackIcon Kind="Logout" Width="24" Height="24"/>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:ColorZone>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Navigation Panel -->
+            <Grid Grid.Column="0" Background="{DynamicResource MaterialDesignPaper}">
+                <StackPanel>
+                    <TextBlock Text="MENU" Margin="16,16,16,8" FontWeight="Bold" Opacity="0.6"/>
+
+                    <ListBox x:Name="NavListBox" Margin="0,8">
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Home" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Trang chủ" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="BookOpenVariant" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Học từ vựng" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Teach" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Luyện thi JLPT" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ChartBar" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Tiến độ học tập" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Trophy" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Xếp hạng" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Account" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Quản lý người dùng" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Cog" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                <TextBlock Text="Cài đặt" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ListBoxItem>
+                    </ListBox>
+                </StackPanel>
+            </Grid>
+
+            <!-- Main Content Area -->
+            <Grid Grid.Column="1" Margin="16">
+                <TextBlock Text="Chào mừng đến với LexiFlow!" 
+                           FontSize="24" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
