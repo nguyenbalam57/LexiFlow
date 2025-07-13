@@ -2,12 +2,13 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:LexiFlow.UI"
+             xmlns:converters="clr-namespace:LexiFlow.UI.Converters"
              StartupUri="Views/Login/LoginView.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-            <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
-            <local:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/LexiFlow.UI;component/Resources/ResourceDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>

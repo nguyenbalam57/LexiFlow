@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <ItemGroup>
-    <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
+	  <ProjectReference Include="..\LexiFlow.Application\LexiFlow.Application.csproj" />
+	  <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,8 @@
     <Folder Include="Views\Gamification\" />
     <Folder Include="Views\Settings\" />
     <Folder Include="Views\Social\" />
+	<Folder Include="Services\" />
+	<Folder Include="Converters\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,8 +12,13 @@ public static class DependencyInjection
         // Register services
         services.AddScoped<IAuthService, AuthService>();
 
-        // Register ViewModels
-        services.AddTransient<LoginViewModel>();
+        // Register ViewModels with factory pattern to avoid circular dependency
+        services.AddTransient<LoginViewModel>(provider =>
+        {
+            var authService = provider.GetRequiredService<IAuthService>();
+            var settingsService = provider.GetRequiredService<ISettingsService>();
+            return new LoginViewModel(authService, settingsService);
+        });
 
         return services;
     }

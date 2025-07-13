@@ -10,9 +10,11 @@ namespace LexiFlow.Application.ViewModels
     public class LoginViewModel : INotifyPropertyChanged
     {
         private readonly IAuthService _authService;
+        private readonly ISettingsService _settingsService;
         private string _username = string.Empty;
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
+        private string _successMessage = string.Empty;
         private bool _isLoading;
         private bool _rememberMe;
         private string _selectedLanguage = "VN";
@@ -117,21 +119,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        public string SuccessMessage
-        {
-            get => _successMessage;
-            set
-            {
-                if (_successMessage != value)
-                {
-                    _successMessage = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        private string _successMessage = string.Empty;
-
         private void ClearMessages()
         {
             ErrorMessage = string.Empty;
@@ -148,9 +135,10 @@ namespace LexiFlow.Application.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler? LoginSuccessful;
 
-        public LoginViewModel(IAuthService authService)
+        public LoginViewModel(IAuthService authService, ISettingsService settingsService)
         {
             _authService = authService;
+            _settingsService = settingsService;
             LoginCommand = new RelayCommand(LoginAsync, CanLogin);
             ChangeLanguageCommand = new RelayCommand<string>(ChangeLanguageExecute);
             ForgotPasswordCommand = new RelayCommand(_ => ShowForgotPassword());
@@ -203,6 +191,9 @@ namespace LexiFlow.Application.ViewModels
                         ClearSavedCredentials();
                     }
 
+                    // Update login attempts
+                    _settingsService.ResetFailedLoginAttempts();
+
                     // Short delay to show success message
                     await Task.Delay(500);
 
@@ -212,6 +203,9 @@ namespace LexiFlow.Application.ViewModels
                 else
                 {
                     ErrorMessage = GetLocalizedString("Login_InvalidCredentials");
+
+                    // Update failed login attempts
+                    _settingsService.UpdateFailedLoginAttempts();
 
                     // Clear password on failed login
                     Password = string.Empty;
@@ -296,7 +290,7 @@ namespace LexiFlow.Application.ViewModels
                 ClearMessages();
 
                 // Change application language
-                var app = Application.Current;
+                var app = System.Windows.Application.Current;
                 if (app?.Resources != null)
                 {
                     var resourceDictionaries = app.Resources.MergedDictionaries;
@@ -339,17 +333,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        private void UpdateResourceDictionary(string language)
-        {
-            // This would be implemented in the UI layer to update the app's resources
-        }
-
-        private void SaveLoginCredentials()
-        {
-            // In a real app, this would securely store the username (not password)
-            // using something like ProtectedData or a secure storage mechanism
-        }
-
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -373,10 +356,10 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                var settings = Properties.Settings.Default;
-                if (settings.RememberMe && !string.IsNullOrEmpty(settings.SavedUsername))
+                var settings = Settings.Default;
+                if (_settingsService.RememberMe && !string.IsNullOrEmpty(_settingsService.SavedUsername))
                 {
-                    Username = settings.SavedUsername;
+                    Username = _settingsService.SavedUsername;
                     RememberMe = true;
                 }
             }
@@ -390,11 +373,10 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                var settings = Properties.Settings.Default;
-                settings.SavedUsername = RememberMe ? Username : string.Empty;
-                settings.RememberMe = RememberMe;
-                settings.LastLoginDate = DateTime.Now;
-                settings.Save();
+                _settingsService.SavedUsername = RememberMe ? Username : string.Empty;
+                _settingsService.RememberMe = RememberMe;
+                _settingsService.LastLoginDate = DateTime.Now;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {
@@ -406,10 +388,9 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                var settings = Properties.Settings.Default;
-                settings.SavedUsername = string.Empty;
-                settings.RememberMe = false;
-                settings.Save();
+                _settingsService.SavedUsername = string.Empty;
+                _settingsService.RememberMe = false;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {
@@ -421,8 +402,8 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                Properties.Settings.Default.PreferredLanguage = SelectedLanguage;
-                Properties.Settings.Default.Save();
+                _settingsService.PreferredLanguage = SelectedLanguage;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {

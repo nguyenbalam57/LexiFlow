@@ -1,7 +1,7 @@
 ﻿using LexiFlow.Core.Entities;
 using LexiFlow.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using LexiFlow.UI.Properties;
+using LexiFlow.Infrastructure.Data;
 
 namespace LexiFlow.Application.Services
 {
@@ -31,18 +31,15 @@ namespace LexiFlow.Application.Services
                 if (user == null || !user.IsActive)
                 {
                     // Update failed login attempts
-                    UpdateFailedLoginAttempts();
+                    _logger?.LogWarning($"Failed login attempt for user: {username} - User not found or inactive");
                     return null;
                 }
 
                 if (!VerifyPassword(password, user.PasswordHash))
                 {
-                    UpdateFailedLoginAttempts();
+                    _logger?.LogWarning($"Failed login attempt for user: {username} - Invalid password");
                     return null;
                 }
-
-                // Reset failed attempts on successful login
-                ResetFailedLoginAttempts();
 
                 // Update last login time
                 await _sqlAdapter.UpdateUserLastLoginAsync(user.Id);
@@ -55,21 +52,6 @@ namespace LexiFlow.Application.Services
                 _logger.LogError(ex, $"Authentication error for user: {username}");
                 throw;
             }
-        }
-
-        private void UpdateFailedLoginAttempts()
-        {
-            var settings = Settings.Default;
-            settings.LoginAttempts++;
-            settings.LastFailedLogin = DateTime.Now;
-            settings.Save();
-        }
-
-        private void ResetFailedLoginAttempts()
-        {
-            var settings = Settings.Default;
-            settings.LoginAttempts = 0;
-            settings.Save();
         }
 
         public async Task<bool> ValidateCredentialsAsync(string username, string password)

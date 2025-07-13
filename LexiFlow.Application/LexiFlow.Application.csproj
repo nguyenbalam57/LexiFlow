@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
 	<ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
-	<ProjectReference Include="..\LexiFlow.UI\LexiFlow.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

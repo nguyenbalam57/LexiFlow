@@ -75,7 +75,7 @@ namespace LexiFlow.UI.Helpers
 
         private static void UpdateResourceDictionaries(string language)
         {
-            var app = Application.Current;
+            var app = System.Windows.Application.Current;
             if (app?.Resources == null) return;
 
             var resourceDictionaries = app.Resources.MergedDictionaries;
@@ -128,7 +128,7 @@ namespace LexiFlow.UI.Helpers
         {
             try
             {
-                var app = Application.Current;
+                var app = System.Windows.Application.Current;
                 if (app?.Resources != null && app.Resources.Contains(key))
                 {
                     var value = app.Resources[key]?.ToString() ?? key;
@@ -328,14 +328,14 @@ namespace LexiFlow.UI.Helpers
             try
             {
                 // Refresh all open windows to apply language changes
-                foreach (Window window in Application.Current.Windows)
+                foreach (Window window in System.Windows.Application.Current.Windows)
                 {
                     if (window.DataContext is INotifyPropertyChanged notifyPropertyChanged)
                     {
                         // Trigger property change notifications to refresh bindings
                         notifyPropertyChanged.PropertyChanged?.Invoke(
                             notifyPropertyChanged,
-                            new System.ComponentModel.PropertyChangedEventArgs(string.Empty));
+                            new PropertyChangedEventArgs(string.Empty));
                     }
                 }
             }

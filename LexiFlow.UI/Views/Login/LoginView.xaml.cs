@@ -50,7 +50,7 @@ namespace LexiFlow.UI.Views.Login
 
         private void SetupConverters()
         {
-            Resources.Add("BooleanToVisibilityConverter", new System.Windows.Controls.BooleanToVisibilityConverter());
+            Resources.Add("BooleanToVisibilityConverter", new BooleanToVisibilityConverter());
             Resources.Add("StringToVisibilityConverter", new StringToVisibilityConverter());
             Resources.Add("InverseBooleanConverter", new InverseBooleanConverter());
         }
@@ -136,7 +136,7 @@ namespace LexiFlow.UI.Views.Login
         {
             try
             {
-                var resourceDictionaries = Application.Current.Resources.MergedDictionaries;
+                var resourceDictionaries = System.Windows.Application.Current.Resources.MergedDictionaries;
 
                 // Remove existing theme dictionary
                 var existingTheme = resourceDictionaries
@@ -221,7 +221,7 @@ namespace LexiFlow.UI.Views.Login
 
                             if (result == MessageBoxResult.Yes)
                             {
-                                Application.Current.Shutdown();
+                                System.Windows.Application.Current.Shutdown();
                             }
                         }
                         e.Handled = true;
@@ -284,12 +284,12 @@ namespace LexiFlow.UI.Views.Login
                 if (!string.IsNullOrEmpty(password) && password.Length >= 6)
                 {
                     // Password meets minimum requirements
-                    PasswordBox.BorderBrush = System.Windows.Media.Brushes.Green;
+                    PasswordBox.BorderBrush = Brushes.Green;
                 }
                 else if (!string.IsNullOrEmpty(password))
                 {
                     // Password too short
-                    PasswordBox.BorderBrush = System.Windows.Media.Brushes.Orange;
+                    PasswordBox.BorderBrush = Brushes.Orange;
                 }
                 else
                 {

@@ -1,6 +1,8 @@
 ﻿using LexiFlow.Application;
+using LexiFlow.Core.Interfaces;
 using LexiFlow.Infrastructure;
 using LexiFlow.UI.Helpers;
+using LexiFlow.UI.Services;
 using LexiFlow.UI.Views.Login;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +35,9 @@ public partial class App : System.Windows.Application
                 // Register application and infrastructure services
                 services.AddApplication();
                 services.AddInfrastructure(context.Configuration);
+
+                // Register UI-specific services
+                services.AddSingleton<ISettingsService, SettingsService>();
 
                 // Register views
                 services.AddTransient<LoginView>();
