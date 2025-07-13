@@ -6,9 +6,11 @@
              StartupUri="Views/Login/LoginView.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Global converters -->
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/LexiFlow.UI;component/Resources/ResourceDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LexiFlow.UI.Views.Login"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:converters="clr-namespace:LexiFlow.UI.Converters"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         Title="{DynamicResource Login_Title}" Height="600" Width="900"
@@ -91,8 +92,6 @@
             <Setter Property="Height" Value="56"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,10,0,15"/>
-            <Setter Property="materialDesign:TextFieldAssist.OutlinedBorderActiveThickness" Value="2"/>
-            <Setter Property="materialDesign:TextFieldAssist.OutlinedBorderInactiveThickness" Value="1"/>
         </Style>
 
         <!-- Password Field Style -->
@@ -100,8 +99,6 @@
             <Setter Property="Height" Value="56"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,10,0,15"/>
-            <Setter Property="materialDesign:TextFieldAssist.OutlinedBorderActiveThickness" Value="2"/>
-            <Setter Property="materialDesign:TextFieldAssist.OutlinedBorderInactiveThickness" Value="1"/>
         </Style>
 
         <!-- Login Button Style -->

@@ -45,6 +45,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+	 <None Update="appsettings.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	 </None>
+   </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows7.0</TargetFramework>

@@ -34,9 +34,6 @@ namespace LexiFlow.UI.Views.Login
             // Subscribe to events
             _viewModel.LoginSuccessful += ViewModel_LoginSuccessful;
 
-            // Setup converters
-            SetupConverters();
-
             // Setup animations
             SetupAnimations();
 
@@ -47,13 +44,6 @@ namespace LexiFlow.UI.Views.Login
 
             // Focus management
             this.Activated += LoginView_Activated;
-        }
-
-        private void SetupConverters()
-        {
-            Resources.Add("BooleanToVisibilityConverter", new BooleanToVisibilityConverter());
-            Resources.Add("StringToVisibilityConverter", new StringToVisibilityConverter());
-            Resources.Add("InverseBooleanConverter", new InverseBooleanConverter());
         }
 
         private void SetupAnimations()

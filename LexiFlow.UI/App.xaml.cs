@@ -24,6 +24,9 @@ public partial class App : System.Windows.Application
 
     public App()
     {
+        // Create appsettings.json if it doesn't exist
+        CreateAppSettingsIfNotExists();
+
         _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
@@ -44,6 +47,53 @@ public partial class App : System.Windows.Application
                 services.AddTransient<MainWindow>();
             })
             .Build();
+
+        // Set up unhandled exception handler
+        this.DispatcherUnhandledException += Application_DispatcherUnhandledException;
+    }
+
+    // Create default appsettings.json file if it doesn't exist
+    private void CreateAppSettingsIfNotExists()
+    {
+        try
+        {
+            string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
+
+            if (!File.Exists(appSettingsPath))
+            {
+                // Define default appsettings content
+                string defaultSettings = @"{
+                                              ""ConnectionStrings"": {
+                                                ""DefaultConnection"": ""Server=.\\SQLEXPRESS;Database=LexiFlow;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true""
+                                              },
+                                              ""Logging"": {
+                                                ""LogLevel"": {
+                                                  ""Default"": ""Information"",
+                                                  ""Microsoft"": ""Warning"",
+                                                  ""Microsoft.Hosting.Lifetime"": ""Information""
+                                                }
+                                              },
+                                              ""AllowedHosts"": ""*"",
+                                              ""AppSettings"": {
+                                                ""AppName"": ""LexiFlow"",
+                                                ""Version"": ""1.0.0"",
+                                                ""DefaultLanguage"": ""VN""
+                                              }
+                                            }";
+                // Create directory if it doesn't exist
+                Directory.CreateDirectory(Path.GetDirectoryName(appSettingsPath));
+
+                // Write the default settings
+                File.WriteAllText(appSettingsPath, defaultSettings);
+
+                System.Diagnostics.Debug.WriteLine($"Created default appsettings.json at {appSettingsPath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to create appsettings.json: {ex.Message}");
+            // Don't throw here, we'll handle configuration issues later
+        }
     }
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -60,9 +110,8 @@ public partial class App : System.Windows.Application
         }
         catch (Exception ex)
         {
-            var errorMsg = LanguageHelper.GetLocalizedString("Login_DatabaseInitError");
-            MessageBox.Show($"{errorMsg}: {ex.Message}", "Error",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Không thể khởi tạo cơ sở dữ liệu: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
         }
