@@ -322,7 +322,7 @@ namespace LexiFlow.Application.ViewModels
                     // Clear the message after a short delay
                     Task.Delay(2000).ContinueWith(_ =>
                     {
-                        Application.Current.Dispatcher.Invoke(() => SuccessMessage = string.Empty);
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => SuccessMessage = string.Empty);
                     });
                 }
             }
@@ -356,7 +356,6 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                var settings = Settings.Default;
                 if (_settingsService.RememberMe && !string.IsNullOrEmpty(_settingsService.SavedUsername))
                 {
                     Username = _settingsService.SavedUsername;
@@ -415,7 +414,7 @@ namespace LexiFlow.Application.ViewModels
         {
             try
             {
-                var resource = Application.Current.TryFindResource(key);
+                var resource = System.Windows.Application.Current.TryFindResource(key);
                 return resource?.ToString() ?? key;
             }
             catch

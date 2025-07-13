@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using LexiFlow.UI.Converters;
 
 namespace LexiFlow.UI.Views.Login
 {
@@ -487,29 +488,29 @@ namespace LexiFlow.UI.Views.Login
     }
 
     // Custom converters
-    public class StringToVisibilityConverter : System.Windows.Data.IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
-        }
+    //public class StringToVisibilityConverter : System.Windows.Data.IValueConverter
+    //{
+    //    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    //    {
+    //        return string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
+    //    }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return value is Visibility visibility && visibility == Visibility.Visible ? "Visible" : string.Empty;
-        }
-    }
+    //    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    //    {
+    //        return value is Visibility visibility && visibility == Visibility.Visible ? "Visible" : string.Empty;
+    //    }
+    //}
 
-    public class InverseBooleanConverter : System.Windows.Data.IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return !(bool)value;
-        }
+    //public class InverseBooleanConverter : System.Windows.Data.IValueConverter
+    //{
+    //    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    //    {
+    //        return !(bool)value;
+    //    }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return !(bool)value;
-        }
-    }
+    //    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    //    {
+    //        return !(bool)value;
+    //    }
+    //}
 }

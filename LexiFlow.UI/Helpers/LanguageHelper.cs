@@ -323,26 +323,26 @@ namespace LexiFlow.UI.Helpers
             }
         }
 
-        public static void RefreshAllWindows()
-        {
-            try
-            {
-                // Refresh all open windows to apply language changes
-                foreach (Window window in System.Windows.Application.Current.Windows)
-                {
-                    if (window.DataContext is INotifyPropertyChanged notifyPropertyChanged)
-                    {
-                        // Trigger property change notifications to refresh bindings
-                        notifyPropertyChanged.PropertyChanged?.Invoke(
-                            notifyPropertyChanged,
-                            new PropertyChangedEventArgs(string.Empty));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error refreshing windows: {ex.Message}");
-            }
-        }
+        //public static void RefreshAllWindows()
+        //{
+        //    try
+        //    {
+        //        // Refresh all open windows to apply language changes
+        //        foreach (Window window in System.Windows.Application.Current.Windows)
+        //        {
+        //            if (window.DataContext is INotifyPropertyChanged notifyPropertyChanged)
+        //            {
+        //                // Trigger property change notifications to refresh bindings
+        //                notifyPropertyChanged.PropertyChanged?.Invoke(
+        //                    notifyPropertyChanged,
+        //                    new PropertyChangedEventArgs(string.Empty));
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Error refreshing windows: {ex.Message}");
+        //    }
+        //}
     }
 }
