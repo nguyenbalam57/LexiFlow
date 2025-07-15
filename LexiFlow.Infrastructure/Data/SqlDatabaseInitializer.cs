@@ -25,19 +25,29 @@ namespace LexiFlow.Infrastructure.Data
                 // Tạo chuỗi kết nối tới master database để có thể tạo database mới
                 var builder = new SqlConnectionStringBuilder(connectionString);
                 string databaseName = builder.InitialCatalog;
-                builder.InitialCatalog = "master";
-                string masterConnectionString = builder.ConnectionString;
 
-                // Kiểm tra và tạo database nếu chưa tồn tại
-                if (!await DatabaseExistsAsync(masterConnectionString, databaseName))
+                _logger.LogInformation($"Checking database '{databaseName}'...");
+                // Chỉ kiểm tra xem database có tồn tại không
+                if (await DatabaseExistsAsync(connectionString))
                 {
-                    await CreateDatabaseAsync(masterConnectionString, databaseName);
+                    _logger.LogInformation($"Database '{databaseName}' already exists. Skipping creation.");
+
+                    // Kiểm tra xem có tables không
+                    if (!await TablesExistAsync(connectionString))
+                    {
+                        _logger.LogInformation("Tables not found. Creating tables...");
+                        await ExecuteSqlScriptAsync(connectionString);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Tables already exist. Database is ready.");
+                    }
                 }
-
-                // Đọc và thực thi script SQL
-                await ExecuteSqlScriptAsync(connectionString);
-
-                _logger.LogInformation("Database initialized successfully.");
+                else
+                {
+                    _logger.LogWarning($"Database '{databaseName}' not found!");
+                    throw new Exception($"Database '{databaseName}' does not exist. Please create it first in SQL Server Management Studio.");
+                }
             }
             catch (Exception ex)
             {
@@ -46,35 +56,35 @@ namespace LexiFlow.Infrastructure.Data
             }
         }
 
-        private async Task<bool> DatabaseExistsAsync(string masterConnectionString, string databaseName)
+        private async Task<bool> DatabaseExistsAsync(string connectionString)
         {
-            using (var connection = new SqlConnection(masterConnectionString))
+            try
             {
+                using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
-
-                string query = $"SELECT COUNT(*) FROM sys.databases WHERE name = '{databaseName}'";
-                using (var command = new SqlCommand(query, connection))
-                {
-                    object? result = await command.ExecuteScalarAsync();
-                    int count = Convert.ToInt32(result);
-                    return count > 0;
-                }
+                return true;
+            }
+            catch (SqlException)
+            {
+                return false;
             }
         }
 
-        private async Task CreateDatabaseAsync(string masterConnectionString, string databaseName)
+        private async Task<bool> TablesExistAsync(string connectionString)
         {
-            using (var connection = new SqlConnection(masterConnectionString))
-            {
-                await connection.OpenAsync();
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
 
-                string query = $"CREATE DATABASE [{databaseName}]";
-                using (var command = new SqlCommand(query, connection))
-                {
-                    await command.ExecuteNonQueryAsync();
-                    _logger.LogInformation($"Database '{databaseName}' created successfully.");
-                }
-            }
+            // Kiểm tra xem bảng Users có tồn tại không
+            string query = @"
+                SELECT COUNT(*) 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_TYPE = 'BASE TABLE' 
+                AND TABLE_NAME = 'Users'";
+
+            using var command = new SqlCommand(query, connection);
+            var count = (int)await command.ExecuteScalarAsync();
+            return count > 0;
         }
 
         private async Task ExecuteSqlScriptAsync(string connectionString)

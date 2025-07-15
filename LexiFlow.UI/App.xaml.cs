@@ -27,7 +27,9 @@ public partial class App : System.Windows.Application
         // Create appsettings.json if it doesn't exist
         CreateAppSettingsIfNotExists();
 
-        _host = Host.CreateDefaultBuilder()
+        try
+        {
+            _host = Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, config) =>
             {
                 config.SetBasePath(Directory.GetCurrentDirectory())
@@ -47,9 +49,16 @@ public partial class App : System.Windows.Application
                 services.AddTransient<MainWindow>();
             })
             .Build();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Không thể khởi tạo ứng dụng: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
 
         // Set up unhandled exception handler
-        this.DispatcherUnhandledException += Application_DispatcherUnhandledException;
+       this.DispatcherUnhandledException += Application_DispatcherUnhandledException;
     }
 
     // Create default appsettings.json file if it doesn't exist
@@ -120,7 +129,9 @@ public partial class App : System.Windows.Application
         var loginWindow = _host.Services.GetRequiredService<LoginView>();
         loginWindow.Show();
 
+
         base.OnStartup(e);
+
     }
 
     protected override async void OnExit(ExitEventArgs e)

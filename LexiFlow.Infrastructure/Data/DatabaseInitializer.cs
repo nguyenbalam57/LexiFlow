@@ -20,9 +20,19 @@ namespace LexiFlow.Infrastructure.Data
             try
             {
                 var context = services.GetRequiredService<ApplicationDbContext>();
+                var logger = services.GetRequiredService<ILogger<DatabaseInitializer>>();
 
                 // Apply migrations if they haven't been applied
-                await context.Database.MigrateAsync();
+                //await context.Database.MigrateAsync();
+
+                // Thay vào đó, chỉ kiểm tra kết nối
+                var canConnect = await context.Database.CanConnectAsync();
+                if (!canConnect)
+                {
+                    throw new Exception("Cannot connect to database. Please ensure database 'LexiFlow' exists.");
+                }
+
+                logger.LogInformation("Successfully connected to existing database.");
 
                 // Seed additional data if needed
                 await SeedDataAsync(context);

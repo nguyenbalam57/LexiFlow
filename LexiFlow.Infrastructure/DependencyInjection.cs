@@ -17,7 +17,12 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                sqlOptions =>
+                {
+                    sqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                    // Disable automatic migrations
+                    sqlOptions.EnableRetryOnFailure();
+                }));
 
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
