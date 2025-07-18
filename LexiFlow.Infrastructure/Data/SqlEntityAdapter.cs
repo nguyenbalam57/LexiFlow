@@ -25,7 +25,7 @@ namespace LexiFlow.Infrastructure.Data
             await connection.OpenAsync();
 
             using var command = new SqlCommand(
-                "SELECT UserID, Username, PasswordHash, Email, FullName, Department, IsActive, CreatedAt, LastLogin " +
+                "SELECT UserID, Username, PasswordHash, Email, PhoneNumber, FullName, Department, IsActive, CreatedAt, LastLogin " +
                 "FROM Users WHERE Username = @Username", connection);
 
             command.Parameters.AddWithValue("@Username", username);
@@ -40,6 +40,9 @@ namespace LexiFlow.Infrastructure.Data
                     PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash")),
                     Email = !reader.IsDBNull(reader.GetOrdinal("Email"))
                         ? reader.GetString(reader.GetOrdinal("Email"))
+                        : string.Empty,
+                    PhoneNumber = !reader.IsDBNull(reader.GetOrdinal("PhoneNumber"))
+                        ? reader.GetString(reader.GetOrdinal("PhoneNumber"))
                         : string.Empty,
                     FullName = !reader.IsDBNull(reader.GetOrdinal("FullName"))
                         ? reader.GetString(reader.GetOrdinal("FullName"))
