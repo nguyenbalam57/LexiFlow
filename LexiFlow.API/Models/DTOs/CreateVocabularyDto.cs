@@ -1,8 +1,7 @@
 ﻿namespace LexiFlow.API.Models.DTOs
 {
-    public class VocabularyDto
+    public class CreateVocabularyDto
     {
-        public int VocabularyID { get; set; }
         public string Japanese { get; set; }
         public string? Kana { get; set; }
         public string? Romaji { get; set; }
@@ -13,7 +12,5 @@
         public string? Level { get; set; }
         public string? PartOfSpeech { get; set; }
         public int? GroupID { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
     }
 }
