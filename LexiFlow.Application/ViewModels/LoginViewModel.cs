@@ -8,32 +8,29 @@ using System.Windows.Input;
 using System;
 using System.Threading.Tasks;
 
+
 namespace LexiFlow.Application.ViewModels
 {
     public class LoginViewModel : INotifyPropertyChanged
     {
         private readonly IAuthService _authService;
-        private readonly ISettingsService _settingsService;
+        private readonly ILogger<LoginViewModel> _logger;
+
+        // Properties
         private string _username = string.Empty;
         private string _password = string.Empty;
-        private string _errorMessage = string.Empty;
-        private string _successMessage = string.Empty;
-        private bool _isLoading;
         private bool _rememberMe;
-        private string _selectedLanguage = "VN";
+        private bool _isLoading;
+        private string _errorMessage = string.Empty;
+        private bool _hasError;
 
         public string Username
         {
             get => _username;
             set
             {
-                if (_username != value)
-                {
-                    _username = value;
-                    OnPropertyChanged();
-                    ClearMessages();
-                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
-                }
+                _username = value;
+                OnPropertyChanged();
             }
         }
 
@@ -42,39 +39,18 @@ namespace LexiFlow.Application.ViewModels
             get => _password;
             set
             {
-                if (_password != value)
-                {
-                    _password = value;
-                    OnPropertyChanged();
-                    ClearMessages();
-                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
-                }
+                _password = value;
+                OnPropertyChanged();
             }
         }
 
-        public string ErrorMessage
+        public bool RememberMe
         {
-            get => _errorMessage;
+            get => _rememberMe;
             set
             {
-                if (_errorMessage != value)
-                {
-                    _errorMessage = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string SuccessMessage
-        {
-            get => _successMessage;
-            set
-            {
-                if (_successMessage != value)
-                {
-                    _successMessage = value;
-                    OnPropertyChanged();
-                }
+                _rememberMe = value;
+                OnPropertyChanged();
             }
         }
 
@@ -83,331 +59,149 @@ namespace LexiFlow.Application.ViewModels
             get => _isLoading;
             set
             {
-                if (_isLoading != value)
-                {
-                    _isLoading = value;
-                    OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsNotLoading));
-                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
-                }
+                _isLoading = value;
+                OnPropertyChanged();
             }
         }
 
-        public bool IsNotLoading => !IsLoading;
-
-        public bool RememberMe
+        public string ErrorMessage
         {
-            get => _rememberMe;
+            get => _errorMessage;
             set
             {
-                if (_rememberMe != value)
-                {
-                    _rememberMe = value;
-                    OnPropertyChanged();
-                }
+                _errorMessage = value;
+                HasError = !string.IsNullOrEmpty(value);
+                OnPropertyChanged();
             }
         }
 
-        public string SelectedLanguage
+        public bool HasError
         {
-            get => _selectedLanguage;
+            get => _hasError;
             set
             {
-                if (_selectedLanguage != value)
-                {
-                    _selectedLanguage = value;
-                    OnPropertyChanged();
-                    ChangeLanguage();
-                }
+                _hasError = value;
+                OnPropertyChanged();
             }
         }
 
-        public System.Collections.Generic.List<string> AvailableLanguages { get; } = new System.Collections.Generic.List<string> { "VN", "EN", "JP" };
-
+        // Commands
         public ICommand LoginCommand { get; }
-        public ICommand ChangeLanguageCommand { get; }
         public ICommand ForgotPasswordCommand { get; }
-        public ICommand RegisterCommand { get; }
+        public ICommand SignUpCommand { get; }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        public event EventHandler? LoginSuccessful;
-
-        public LoginViewModel(IAuthService authService, ISettingsService settingsService)
+        // Constructor
+        public LoginViewModel()
         {
-            _authService = authService;
-            _settingsService = settingsService;
-            LoginCommand = new RelayCommand(LoginAsync, CanLogin);
-            ChangeLanguageCommand = new RelayCommand<string>(ChangeLanguageExecute);
-            ForgotPasswordCommand = new RelayCommand(_ => ShowForgotPassword());
-            RegisterCommand = new RelayCommand(_ => ShowRegister());
+            // Get services from dependency injection
+            _authService = App.ServiceProvider.GetService(typeof(IAuthService)) as IAuthService
+                ?? throw new InvalidOperationException("IAuthService not found in service provider");
 
-            // Load saved login credentials if remember me was checked
-            LoadSavedCredentials();
+            _logger = App.ServiceProvider.GetService(typeof(ILogger<LoginViewModel>)) as ILogger<LoginViewModel>
+                ?? throw new InvalidOperationException("ILogger<LoginViewModel> not found in service provider");
+
+            // Initialize commands
+            LoginCommand = new RelayCommand(async _ => await LoginAsync());
+            ForgotPasswordCommand = new RelayCommand(_ => NavigateToForgotPassword());
+            SignUpCommand = new RelayCommand(_ => NavigateToSignUp());
         }
 
-        private bool CanLogin(object? parameter)
-        {
-            return !string.IsNullOrWhiteSpace(Username) &&
-                   !string.IsNullOrWhiteSpace(Password) &&
-                   !IsLoading &&
-                   Username.Length >= 3 &&
-                   Password.Length >= 6;
-        }
-
-        private async void LoginAsync(object? parameter)
+        private async Task LoginAsync()
         {
             try
             {
-                IsLoading = true;
-                ClearMessages();
-
                 // Validate input
-                if (!ValidateInput())
-                    return;
-
-                // Show progress message
-                SuccessMessage = GetLocalizedString("Login_Connecting");
-
-                // Simulate network delay for better UX
-                await Task.Delay(800);
-
-                // Authenticate user
-                var user = await _authService.AuthenticateAsync(Username.Trim(), Password);
-
-                if (user != null)
+                if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
                 {
-                    SuccessMessage = GetLocalizedString("Login_Success");
+                    ErrorMessage = "Please enter both username and password";
+                    return;
+                }
+
+                // Set loading state
+                IsLoading = true;
+                ErrorMessage = string.Empty;
+
+                // Attempt to authenticate
+                var result = await _authService.AuthenticateAsync(Username, Password);
+
+                if (result.Success)
+                {
+                    _logger.LogInformation("User {Username} logged in successfully", Username);
 
                     // Save credentials if remember me is checked
-                    if (RememberMe)
-                    {
-                        SaveLoginCredentials();
-                    }
-                    else
-                    {
-                        ClearSavedCredentials();
-                    }
+                    SaveCredentials();
 
-                    // Update login attempts
-                    _settingsService.ResetFailedLoginAttempts();
-
-                    // Short delay to show success message
-                    await Task.Delay(500);
-
-                    // Notify login successful
-                    LoginSuccessful?.Invoke(this, EventArgs.Empty);
+                    // Navigate to main application
+                    OpenMainWindow();
                 }
                 else
                 {
-                    ErrorMessage = GetLocalizedString("Login_InvalidCredentials");
-
-                    // Update failed login attempts
-                    _settingsService.UpdateFailedLoginAttempts();
-
-                    // Clear password on failed login
-                    Password = string.Empty;
+                    // Show error message
+                    ErrorMessage = result.Message ?? "Login failed. Please check your credentials.";
+                    _logger.LogWarning("Login failed for user {Username}: {Message}", Username, result.Message);
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = string.Format(GetLocalizedString("Login_GeneralError"), ex.Message);
-                System.Diagnostics.Debug.WriteLine($"Login error: {ex}");
+                // Handle exception
+                ErrorMessage = "An error occurred during login. Please try again.";
+                _logger.LogError(ex, "Login error for user {Username}", Username);
             }
             finally
             {
+                // Reset loading state
                 IsLoading = false;
             }
         }
 
-        private bool ValidateInput()
+        private void SaveCredentials()
         {
-            if (string.IsNullOrWhiteSpace(Username))
-            {
-                ErrorMessage = GetLocalizedString("Login_UsernameRequired");
-                return false;
-            }
-
-            if (Username.Length < 3)
-            {
-                ErrorMessage = GetLocalizedString("Login_UsernameMinLength");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(Password))
-            {
-                ErrorMessage = GetLocalizedString("Login_PasswordRequired");
-                return false;
-            }
-
-            if (Password.Length < 6)
-            {
-                ErrorMessage = GetLocalizedString("Login_PasswordMinLength");
-                return false;
-            }
-
-            // Check for common invalid characters
-            if (Username.Contains(" ") || Username.Contains("'") || Username.Contains("\""))
-            {
-                ErrorMessage = GetLocalizedString("Login_InvalidUsername");
-                return false;
-            }
-
-            return true;
+            // Save username if remember me is checked
+            Properties.Settings.Default.RememberMe = RememberMe;
+            Properties.Settings.Default.SavedUsername = RememberMe ? Username : string.Empty;
+            Properties.Settings.Default.Save();
         }
 
-        private void ChangeLanguageExecute(string? language)
+        private void OpenMainWindow()
         {
-            if (!string.IsNullOrEmpty(language) && AvailableLanguages.Contains(language))
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                SelectedLanguage = language;
-            }
-        }
+                // Create and show main window
+                var mainWindow = new MainWindow();
+                mainWindow.Show();
 
-        private void ChangeLanguage()
-        {
-            try
-            {
-                // Clear any existing messages since they might be in the old language
-                ClearMessages();
-
-                // Change application language
-                var app = System.Windows.Application.Current;
-                if (app?.Resources != null)
+                // Close login window
+                foreach (Window window in Application.Current.Windows)
                 {
-                    var resourceDictionaries = app.Resources.MergedDictionaries;
-
-                    // Find and remove existing language dictionary
-                    var existingLangDict = resourceDictionaries
-                        .FirstOrDefault(rd => rd.Source?.OriginalString?.Contains("Languages_") == true);
-
-                    if (existingLangDict != null)
+                    if (window is LoginView)
                     {
-                        resourceDictionaries.Remove(existingLangDict);
+                        window.Close();
+                        break;
                     }
-
-                    // Add new language dictionary
-                    var newLangDict = new ResourceDictionary
-                    {
-                        Source = new Uri($"/LexiFlow.UI;component/Resources/Languages/Languages_{SelectedLanguage}.xaml",
-                                       UriKind.RelativeOrAbsolute)
-                    };
-
-                    resourceDictionaries.Add(newLangDict);
-
-                    // Save language preference
-                    SaveLanguagePreference();
-
-                    // Show language changed message
-                    SuccessMessage = GetLocalizedString("Login_LanguageChanged");
-
-                    // Clear the message after a short delay
-                    Task.Delay(2000).ContinueWith(_ =>
-                    {
-                        System.Windows.Application.Current.Dispatcher.Invoke(() => SuccessMessage = string.Empty);
-                    });
                 }
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = GetLocalizedString("Login_LanguageChangeError");
-                System.Diagnostics.Debug.WriteLine($"Language change error: {ex.Message}");
-            }
+            });
         }
 
-        private void ClearMessages()
+        private void NavigateToForgotPassword()
         {
-            ErrorMessage = string.Empty;
-            SuccessMessage = string.Empty;
+            // Implementation for forgot password navigation
+            MessageBox.Show("This feature is not implemented yet.", "Forgot Password",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        private void NavigateToSignUp()
+        {
+            // Implementation for sign up navigation
+            MessageBox.Show("This feature is not implemented yet.", "Sign Up",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // INotifyPropertyChanged implementation
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private void ShowForgotPassword()
-        {
-            var message = GetLocalizedString("Login_ForgotPasswordMessage");
-            var title = GetLocalizedString("Login_ForgotPasswordTitle");
-            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void ShowRegister()
-        {
-            var message = GetLocalizedString("Login_RegisterMessage");
-            var title = GetLocalizedString("Login_RegisterTitle");
-            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        private void LoadSavedCredentials()
-        {
-            try
-            {
-                if (_settingsService.RememberMe && !string.IsNullOrEmpty(_settingsService.SavedUsername))
-                {
-                    Username = _settingsService.SavedUsername;
-                    RememberMe = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading saved credentials: {ex.Message}");
-            }
-        }
-
-        private void SaveLoginCredentials()
-        {
-            try
-            {
-                _settingsService.SavedUsername = RememberMe ? Username : string.Empty;
-                _settingsService.RememberMe = RememberMe;
-                _settingsService.LastLoginDate = DateTime.Now;
-                _settingsService.SaveSettings();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error saving credentials: {ex.Message}");
-            }
-        }
-
-        private void ClearSavedCredentials()
-        {
-            try
-            {
-                _settingsService.SavedUsername = string.Empty;
-                _settingsService.RememberMe = false;
-                _settingsService.SaveSettings();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error clearing saved credentials: {ex.Message}");
-            }
-        }
-
-        private void SaveLanguagePreference()
-        {
-            try
-            {
-                _settingsService.PreferredLanguage = SelectedLanguage;
-                _settingsService.SaveSettings();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error saving language preference: {ex.Message}");
-            }
-        }
-
-        private string GetLocalizedString(string key)
-        {
-            try
-            {
-                var resource = System.Windows.Application.Current.TryFindResource(key);
-                return resource?.ToString() ?? key;
-            }
-            catch
-            {
-                return key;
-            }
         }
     }
 

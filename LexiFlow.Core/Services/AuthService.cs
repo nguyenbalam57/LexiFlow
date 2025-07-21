@@ -39,7 +39,7 @@ namespace LexiFlow.Core.Services
             {
                 var response = await _apiService.LoginAsync(username, password);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Lưu thông tin người dùng hiện tại
                     _currentUser = response.Data.User;
@@ -94,7 +94,7 @@ namespace LexiFlow.Core.Services
             {
                 var response = await _apiService.RefreshTokenAsync();
 
-                if (response.Success && !string.IsNullOrEmpty(response.Data))
+                if (response.SuccessResult && !string.IsNullOrEmpty(response.Data))
                 {
                     return ServiceResult<string>.Success(response.Data);
                 }

@@ -14,7 +14,7 @@ namespace LexiFlow.Core.Models
         /// <summary>
         /// Trạng thái thành công của request
         /// </summary>
-        public bool Success { get; set; }
+        public bool SuccessResponse { get; set; }
 
         /// <summary>
         /// Thông báo lỗi nếu có
@@ -38,7 +38,7 @@ namespace LexiFlow.Core.Models
         {
             return new ApiResponse<T>
             {
-                Success = true,
+                SuccessResponse = true,
                 Data = data
             };
         }
@@ -50,7 +50,7 @@ namespace LexiFlow.Core.Models
         {
             return new ApiResponse<T>
             {
-                Success = false,
+                SuccessResponse = false,
                 Message = message,
                 SessionExpired = sessionExpired
             };

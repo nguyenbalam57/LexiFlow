@@ -11,39 +11,10 @@ namespace LexiFlow.Core.Models
     /// </summary>
     public class SyncResult
     {
-        /// <summary>
-        /// Trạng thái đồng bộ
-        /// </summary>
-        public bool Success { get; set; }
-
-        /// <summary>
-        /// Thời gian đồng bộ
-        /// </summary>
-        public DateTime SyncedAt { get; set; }
-
-        /// <summary>
-        /// Số lượng bản ghi đã tải lên
-        /// </summary>
-        public int UploadedCount { get; set; }
-
-        /// <summary>
-        /// Số lượng bản ghi đã tải về
-        /// </summary>
-        public int DownloadedCount { get; set; }
-
-        /// <summary>
-        /// Số lượng bản ghi đã xóa
-        /// </summary>
-        public int DeletedCount { get; set; }
-
-        /// <summary>
-        /// Số lượng bản ghi bị lỗi
-        /// </summary>
-        public int FailedCount { get; set; }
-
-        /// <summary>
-        /// Thông báo lỗi nếu có
-        /// </summary>
-        public string ErrorMessage { get; set; }
+        public int Added { get; set; }
+        public int Updated { get; set; }
+        public int Deleted { get; set; }
+        public int Failed { get; set; }
+        public string? LastSyncTime { get; set; }
     }
 }

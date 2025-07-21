@@ -2,82 +2,38 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <!-- Login Screen -->
-    <sys:String x:Key="Login_Title">LexiFlow - Japanese Learning App</sys:String>
-    <sys:String x:Key="Login_Header">Sign In</sys:String>
-    <sys:String x:Key="Login_Subtitle">Learn Japanese effectively with scientific methods</sys:String>
-    <sys:String x:Key="Login_Welcome">Welcome back! Please sign in to continue.</sys:String>
+    <sys:String x:Key="Login_Header">Welcome Back</sys:String>
+    <sys:String x:Key="Login_Welcome">Sign in to your account to continue your Japanese learning journey</sys:String>
     <sys:String x:Key="Login_Username">Username</sys:String>
     <sys:String x:Key="Login_Password">Password</sys:String>
-    <sys:String x:Key="Login_RememberMe">Remember me</sys:String>
+    <sys:String x:Key="Login_Remember">Remember me</sys:String>
+    <sys:String x:Key="Login_Forgot">Forgot password?</sys:String>
     <sys:String x:Key="Login_Button">Sign In</sys:String>
-    <sys:String x:Key="Login_ForgotPassword">Forgot Password?</sys:String>
     <sys:String x:Key="Login_NoAccount">Don't have an account?</sys:String>
-    <sys:String x:Key="Login_Register">Register now</sys:String>
-    <sys:String x:Key="Login_Authenticating">Authenticating...</sys:String>
+    <sys:String x:Key="Login_SignUp">Sign Up</sys:String>
+    <sys:String x:Key="Language_Select">Language</sys:String>
 
-    <!-- Error Messages -->
-    <sys:String x:Key="Login_InvalidCredentials">Invalid username or password</sys:String>
-    <sys:String x:Key="Login_UsernameRequired">Please enter username</sys:String>
-    <sys:String x:Key="Login_PasswordRequired">Please enter password</sys:String>
-    <sys:String x:Key="Login_UsernameMinLength">Username must be at least 3 characters</sys:String>
-    <sys:String x:Key="Login_PasswordMinLength">Password must be at least 6 characters</sys:String>
-    <sys:String x:Key="Login_InvalidUsername">Username contains invalid characters</sys:String>
-    <sys:String x:Key="Login_DatabaseError">Database connection error. Please try again later.</sys:String>
-    <sys:String x:Key="Login_AccessDenied">Access denied</sys:String>
-    <sys:String x:Key="Login_Timeout">Connection timeout. Please try again.</sys:String>
-    <sys:String x:Key="Login_GeneralError">Login error: {0}</sys:String>
-    <sys:String x:Key="Login_LanguageChangeError">Unable to change language</sys:String>
+    <!-- App Features -->
+    <sys:String x:Key="App_Tagline">Your Intelligent Japanese Learning Assistant</sys:String>
+    <sys:String x:Key="Feature_Learn_Title">Smart Learning</sys:String>
+    <sys:String x:Key="Feature_Learn_Desc">Personalized lessons adapting to your pace and level</sys:String>
+    <sys:String x:Key="Feature_Progress_Title">Track Progress</sys:String>
+    <sys:String x:Key="Feature_Progress_Desc">Monitor your improvement with detailed statistics</sys:String>
+    <sys:String x:Key="Feature_Vocab_Title">Extensive Vocabulary</sys:String>
+    <sys:String x:Key="Feature_Vocab_Desc">Build your Japanese vocabulary with context and examples</sys:String>
 
-    <!-- Success Messages -->
-    <sys:String x:Key="Login_Success">Login successful!</sys:String>
-    <sys:String x:Key="Login_Connecting">Connecting...</sys:String>
-    <sys:String x:Key="Login_LanguageChanged">Language changed</sys:String>
-
-    <!-- Language Selection -->
-    <sys:String x:Key="Language_Vietnamese">Vietnamese</sys:String>
-    <sys:String x:Key="Language_English">English</sys:String>
-    <sys:String x:Key="Language_Japanese">Japanese</sys:String>
-
-    <!-- Features -->
-    <sys:String x:Key="Feature_Vocabulary">Smart vocabulary learning</sys:String>
-    <sys:String x:Key="Feature_JLPT">Effective JLPT practice</sys:String>
-    <sys:String x:Key="Feature_Progress">Detailed progress tracking</sys:String>
-
-    <!-- Demo Accounts -->
-    <sys:String x:Key="Login_DemoAccounts">Demo accounts</sys:String>
-    <sys:String x:Key="Login_AdminAccount">Administrator</sys:String>
-    <sys:String x:Key="Login_UserAccount">Student</sys:String>
-
-    <!-- Dialog Messages -->
-    <sys:String x:Key="Login_ForgotPasswordTitle">Forgot Password</sys:String>
-    <sys:String x:Key="Login_ForgotPasswordMessage">Please contact your system administrator for password recovery assistance.</sys:String>
-    <sys:String x:Key="Login_RegisterTitle">Register Account</sys:String>
-    <sys:String x:Key="Login_RegisterMessage">Please contact your system administrator to create a new account.</sys:String>
-
-    <!-- Main Application -->
+    <!-- General -->
     <sys:String x:Key="App_Name">LexiFlow</sys:String>
-    <sys:String x:Key="Menu_Home">Home</sys:String>
-    <sys:String x:Key="Menu_Vocabulary">Vocabulary</sys:String>
-    <sys:String x:Key="Menu_JLPT">JLPT Practice</sys:String>
-    <sys:String x:Key="Menu_Progress">Progress</sys:String>
-    <sys:String x:Key="Menu_Ranking">Ranking</sys:String>
-    <sys:String x:Key="Menu_UserManagement">User Management</sys:String>
-    <sys:String x:Key="Menu_Settings">Settings</sys:String>
-    <sys:String x:Key="Menu_Logout">Logout</sys:String>
+    <sys:String x:Key="Button_Save">Save</sys:String>
+    <sys:String x:Key="Button_Cancel">Cancel</sys:String>
+    <sys:String x:Key="Button_OK">OK</sys:String>
+    <sys:String x:Key="Button_Close">Close</sys:String>
+    <sys:String x:Key="Loading">Loading...</sys:String>
 
-    <!-- Common -->
-    <sys:String x:Key="Common_OK">OK</sys:String>
-    <sys:String x:Key="Common_Cancel">Cancel</sys:String>
-    <sys:String x:Key="Common_Yes">Yes</sys:String>
-    <sys:String x:Key="Common_No">No</sys:String>
-    <sys:String x:Key="Common_Save">Save</sys:String>
-    <sys:String x:Key="Common_Delete">Delete</sys:String>
-    <sys:String x:Key="Common_Edit">Edit</sys:String>
-    <sys:String x:Key="Common_Add">Add</sys:String>
-    <sys:String x:Key="Common_Search">Search</sys:String>
-    <sys:String x:Key="Common_Loading">Loading...</sys:String>
-    <sys:String x:Key="Common_Error">Error</sys:String>
-    <sys:String x:Key="Common_Success">Success</sys:String>
-    <sys:String x:Key="Common_Warning">Warning</sys:String>
-    <sys:String x:Key="Common_Information">Information</sys:String>
+    <!-- Messages -->
+    <sys:String x:Key="Error_Generic">An error occurred. Please try again.</sys:String>
+    <sys:String x:Key="Error_Connection">Cannot connect to the server. Please check your internet connection.</sys:String>
+    <sys:String x:Key="Error_Login">Invalid username or password.</sys:String>
+    <sys:String x:Key="Success_Generic">Operation completed successfully.</sys:String>
+    
 </ResourceDictionary>

@@ -10,21 +10,24 @@
 
         <!-- Default Language -->
         <ResourceDictionary Source="/LexiFlow.UI;component/Resources/Languages/Languages_VN.xaml" />
+
+        <!-- MahApps -->
+        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Custom Colors -->
-    <Color x:Key="PrimaryColor">#4338ca</Color>
-    <!-- Indigo -->
-    <Color x:Key="SecondaryColor">#8b5cf6</Color>
-    <!-- Purple -->
-    <Color x:Key="AccentColor">#06b6d4</Color>
-    <!-- Cyan -->
-    <Color x:Key="SuccessColor">#10b981</Color>
-    <!-- Green -->
-    <Color x:Key="ErrorColor">#ef4444</Color>
-    <!-- Red -->
-    <Color x:Key="WarningColor">#f59e0b</Color>
-    <!-- Yellow -->
+    <SolidColorBrush x:Key="PrimaryColor" Color="#4A6FDC"/>
+    <SolidColorBrush x:Key="SecondaryColor" Color="#0EA5E9"/>
+    <SolidColorBrush x:Key="AccentColor" Color="#6366F1"/>
+    <SolidColorBrush x:Key="BackgroundColor" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="SurfaceColor" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
+    <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="TextPrimaryColor" Color="#1E293B"/>
+    <SolidColorBrush x:Key="TextSecondaryColor" Color="#64748B"/>
+    <SolidColorBrush x:Key="DisabledColor" Color="#CBD5E1"/>
 
     <!-- Custom Fonts -->
     <FontFamily x:Key="PrimaryFont">Segoe UI</FontFamily>
@@ -36,10 +39,4 @@
     <Duration x:Key="NormalAnimation">0:0:0.4</Duration>
     <Duration x:Key="SlowAnimation">0:0:0.6</Duration>
 
-    <!-- Custom Brushes -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource SecondaryColor}" />
-    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
-    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
-    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 </ResourceDictionary>

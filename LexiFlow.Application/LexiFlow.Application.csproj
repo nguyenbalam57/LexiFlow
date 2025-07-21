@@ -14,7 +14,6 @@
 
 	<ItemGroup>
 		<Folder Include="ViewModels\" />
-		<Folder Include="Services\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -23,7 +22,7 @@
 
 
 	<PropertyGroup>
-		<TargetFramework>net9.0-windows7.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>

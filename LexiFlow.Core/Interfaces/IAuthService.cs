@@ -20,6 +20,16 @@ namespace LexiFlow.Core.Interfaces
         Task<ServiceResult<LoginResponse>> AuthenticateAsync(string username, string password);
 
         /// <summary>
+        /// Kiểm tra thông tin đăng nhập
+        /// </summary>
+        Task<User> ValidateUserAsync(string username, string password);
+
+        /// <summary>
+        /// Lấy thông tin người dùng theo ID
+        /// </summary>
+        Task<User> GetUserByIdAsync(int userId);
+
+        /// <summary>
         /// Đăng xuất
         /// </summary>
         void Logout();

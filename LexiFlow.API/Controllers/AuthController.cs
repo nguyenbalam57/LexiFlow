@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text;
+using LexiFlow.Core.Interfaces;
 
 namespace LexiFlow.API.Controllers
 {

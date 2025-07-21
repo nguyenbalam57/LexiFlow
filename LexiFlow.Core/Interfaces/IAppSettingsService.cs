@@ -1,50 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LexiFlow.Core.Interfaces
 {
     /// <summary>
-    /// Interface cho dịch vụ cài đặt ứng dụng
+    /// Interface cho dịch vụ quản lý cài đặt ứng dụng
     /// </summary>
     public interface IAppSettingsService
     {
         /// <summary>
-        /// URL cơ sở của API
+        /// Đường dẫn đến API
         /// </summary>
-        string ApiBaseUrl { get; set; }
+        string ApiUrl { get; set; }
 
         /// <summary>
-        /// Token truy cập hiện tại
+        /// Chuỗi kết nối đến cơ sở dữ liệu cục bộ
         /// </summary>
-        string AccessToken { get; set; }
+        string LocalDbConnectionString { get; set; }
 
         /// <summary>
-        /// Chuỗi kết nối cơ sở dữ liệu địa phương
-        /// </summary>
-        string LocalDbConnectionString { get; }
-
-        /// <summary>
-        /// Ngôn ngữ hiện tại
-        /// </summary>
-        string CurrentLanguage { get; set; }
-
-        /// <summary>
-        /// Bật/tắt ghi nhớ đăng nhập
+        /// Ghi nhớ đăng nhập
         /// </summary>
         bool RememberLogin { get; set; }
 
         /// <summary>
-        /// Tên người dùng đã lưu
+        /// Tên đăng nhập đã lưu
         /// </summary>
         string SavedUsername { get; set; }
 
         /// <summary>
-        /// Bật/tắt tự động đăng nhập
+        /// Tự động đăng nhập
         /// </summary>
         bool AutoLogin { get; set; }
+
+        /// <summary>
+        /// Ngôn ngữ đã chọn
+        /// </summary>
+        string SelectedLanguage { get; set; }
+
+        /// <summary>
+        /// Token truy cập API
+        /// </summary>
+        string AccessToken { get; set; }
 
         /// <summary>
         /// Lưu cài đặt
@@ -55,10 +51,5 @@ namespace LexiFlow.Core.Interfaces
         /// Tải cài đặt
         /// </summary>
         void LoadSettings();
-
-        /// <summary>
-        /// Đặt lại cài đặt về mặc định
-        /// </summary>
-        void ResetSettings();
     }
 }

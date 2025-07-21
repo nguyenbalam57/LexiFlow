@@ -1,6 +1,7 @@
 ﻿using LexiFlow.Application.ViewModels;
 using LexiFlow.UI.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,464 +16,141 @@ namespace LexiFlow.UI.Views.Login
     public partial class LoginView : Window
     {
         private readonly LoginViewModel _viewModel;
-        private bool _isClosing = false;
 
-        public LoginView(LoginViewModel viewModel)
+        public LoginView()
         {
+            // Set application culture
+            SetDefaultCulture("en-US");
+
             InitializeComponent();
 
-            _viewModel = viewModel;
+            // Create and set the view model
+            _viewModel = new LoginViewModel();
             DataContext = _viewModel;
 
-            // Load window settings
-            LoadWindowSettings();
+            // Set password changed event
+            PasswordBox.PasswordChanged += PasswordBox_PasswordChanged;
 
-            // Set initial language
-            LanguageHelper.CurrentLanguage = Properties.Settings.Default.PreferredLanguage ?? "VN";
-
-            // Subscribe to events
-            _viewModel.LoginSuccessful += ViewModel_LoginSuccessful;
-
-            // Setup animations
-            SetupAnimations();
-
-            // Handle window events
-            this.Loaded += LoginView_Loaded;
-            this.Closing += LoginView_Closing;
-            this.KeyDown += LoginView_KeyDown;
-
-            // Focus management
-            this.Activated += LoginView_Activated;
+            // Check for saved credentials
+            LoadSavedCredentials();
         }
 
-        private void SetupAnimations()
+        private void SetDefaultCulture(string cultureName)
         {
-            // Add entrance animation
-            if (Properties.Settings.Default.EnableAnimations)
-            {
-                var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(500));
-                var slideIn = new ThicknessAnimation(
-                    new Thickness(0, 50, 0, 0),
-                    new Thickness(0, 0, 0, 0),
-                    TimeSpan.FromMilliseconds(400));
+            // Set current thread culture
+            var culture = new CultureInfo(cultureName);
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
 
-                this.BeginAnimation(OpacityProperty, fadeIn);
-            }
+            // Set application culture
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
 
-        private void LoadWindowSettings()
+        private void LoadSavedCredentials()
         {
-            try
+            // Load saved username if remember me is checked
+            var settings = Properties.Settings.Default;
+            if (settings.RememberMe)
             {
-                var settings = Properties.Settings.Default;
-
-                // Restore window size and position
-                if (settings.WindowWidth > 0 && settings.WindowHeight > 0)
-                {
-                    this.Width = settings.WindowWidth;
-                    this.Height = settings.WindowHeight;
-                }
-
-                if (settings.WindowLeft >= 0 && settings.WindowTop >= 0)
-                {
-                    this.Left = settings.WindowLeft;
-                    this.Top = settings.WindowTop;
-                }
-
-                if (settings.IsMaximized)
-                {
-                    this.WindowState = WindowState.Maximized;
-                }
-
-                // Restore theme
-                if (!string.IsNullOrEmpty(settings.ThemeMode))
-                {
-                    ApplyTheme(settings.ThemeMode);
-                }
-
-                // Restore font size
-                if (settings.FontSize > 0)
-                {
-                    this.FontSize = settings.FontSize;
-                }
+                _viewModel.Username = settings.SavedUsername;
+                _viewModel.RememberMe = true;
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading window settings: {ex.Message}");
-            }
-        }
-
-        private void SaveWindowSettings()
-        {
-            try
-            {
-                var settings = Properties.Settings.Default;
-
-                settings.WindowWidth = this.Width;
-                settings.WindowHeight = this.Height;
-                settings.WindowLeft = this.Left;
-                settings.WindowTop = this.Top;
-                settings.IsMaximized = this.WindowState == WindowState.Maximized;
-
-                settings.Save();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error saving window settings: {ex.Message}");
-            }
-        }
-
-        private void ApplyTheme(string theme)
-        {
-            try
-            {
-                var resourceDictionaries = System.Windows.Application.Current.Resources.MergedDictionaries;
-
-                // Remove existing theme dictionary
-                var existingTheme = resourceDictionaries
-                    .FirstOrDefault(rd => rd.Source?.OriginalString?.Contains("MaterialDesignTheme") == true);
-
-                if (existingTheme != null)
-                {
-                    resourceDictionaries.Remove(existingTheme);
-                }
-
-                // Add new theme dictionary
-                string themeUri = theme == "Dark"
-                    ? "pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Dark.xaml"
-                    : "pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml";
-
-                var newTheme = new ResourceDictionary
-                {
-                    Source = new Uri(themeUri, UriKind.RelativeOrAbsolute)
-                };
-
-                resourceDictionaries.Insert(0, newTheme);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error applying theme: {ex.Message}");
-            }
-        }
-
-        private void LoginView_Loaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Set focus to username field if empty, otherwise password field
-                if (string.IsNullOrEmpty(_viewModel.Username))
-                {
-                    var usernameTextBox = FindVisualChild<TextBox>(this);
-                    usernameTextBox?.Focus();
-                }
-                else
-                {
-                    PasswordBox?.Focus();
-                }
-
-                // Start periodic security check
-                StartSecurityMonitoring();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in LoginView_Loaded: {ex.Message}");
-            }
-        }
-
-        private void LoginView_Activated(object? sender, EventArgs e)
-        {
-            // Re-focus the appropriate field when window is activated
-            if (string.IsNullOrEmpty(_viewModel.Username))
-            {
-                var usernameTextBox = FindVisualChild<TextBox>(this);
-                usernameTextBox?.Focus();
-            }
-            else if (string.IsNullOrEmpty(_viewModel.Password))
-            {
-                PasswordBox?.Focus();
-            }
-        }
-
-        private void LoginView_KeyDown(object sender, KeyEventArgs e)
-        {
-            try
-            {
-                // Handle keyboard shortcuts
-                switch (e.Key)
-                {
-                    case Key.Escape:
-                        if (!_viewModel.IsLoading)
-                        {
-                            var result = MessageBox.Show(
-                                LanguageHelper.GetLocalizedString("Login_ConfirmExit"),
-                                LanguageHelper.GetLocalizedString("Login_ExitTitle"),
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Question);
-
-                            if (result == MessageBoxResult.Yes)
-                            {
-                                System.Windows.Application.Current.Shutdown();
-                            }
-                        }
-                        e.Handled = true;
-                        break;
-
-                    case Key.F1:
-                        ShowHelp();
-                        e.Handled = true;
-                        break;
-
-                    case Key.F5:
-                        RefreshLogin();
-                        e.Handled = true;
-                        break;
-
-                    case Key.Tab:
-                        // Enhanced tab navigation
-                        HandleTabNavigation(e);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error handling key down: {ex.Message}");
-            }
-        }
-
-        private void HandleTabNavigation(KeyEventArgs e)
-        {
-            if (e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
-            {
-                // Shift+Tab for reverse navigation
-                MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
-            }
-            else
-            {
-                // Tab for forward navigation
-                MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-            }
-            e.Handled = true;
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is PasswordBox passwordBox && DataContext is LoginViewModel viewModel)
+            // Update the password in view model when the password box content changes
+            if (sender is PasswordBox passwordBox)
             {
-                viewModel.Password = passwordBox.Password;
-
-                // Add visual feedback for password strength
-                UpdatePasswordStrengthIndicator(passwordBox.Password);
+                _viewModel.Password = passwordBox.Password;
             }
         }
 
-        private void UpdatePasswordStrengthIndicator(string password)
+        private void LanguageSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // This could be expanded to show password strength
-            // For now, just basic validation feedback
-            try
+            if (sender is ComboBox comboBox)
             {
-                if (!string.IsNullOrEmpty(password) && password.Length >= 6)
+                string cultureName = "en-US"; // Default
+
+                switch (comboBox.SelectedIndex)
                 {
-                    // Password meets minimum requirements
-                    PasswordBox.BorderBrush = Brushes.Green;
+                    case 0: // English
+                        cultureName = "en-US";
+                        break;
+                    case 1: // Vietnamese
+                        cultureName = "vi-VN";
+                        break;
+                    case 2: // Japanese
+                        cultureName = "ja-JP";
+                        break;
                 }
-                else if (!string.IsNullOrEmpty(password))
-                {
-                    // Password too short
-                    PasswordBox.BorderBrush = Brushes.Orange;
-                }
-                else
-                {
-                    // No password
-                    PasswordBox.ClearValue(Border.BorderBrushProperty);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error updating password indicator: {ex.Message}");
+
+                ChangeLanguage(cultureName);
             }
         }
 
-        private void ViewModel_LoginSuccessful(object? sender, EventArgs e)
+        private void ChangeLanguage(string cultureName)
         {
-            try
-            {
-                _isClosing = true;
+            // Change current thread culture
+            var culture = new CultureInfo(cultureName);
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
 
-                // Save current settings
-                SaveWindowSettings();
-
-                // Show success animation if enabled
-                if (Properties.Settings.Default.EnableAnimations)
-                {
-                    ShowSuccessAnimation(() => OpenMainWindow());
-                }
-                else
-                {
-                    OpenMainWindow();
-                }
-            }
-            catch (Exception ex)
+            // Change application resources
+            ResourceDictionary dict = new ResourceDictionary();
+            switch (cultureName)
             {
-                System.Diagnostics.Debug.WriteLine($"Error handling login success: {ex.Message}");
-                OpenMainWindow(); // Fallback
+                case "vi-VN":
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Vietnamese.xaml", UriKind.Absolute);
+                    break;
+                case "ja-JP":
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Japanese.xaml", UriKind.Absolute);
+                    break;
+                default:
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/English.xaml", UriKind.Absolute);
+                    break;
             }
+
+            // Replace the current language dictionary
+            var oldDict = Application.Current.Resources.MergedDictionaries.FirstOrDefault(
+                d => d.Source != null && (
+                    d.Source.OriginalString.Contains("English.xaml") ||
+                    d.Source.OriginalString.Contains("Vietnamese.xaml") ||
+                    d.Source.OriginalString.Contains("Japanese.xaml")
+                ));
+
+            if (oldDict != null)
+            {
+                int index = Application.Current.Resources.MergedDictionaries.IndexOf(oldDict);
+                Application.Current.Resources.MergedDictionaries.Remove(oldDict);
+                Application.Current.Resources.MergedDictionaries.Insert(index, dict);
+            }
+            else
+            {
+                Application.Current.Resources.MergedDictionaries.Add(dict);
+            }
+
+            // Save selected language preference
+            Properties.Settings.Default.SelectedLanguage = cultureName;
+            Properties.Settings.Default.Save();
         }
 
-        private void ShowSuccessAnimation(Action onComplete)
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300));
-                fadeOut.Completed += (s, e) => onComplete();
-                this.BeginAnimation(OpacityProperty, fadeOut);
-            }
-            catch
-            {
-                onComplete(); // Fallback if animation fails
-            }
+            WindowState = WindowState.Minimized;
         }
 
-        private void OpenMainWindow()
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var mainWindow = App.Services.GetService<MainWindow>();
-                if (mainWindow != null)
-                {
-                    mainWindow.Show();
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show("Error opening main window.", "Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error opening main window: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            Application.Current.Shutdown();
         }
 
-        private void LoginView_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        // Allow dragging the window
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            if (!_isClosing && _viewModel.IsLoading)
-            {
-                e.Cancel = true;
-                MessageBox.Show(
-                    LanguageHelper.GetLocalizedString("Login_CannotCloseWhileLoading"),
-                    LanguageHelper.GetLocalizedString("Common_Warning"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                SaveWindowSettings();
-                StopSecurityMonitoring();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error during window closing: {ex.Message}");
-            }
-        }
-
-        private void StartSecurityMonitoring()
-        {
-            // Monitor for suspicious activity
-            var timer = new System.Windows.Threading.DispatcherTimer
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
-            timer.Tick += SecurityTimer_Tick;
-            timer.Start();
-        }
-
-        private void SecurityTimer_Tick(object? sender, EventArgs e)
-        {
-            try
-            {
-                // Check for too many failed login attempts
-                var settings = Properties.Settings.Default;
-                if (settings.LoginAttempts >= 5)
-                {
-                    var timeSinceLastFailed = DateTime.Now - settings.LastFailedLogin;
-                    if (timeSinceLastFailed.TotalMinutes < 15)
-                    {
-                        // Temporarily disable login
-                        _viewModel.ErrorMessage = LanguageHelper.GetLocalizedString("Login_TooManyAttempts");
-                    }
-                    else
-                    {
-                        // Reset attempts after cooldown
-                        settings.LoginAttempts = 0;
-                        settings.Save();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Security monitoring error: {ex.Message}");
-            }
-        }
-
-        private void StopSecurityMonitoring()
-        {
-            // Clean up timers and monitoring
-        }
-
-        private void ShowHelp()
-        {
-            try
-            {
-                var helpMessage = LanguageHelper.GetLocalizedString("Login_HelpMessage");
-                var helpTitle = LanguageHelper.GetLocalizedString("Login_HelpTitle");
-                MessageBox.Show(helpMessage, helpTitle, MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch
-            {
-                MessageBox.Show("For help, please contact your system administrator.",
-                    "Help", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-        }
-
-        private void RefreshLogin()
-        {
-            try
-            {
-                if (!_viewModel.IsLoading)
-                {
-                    _viewModel.ErrorMessage = string.Empty;
-                    _viewModel.SuccessMessage = string.Empty;
-                    PasswordBox.Clear();
-
-                    var usernameTextBox = FindVisualChild<TextBox>(this);
-                    usernameTextBox?.Focus();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error refreshing login: {ex.Message}");
-            }
-        }
-
-        // Helper method to find visual children
-        private static T? FindVisualChild<T>(DependencyObject obj) where T : DependencyObject
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
-            {
-                var child = VisualTreeHelper.GetChild(obj, i);
-                if (child is T typedChild)
-                    return typedChild;
-
-                var childOfChild = FindVisualChild<T>(child);
-                if (childOfChild != null)
-                    return childOfChild;
-            }
-            return null;
+            base.OnMouseLeftButtonDown(e);
+            DragMove();
         }
     }
 }

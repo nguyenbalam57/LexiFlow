@@ -225,7 +225,7 @@ namespace LexiFlow.Core.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Lỗi khi đánh dấu từ vựng ID {id} là đã xóa trong cơ sở dữ liệu cục bộ");
+                _logger.LogError(ex, $"Lỗi khi lấy từ vựng ID {id} từ cơ sở dữ liệu cục bộ");
                 throw;
             }
         }
@@ -442,70 +442,6 @@ namespace LexiFlow.Core.Services
         }
 
         /// <summary>
-        /// Chuyển đổi từ SqliteDataReader sang đối tượng Vocabulary
-        /// </summary>
-        private Vocabulary MapToVocabulary(SqliteDataReader reader)
-        {
-            var vocabulary = new Vocabulary
-            {
-                VocabularyID = reader.GetInt32(reader.GetOrdinal("VocabularyID")),
-                Japanese = reader.GetString(reader.GetOrdinal("Japanese"))
-            };
-
-            // Các trường có thể null
-            if (!reader.IsDBNull(reader.GetOrdinal("Kana")))
-                vocabulary.Kana = reader.GetString(reader.GetOrdinal("Kana"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Romaji")))
-                vocabulary.Romaji = reader.GetString(reader.GetOrdinal("Romaji"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Vietnamese")))
-                vocabulary.Vietnamese = reader.GetString(reader.GetOrdinal("Vietnamese"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("English")))
-                vocabulary.English = reader.GetString(reader.GetOrdinal("English"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Example")))
-                vocabulary.Example = reader.GetString(reader.GetOrdinal("Example"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Notes")))
-                vocabulary.Notes = reader.GetString(reader.GetOrdinal("Notes"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("GroupID")))
-                vocabulary.GroupID = reader.GetInt32(reader.GetOrdinal("GroupID"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Level")))
-                vocabulary.Level = reader.GetString(reader.GetOrdinal("Level"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("PartOfSpeech")))
-                vocabulary.PartOfSpeech = reader.GetString(reader.GetOrdinal("PartOfSpeech"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("AudioFile")))
-                vocabulary.AudioFile = reader.GetString(reader.GetOrdinal("AudioFile"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("CreatedByUserID")))
-                vocabulary.CreatedByUserID = reader.GetInt32(reader.GetOrdinal("CreatedByUserID"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("UpdatedByUserID")))
-                vocabulary.UpdatedByUserID = reader.GetInt32(reader.GetOrdinal("UpdatedByUserID"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("CreatedAt")))
-                vocabulary.CreatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("CreatedAt")));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("UpdatedAt")))
-                vocabulary.UpdatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("UpdatedAt")));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("Version")))
-                vocabulary.Version = reader.GetString(reader.GetOrdinal("Version"));
-
-            if (!reader.IsDBNull(reader.GetOrdinal("SyncStatus")))
-                vocabulary.SyncStatus = reader.GetString(reader.GetOrdinal("SyncStatus"));
-
-            return vocabulary;
-        }
-    }
-
-    /// <summary>
         /// Lưu từ vựng
         /// </summary>
         public async Task<bool> SaveVocabularyAsync(Vocabulary vocabulary)
@@ -622,6 +558,7 @@ namespace LexiFlow.Core.Services
                 throw;
             }
         }
+
         /// <summary>
         /// Đánh dấu từ vựng đã xóa
         /// </summary>
@@ -641,10 +578,72 @@ namespace LexiFlow.Core.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Lỗi khi lấy từ vựng ID {id} từ cơ sở dữ liệu cục bộ");
+                _logger.LogError(ex, $"Lỗi khi đánh dấu từ vựng ID {id} là đã xóa trong cơ sở dữ liệu cục bộ");
                 throw;
             }
         }
-    }
 
+        /// <summary>
+        /// Chuyển đổi từ SqliteDataReader sang đối tượng Vocabulary
+        /// </summary>
+        private Vocabulary MapToVocabulary(SqliteDataReader reader)
+        {
+            var vocabulary = new Vocabulary
+            {
+                VocabularyID = reader.GetInt32(reader.GetOrdinal("VocabularyID")),
+                Japanese = reader.GetString(reader.GetOrdinal("Japanese"))
+            };
+
+            // Các trường có thể null
+            if (!reader.IsDBNull(reader.GetOrdinal("Kana")))
+                vocabulary.Kana = reader.GetString(reader.GetOrdinal("Kana"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Romaji")))
+                vocabulary.Romaji = reader.GetString(reader.GetOrdinal("Romaji"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Vietnamese")))
+                vocabulary.Vietnamese = reader.GetString(reader.GetOrdinal("Vietnamese"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("English")))
+                vocabulary.English = reader.GetString(reader.GetOrdinal("English"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Example")))
+                vocabulary.Example = reader.GetString(reader.GetOrdinal("Example"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Notes")))
+                vocabulary.Notes = reader.GetString(reader.GetOrdinal("Notes"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("GroupID")))
+                vocabulary.GroupID = reader.GetInt32(reader.GetOrdinal("GroupID"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Level")))
+                vocabulary.Level = reader.GetString(reader.GetOrdinal("Level"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("PartOfSpeech")))
+                vocabulary.PartOfSpeech = reader.GetString(reader.GetOrdinal("PartOfSpeech"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("AudioFile")))
+                vocabulary.AudioFile = reader.GetString(reader.GetOrdinal("AudioFile"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("CreatedByUserID")))
+                vocabulary.CreatedByUserID = reader.GetInt32(reader.GetOrdinal("CreatedByUserID"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("UpdatedByUserID")))
+                vocabulary.UpdatedByUserID = reader.GetInt32(reader.GetOrdinal("UpdatedByUserID"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("CreatedAt")))
+                vocabulary.CreatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("CreatedAt")));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("UpdatedAt")))
+                vocabulary.UpdatedAt = DateTime.Parse(reader.GetString(reader.GetOrdinal("UpdatedAt")));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("Version")))
+                vocabulary.Version = reader.GetString(reader.GetOrdinal("Version"));
+
+            if (!reader.IsDBNull(reader.GetOrdinal("SyncStatus")))
+                vocabulary.SyncStatus = reader.GetString(reader.GetOrdinal("SyncStatus"));
+
+            return vocabulary;
+        }
+    }
 }

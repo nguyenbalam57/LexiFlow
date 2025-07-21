@@ -1,55 +1,53 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace LexiFlow.Core.Entities
 {
     /// <summary>
-    /// Đối tượng từ vựng
+    /// Lớp thực thể từ vựng
     /// </summary>
     public class Vocabulary
     {
         /// <summary>
-        /// ID từ vựng
+        /// ID của từ vựng
         /// </summary>
         public int VocabularyID { get; set; }
 
         /// <summary>
-        /// Từ tiếng Nhật
+        /// Từ tiếng Nhật (Kanji)
         /// </summary>
-        public string Japanese { get; set; }
+        [Required]
+        public string Japanese { get; set; } = string.Empty;
 
         /// <summary>
-        /// Phiên âm Kana
+        /// Hiragana/Katakana
         /// </summary>
-        public string Kana { get; set; }
+        public string? Kana { get; set; }
 
         /// <summary>
-        /// Phiên âm Romaji
+        /// Phiên âm Latin
         /// </summary>
-        public string Romaji { get; set; }
+        public string? Romaji { get; set; }
 
         /// <summary>
         /// Nghĩa tiếng Việt
         /// </summary>
-        public string Vietnamese { get; set; }
+        public string? Vietnamese { get; set; }
 
         /// <summary>
         /// Nghĩa tiếng Anh
         /// </summary>
-        public string English { get; set; }
+        public string? English { get; set; }
 
         /// <summary>
-        /// Ví dụ
+        /// Ví dụ sử dụng
         /// </summary>
-        public string Example { get; set; }
+        public string? Example { get; set; }
 
         /// <summary>
-        /// Ghi chú
+        /// Ghi chú bổ sung
         /// </summary>
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         /// <summary>
         /// ID nhóm từ vựng
@@ -57,19 +55,19 @@ namespace LexiFlow.Core.Entities
         public int? GroupID { get; set; }
 
         /// <summary>
-        /// Cấp độ JLPT
+        /// Cấp độ JLPT (N5, N4, N3, N2, N1)
         /// </summary>
-        public string Level { get; set; }
+        public string? Level { get; set; }
 
         /// <summary>
-        /// Loại từ
+        /// Loại từ (Danh từ, Động từ, Tính từ, v.v.)
         /// </summary>
-        public string PartOfSpeech { get; set; }
+        public string? PartOfSpeech { get; set; }
 
         /// <summary>
-        /// Đường dẫn file âm thanh
+        /// Đường dẫn đến file âm thanh
         /// </summary>
-        public string AudioFile { get; set; }
+        public string? AudioFile { get; set; }
 
         /// <summary>
         /// ID người tạo
@@ -84,7 +82,7 @@ namespace LexiFlow.Core.Entities
         /// <summary>
         /// Thời gian tạo
         /// </summary>
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         /// <summary>
         /// Thời gian cập nhật
@@ -92,13 +90,13 @@ namespace LexiFlow.Core.Entities
         public DateTime? UpdatedAt { get; set; }
 
         /// <summary>
-        /// Phiên bản của từ vựng (để kiểm tra xung đột)
+        /// Phiên bản dữ liệu (dùng cho đồng bộ)
         /// </summary>
-        public string Version { get; set; }
+        public string? Version { get; set; }
 
         /// <summary>
-        /// Trạng thái đồng bộ cục bộ
+        /// Trạng thái đồng bộ (New, Modified, Synced, Deleted)
         /// </summary>
-        public string SyncStatus { get; set; }
+        public string? SyncStatus { get; set; } = "New";
     }
 }

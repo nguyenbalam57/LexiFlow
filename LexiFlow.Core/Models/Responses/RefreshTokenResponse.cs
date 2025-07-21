@@ -14,11 +14,11 @@ namespace LexiFlow.Core.Models.Responses
         /// <summary>
         /// Token mới
         /// </summary>
-        public string Token { get; set; }
+        public string? Token { get; set; }
 
         /// <summary>
         /// Thời gian hết hạn
         /// </summary>
-        public DateTime ExpiresAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
     }
 }
