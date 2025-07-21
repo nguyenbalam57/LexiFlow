@@ -7,18 +7,54 @@ using System.Threading.Tasks;
 
 namespace LexiFlow.Core.Entities
 {
-    public class Group
+    /// <summary>
+    /// Đối tượng nhóm từ vựng
+    /// </summary>
+    public class VocabularyGroup
     {
-        public int Id { get; set; }
+        /// <summary>
+        /// ID nhóm
+        /// </summary>
+        public int GroupID { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string Name { get; set; } = string.Empty;
+        /// <summary>
+        /// Tên nhóm
+        /// </summary>
+        public string GroupName { get; set; }
 
-        [StringLength(200)]
-        public string Description { get; set; } = string.Empty;
+        /// <summary>
+        /// Mô tả
+        /// </summary>
+        public string Description { get; set; }
 
-        // Navigation properties
-        public virtual ICollection<UserGroup>? UserGroups { get; set; }
+        /// <summary>
+        /// ID danh mục
+        /// </summary>
+        public int? CategoryID { get; set; }
+
+        /// <summary>
+        /// ID người tạo
+        /// </summary>
+        public int? CreatedByUserID { get; set; }
+
+        /// <summary>
+        /// Trạng thái hoạt động
+        /// </summary>
+        public bool IsActive { get; set; }
+
+        /// <summary>
+        /// Thời gian tạo
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Thời gian cập nhật
+        /// </summary>
+        public DateTime? UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Danh sách từ vựng trong nhóm
+        /// </summary>
+        public List<Vocabulary> Vocabularies { get; set; }
     }
 }
