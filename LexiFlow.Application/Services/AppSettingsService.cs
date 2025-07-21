@@ -2,7 +2,7 @@
 using LexiFlow.Core.Models;
 using System;
 
-namespace LexiFlow.Application.Services
+namespace LexiFlow.App.Services
 {
     /// <summary>
     /// Triển khai dịch vụ quản lý cài đặt ứng dụng

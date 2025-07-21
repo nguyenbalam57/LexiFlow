@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace LexiFlow.Application.Services
+namespace LexiFlow.App.Services
 {
     public class ApiService : IApiService
     {

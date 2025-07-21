@@ -25,7 +25,7 @@ namespace LexiFlow.UI
         public static IServiceProvider ServiceProvider { get; private set; }
         public static IConfiguration Configuration { get; private set; }
 
-        private void Application_Startup(object sender, StartupEventArgs e)
+        private async void Application_Startup(object sender, StartupEventArgs e)
         {
             // Set default culture
             var selectedLanguage = Properties.Settings.Default.SelectedLanguage;
@@ -43,9 +43,81 @@ namespace LexiFlow.UI
             // Build service provider
             ServiceProvider = serviceCollection.BuildServiceProvider();
 
-            // Start application with login window
-            var loginWindow = new LoginView();
-            loginWindow.Show();
+            try
+            {
+                // Khởi tạo cơ sở dữ liệu cục bộ
+                var localStorageService = ServiceProvider.GetService<ILocalStorageService>();
+                await localStorageService.InitializeDatabaseAsync();
+
+                // Khởi tạo phiên làm việc
+                var sessionManager = ServiceProvider.GetService<SessionManager>();
+                var sessionInitialized = await sessionManager.InitializeSessionAsync();
+
+                if (sessionInitialized)
+                {
+                    // Đã khôi phục phiên làm việc, mở màn hình chính
+                    var mainWindow = new MainWindow();
+                    mainWindow.Show();
+                }
+                else
+                {
+                    // Cần đăng nhập, mở màn hình đăng nhập
+                    var loginWindow = new LoginView();
+                    loginWindow.Show();
+                }
+
+                // Đăng ký xử lý sự kiện phiên làm việc
+                sessionManager.SessionStateChanged += SessionManager_SessionStateChanged;
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi khởi động
+                var logger = ServiceProvider.GetService<ILogger<App>>();
+                logger.LogError(ex, "Lỗi khi khởi động ứng dụng");
+
+                MessageBox.Show($"Đã xảy ra lỗi khi khởi động ứng dụng: {ex.Message}",
+                    "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Mở màn hình đăng nhập
+                var loginWindow = new LoginView();
+                loginWindow.Show();
+            }
+        }
+
+        private void SessionManager_SessionStateChanged(object sender, SessionStateChangedEventArgs e)
+        {
+            // Xử lý sự kiện phiên làm việc thay đổi
+            switch (e.State)
+            {
+                case SessionState.Expired:
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.",
+                            "Phiên hết hạn", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        // Mở màn hình đăng nhập
+                        var loginWindow = new LoginView();
+                        loginWindow.Show();
+
+                        // Đóng các cửa sổ khác
+                        foreach (Window window in Application.Current.Windows)
+                        {
+                            if (window is not LoginView)
+                            {
+                                window.Close();
+                            }
+                        }
+                    });
+                    break;
+
+                case SessionState.Error:
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show("Đã xảy ra lỗi với phiên làm việc. Vui lòng đăng nhập lại.",
+                            "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                    break;
+            }
         }
 
         private void ConfigureServices(IServiceCollection services)
@@ -82,13 +154,18 @@ namespace LexiFlow.UI
             services.AddScoped<ILocalStorageService, LocalStorageService>();
             services.AddScoped<IVocabularyService, VocabularyService>();
 
+            // Add token and session management
+            services.AddSingleton<TokenManager>();
+            services.AddSingleton<SessionManager>();
+
             // Configure AppSettings service
             var appSettings = new AppSettings
             {
                 ApiUrl = Configuration["Api:BaseUrl"],
                 RememberLogin = Properties.Settings.Default.RememberMe,
                 SavedUsername = Properties.Settings.Default.SavedUsername,
-                AutoLogin = false
+                AutoLogin = Properties.Settings.Default.AutoLogin,
+                AccessToken = Properties.Settings.Default.AccessToken
             };
 
             services.AddSingleton(appSettings);
@@ -98,15 +175,14 @@ namespace LexiFlow.UI
         {
             // Log unhandled exceptions
             var logger = ServiceProvider?.GetService<ILogger<App>>();
-            logger?.LogError(e.Exception, "Unhandled application exception");
+            logger?.LogError(e.Exception, "Lỗi không được xử lý trong ứng dụng");
 
             // Show user-friendly error message
-            MessageBox.Show($"An unexpected error occurred: {e.Exception.Message}\n\nPlease restart the application.",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Đã xảy ra lỗi không mong muốn: {e.Exception.Message}\n\nVui lòng khởi động lại ứng dụng.",
+                "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
 
             // Mark as handled to prevent application crash
             e.Handled = true;
         }
     }
 }
-

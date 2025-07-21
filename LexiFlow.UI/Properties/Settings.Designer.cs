@@ -49,121 +49,25 @@ namespace LexiFlow.UI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("VN")]
-        public string PreferredLanguage {
+        [global::System.Configuration.DefaultSettingValueAttribute("en-US")]
+        public string SelectedLanguage {
             get {
-                return ((string)(this["PreferredLanguage"]));
+                return ((string)(this["SelectedLanguage"]));
             }
             set {
-                this["PreferredLanguage"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2025-01-01T00:00:00")]
-        public global::System.DateTime LastLoginDate {
-            get {
-                return ((global::System.DateTime)(this["LastLoginDate"]));
-            }
-            set {
-                this["LastLoginDate"] = value;
+                this["SelectedLanguage"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Light")]
-        public string ThemeMode {
+        public string Theme {
             get {
-                return ((string)(this["ThemeMode"]));
+                return ((string)(this["Theme"]));
             }
             set {
-                this["ThemeMode"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1100")]
-        public double WindowWidth {
-            get {
-                return ((double)(this["WindowWidth"]));
-            }
-            set {
-                this["WindowWidth"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("700")]
-        public double WindowHeight {
-            get {
-                return ((double)(this["WindowHeight"]));
-            }
-            set {
-                this["WindowHeight"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
-        public double WindowLeft {
-            get {
-                return ((double)(this["WindowLeft"]));
-            }
-            set {
-                this["WindowLeft"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
-        public double WindowTop {
-            get {
-                return ((double)(this["WindowTop"]));
-            }
-            set {
-                this["WindowTop"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool IsMaximized {
-            get {
-                return ((bool)(this["IsMaximized"]));
-            }
-            set {
-                this["IsMaximized"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("13")]
-        public double FontSize {
-            get {
-                return ((double)(this["FontSize"]));
-            }
-            set {
-                this["FontSize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool EnableAnimations {
-            get {
-                return ((bool)(this["EnableAnimations"]));
-            }
-            set {
-                this["EnableAnimations"] = value;
+                this["Theme"] = value;
             }
         }
         
@@ -181,25 +85,25 @@ namespace LexiFlow.UI.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int LoginAttempts {
+        [global::System.Configuration.DefaultSettingValueAttribute("2025-01-01")]
+        public global::System.DateTime LastSyncTime {
             get {
-                return ((int)(this["LoginAttempts"]));
+                return ((global::System.DateTime)(this["LastSyncTime"]));
             }
             set {
-                this["LoginAttempts"] = value;
+                this["LastSyncTime"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2025-01-01T00:00:00")]
-        public global::System.DateTime LastFailedLogin {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AccessToken {
             get {
-                return ((global::System.DateTime)(this["LastFailedLogin"]));
+                return ((string)(this["AccessToken"]));
             }
             set {
-                this["LastFailedLogin"] = value;
+                this["AccessToken"] = value;
             }
         }
     }

@@ -1,9 +1,9 @@
-﻿using LexiFlow.Application.Services;
-using LexiFlow.Application.ViewModels;
+﻿using LexiFlow.App.Services;
+using LexiFlow.App.ViewModels;
 using LexiFlow.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LexiFlow.Application;
+namespace LexiFlow.App;
 
 public static class DependencyInjection
 {

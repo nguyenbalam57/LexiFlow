@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <ItemGroup>
-	  <ProjectReference Include="..\LexiFlow.Application\LexiFlow.Application.csproj" />
+	  <ProjectReference Include="..\LexiFlow.Application\LexiFlow.App.csproj" />
 	  <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
   </ItemGroup>
 
@@ -39,15 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
 	 <None Update="appsettings.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	 </None>
+	 <None Update="Properties\Settings.settings">
+	   <Generator>SettingsSingleFileGenerator</Generator>
+	   <LastGenOutput>Settings.Designer.cs</LastGenOutput>
 	 </None>
    </ItemGroup>
 

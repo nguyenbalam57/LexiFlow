@@ -1,5 +1,6 @@
 ﻿using LexiFlow.Core.Interfaces;
 using LexiFlow.UI.Properties;
+using System;
 
 namespace LexiFlow.UI.Services
 {
@@ -28,63 +29,15 @@ namespace LexiFlow.UI.Services
 
         public string PreferredLanguage
         {
-            get => _settings.PreferredLanguage;
-            set => _settings.PreferredLanguage = value;
+            get => _settings.SelectedLanguage;
+            set => _settings.SelectedLanguage = value;
         }
 
-        public DateTime LastLoginDate
-        {
-            get => _settings.LastLoginDate;
-            set => _settings.LastLoginDate = value;
-        }
-
-        // Window settings
+        // Theme settings
         public string ThemeMode
         {
-            get => _settings.ThemeMode;
-            set => _settings.ThemeMode = value;
-        }
-
-        public double WindowWidth
-        {
-            get => _settings.WindowWidth;
-            set => _settings.WindowWidth = value;
-        }
-
-        public double WindowHeight
-        {
-            get => _settings.WindowHeight;
-            set => _settings.WindowHeight = value;
-        }
-
-        public double WindowLeft
-        {
-            get => _settings.WindowLeft;
-            set => _settings.WindowLeft = value;
-        }
-
-        public double WindowTop
-        {
-            get => _settings.WindowTop;
-            set => _settings.WindowTop = value;
-        }
-
-        public bool IsMaximized
-        {
-            get => _settings.IsMaximized;
-            set => _settings.IsMaximized = value;
-        }
-
-        public double FontSize
-        {
-            get => _settings.FontSize;
-            set => _settings.FontSize = value;
-        }
-
-        public bool EnableAnimations
-        {
-            get => _settings.EnableAnimations;
-            set => _settings.EnableAnimations = value;
+            get => _settings.Theme;
+            set => _settings.Theme = value;
         }
 
         // Security
@@ -94,16 +47,16 @@ namespace LexiFlow.UI.Services
             set => _settings.AutoLogin = value;
         }
 
-        public int LoginAttempts
+        public DateTime LastSyncTime
         {
-            get => _settings.LoginAttempts;
-            set => _settings.LoginAttempts = value;
+            get => _settings.LastSyncTime;
+            set => _settings.LastSyncTime = value;
         }
 
-        public DateTime LastFailedLogin
+        public string AccessToken
         {
-            get => _settings.LastFailedLogin;
-            set => _settings.LastFailedLogin = value;
+            get => _settings.AccessToken;
+            set => _settings.AccessToken = value;
         }
 
         public void SaveSettings()
@@ -132,14 +85,15 @@ namespace LexiFlow.UI.Services
 
         public void UpdateFailedLoginAttempts()
         {
-            LoginAttempts++;
-            LastFailedLogin = DateTime.Now;
+            // Note: LoginAttempts is not in the Settings file
+            // Implement alternative approach or add this setting to the file
             SaveSettings();
         }
 
         public void ResetFailedLoginAttempts()
         {
-            LoginAttempts = 0;
+            // Note: LoginAttempts is not in the Settings file
+            // Implement alternative approach or add this setting to the file
             SaveSettings();
         }
     }

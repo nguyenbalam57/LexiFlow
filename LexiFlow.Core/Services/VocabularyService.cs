@@ -105,7 +105,7 @@ namespace LexiFlow.Core.Services
                 // Nếu không có dữ liệu cục bộ, gọi API
                 var response = await _apiService.GetVocabularyAsync(page, pageSize);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Lưu dữ liệu vào cơ sở dữ liệu cục bộ
                     foreach (var vocabulary in response.Data.Items)
@@ -119,7 +119,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await GetVocabularyAsync(page, pageSize, searchQuery);
@@ -151,7 +151,7 @@ namespace LexiFlow.Core.Services
             {
                 var response = await _apiService.GetVocabularyAsync(page, pageSize);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Lưu dữ liệu vào cơ sở dữ liệu cục bộ
                     foreach (var vocabulary in response.Data.Items)
@@ -197,7 +197,7 @@ namespace LexiFlow.Core.Services
                 // Nếu không có dữ liệu cục bộ, gọi API
                 var response = await _apiService.GetVocabularyByIdAsync(id);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Lưu vào cơ sở dữ liệu cục bộ
                     await _localStorage.SaveVocabularyAsync(response.Data);
@@ -207,7 +207,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await GetByIdAsync(id);
@@ -252,7 +252,7 @@ namespace LexiFlow.Core.Services
                 // Gọi API để tạo từ vựng mới
                 var response = await _apiService.CreateVocabularyAsync(request);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Lưu vào cơ sở dữ liệu cục bộ
                     await _localStorage.SaveVocabularyAsync(response.Data);
@@ -262,7 +262,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await CreateAsync(request);
@@ -307,7 +307,7 @@ namespace LexiFlow.Core.Services
                 // Gọi API để cập nhật từ vựng
                 var response = await _apiService.UpdateVocabularyAsync(id, request);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Cập nhật vào cơ sở dữ liệu cục bộ
                     await _localStorage.SaveVocabularyAsync(response.Data);
@@ -317,7 +317,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await UpdateAsync(id, request);
@@ -356,7 +356,7 @@ namespace LexiFlow.Core.Services
                 // Gọi API để xóa từ vựng
                 var response = await _apiService.DeleteVocabularyAsync(id);
 
-                if (response.Success)
+                if (response.SuccessResult)
                 {
                     // Xóa khỏi cơ sở dữ liệu cục bộ hoặc đánh dấu đã xóa
                     await _localStorage.MarkVocabularyAsDeletedAsync(id);
@@ -366,7 +366,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await DeleteAsync(id);
@@ -434,7 +434,7 @@ namespace LexiFlow.Core.Services
                 // Giả lập việc gọi API tìm kiếm (trong thực tế sẽ triển khai API tìm kiếm)
                 var vocabResponse = await _apiService.GetVocabularyAsync(1, 100);
 
-                if (vocabResponse.Success && vocabResponse.Data != null)
+                if (vocabResponse.SuccessResult && vocabResponse.Data != null)
                 {
                     // Lọc kết quả từ API theo từ khóa
                     var apiResults = FilterByKeyword(vocabResponse.Data.Items, keyword, searchBy);
@@ -451,7 +451,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await SearchAsync(keyword, searchBy);
@@ -572,7 +572,7 @@ namespace LexiFlow.Core.Services
                 {
                     // Nếu phiên đăng nhập hết hạn, thử làm mới token
                     var refreshResult = await _authService.RefreshTokenAsync();
-                    if (refreshResult.Success)
+                    if (refreshResult.SuccessResult)
                     {
                         // Thử lại yêu cầu
                         return await SyncAsync();

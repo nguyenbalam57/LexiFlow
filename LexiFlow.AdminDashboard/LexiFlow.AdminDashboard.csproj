@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LexiFlow.Application\LexiFlow.Application.csproj" />
+    <ProjectReference Include="..\LexiFlow.Application\LexiFlow.App.csproj" />
     <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
   </ItemGroup>
 

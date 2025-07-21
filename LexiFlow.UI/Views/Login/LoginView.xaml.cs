@@ -1,4 +1,4 @@
-﻿using LexiFlow.Application.ViewModels;
+﻿using LexiFlow.App.ViewModels;
 using LexiFlow.UI.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using System.Windows;
 
 namespace LexiFlow.UI.Helpers
@@ -229,7 +223,7 @@ namespace LexiFlow.UI.Helpers
         {
             try
             {
-                Properties.Settings.Default.PreferredLanguage = language;
+                Properties.Settings.Default.SelectedLanguage = language;
                 Properties.Settings.Default.Save();
             }
             catch (Exception ex)
@@ -242,7 +236,7 @@ namespace LexiFlow.UI.Helpers
         {
             try
             {
-                return Properties.Settings.Default.PreferredLanguage ?? "VN";
+                return Properties.Settings.Default.SelectedLanguage ?? "VN";
             }
             catch (Exception ex)
             {

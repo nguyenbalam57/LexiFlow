@@ -250,7 +250,7 @@
                                     <Run Text="{Binding Settings.Backup.LastBackupDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"/>
                                 </TextBlock>
 
-                                <TextBlock Text="Backup & Restore" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,16"/>
+                                <TextBlock Text="Backup Restore" FontSize="18" FontWeight="SemiBold" Margin="0,16,0,16"/>
 
                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
                                       Content="Backup Now"

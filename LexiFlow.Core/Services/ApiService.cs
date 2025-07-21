@@ -22,15 +22,19 @@ namespace LexiFlow.Core.Services
     {
         private readonly ILogger<ApiService> _logger;
         private readonly IAppSettingsService _appSettings;
+        private readonly TokenManager _tokenManager;
         private readonly HttpClient _httpClient;
         private string _accessToken = string.Empty;
-        private DateTime _tokenExpiration = DateTime.MinValue;
         private string _baseUrl;
 
-        public ApiService(ILogger<ApiService> logger, IAppSettingsService appSettings)
+        public ApiService(
+            ILogger<ApiService> logger,
+            IAppSettingsService appSettings,
+            TokenManager tokenManager)
         {
             _logger = logger;
             _appSettings = appSettings;
+            _tokenManager = tokenManager;
             _httpClient = new HttpClient();
             InitializeHttpClient();
         }
@@ -45,24 +49,41 @@ namespace LexiFlow.Core.Services
                 new MediaTypeWithQualityHeaderValue("application/json"));
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
 
-            // Lấy access token từ cài đặt nếu có
-            _accessToken = _appSettings.AccessToken ?? string.Empty;
-            if (!string.IsNullOrEmpty(_accessToken))
+            // Khôi phục token từ bộ nhớ an toàn
+            if (_tokenManager.IsTokenValid())
             {
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", _accessToken);
+                _accessToken = _tokenManager.GetCurrentToken();
+                if (!string.IsNullOrEmpty(_accessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", _accessToken);
+                    _logger.LogInformation("Token đã được khôi phục từ bộ nhớ an toàn");
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Không có token hợp lệ trong bộ nhớ");
             }
         }
 
         /// <summary>
         /// Thiết lập access token cho các yêu cầu tiếp theo
         /// </summary>
-        public void SetAccessToken(string token)
+        public void SetAccessToken(string token, DateTime expiresAt)
         {
+            if (string.IsNullOrEmpty(token))
+            {
+                ClearAccessToken();
+                return;
+            }
+
             _accessToken = token;
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
-            _appSettings.AccessToken = token;
+
+            // Lưu token vào bộ nhớ an toàn
+            _tokenManager.SaveToken(token, expiresAt);
+            _logger.LogInformation("Token mới đã được thiết lập và lưu trữ");
         }
 
         /// <summary>
@@ -72,7 +93,8 @@ namespace LexiFlow.Core.Services
         {
             _accessToken = string.Empty;
             _httpClient.DefaultRequestHeaders.Authorization = null;
-            _appSettings.AccessToken = string.Empty;
+            _tokenManager.ClearToken();
+            _logger.LogInformation("Token đã được xóa");
         }
 
         /// <summary>
@@ -113,7 +135,10 @@ namespace LexiFlow.Core.Services
                     if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
                     {
                         // Lưu token cho các request tiếp theo
-                        SetAccessToken(loginResponse.Token);
+                        SetAccessToken(
+                            loginResponse.Token,
+                            loginResponse.ExpiresAt ?? DateTime.Now.AddHours(8));
+
                         return ServiceResult<LoginResponse>.Success(loginResponse);
                     }
                     else
@@ -148,75 +173,102 @@ namespace LexiFlow.Core.Services
         }
 
         /// <summary>
-        /// Lấy danh sách từ vựng từ API
+        /// Xử lý các yêu cầu HTTP chung với xử lý token tự động
         /// </summary>
-        public async Task<ServiceResult<PagedResult<Vocabulary>>> GetVocabularyAsync(int page = 1, int pageSize = 20, DateTime? lastSync = null)
+        private async Task<ServiceResult<T>> SendRequestWithTokenHandlingAsync<T>(Func<Task<HttpResponseMessage>> requestFunc)
         {
             try
             {
-                // Kiểm tra token trước khi thực hiện request
+                // Kiểm tra token
                 if (string.IsNullOrEmpty(_accessToken))
                 {
-                    return ServiceResult<PagedResult<Vocabulary>>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
+                    return ServiceResult<T>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
                 }
 
-                string url = $"{_baseUrl}/api/v1/vocabulary?page={page}&pageSize={pageSize}";
-                if (lastSync.HasValue)
-                {
-                    url += $"&lastSync={lastSync.Value:yyyy-MM-ddTHH:mm:ss}";
-                }
+                // Thực hiện yêu cầu
+                var response = await requestFunc();
 
-                var response = await _httpClient.GetAsync(url);
-
+                // Kiểm tra trạng thái
                 if (response.IsSuccessStatusCode)
                 {
+                    // Xử lý phản hồi thành công
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<VocabularyListResponse>(
+                    var result = JsonSerializer.Deserialize<T>(
                         content,
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    if (result != null && result.Data != null)
+                    return ServiceResult<T>.Success(result);
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    // Thử làm mới token một lần
+                    var refreshResult = await RefreshTokenAsync();
+                    if (refreshResult.SuccessResult)
                     {
-                        var pagedResult = new PagedResult<Vocabulary>
+                        // Thử lại yêu cầu ban đầu
+                        response = await requestFunc();
+                        if (response.IsSuccessStatusCode)
                         {
-                            Items = result.Data,
-                            Page = result.Pagination.Page,
-                            PageSize = result.Pagination.PageSize,
-                            TotalCount = result.Pagination.TotalCount,
-                            TotalPages = result.Pagination.TotalPages
-                        };
-                        return ServiceResult<PagedResult<Vocabulary>>.Success(pagedResult);
+                            var content = await response.Content.ReadAsStringAsync();
+                            var result = JsonSerializer.Deserialize<T>(
+                                content,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                            return ServiceResult<T>.Success(result);
+                        }
                     }
-                    else
-                    {
-                        return ServiceResult<PagedResult<Vocabulary>>.Fail("Không thể phân tích dữ liệu từ server");
-                    }
+
+                    // Nếu vẫn thất bại sau khi làm mới token
+                    ClearAccessToken();
+                    return ServiceResult<T>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
                 }
                 else
                 {
-                    // Xử lý trường hợp token hết hạn
-                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        ClearAccessToken();
-                        return ServiceResult<PagedResult<Vocabulary>>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
-                    }
-                    else
-                    {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        return ServiceResult<PagedResult<Vocabulary>>.Fail($"Lỗi lấy dữ liệu: {response.StatusCode} - {errorContent}");
-                    }
+                    // Xử lý các lỗi khác
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return ServiceResult<T>.Fail($"Lỗi API: {response.StatusCode} - {errorContent}");
                 }
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Lỗi kết nối khi lấy danh sách từ vựng");
-                return ServiceResult<PagedResult<Vocabulary>>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+                _logger.LogError(ex, "Lỗi kết nối HTTP");
+                return ServiceResult<T>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi không xác định khi lấy danh sách từ vựng");
-                return ServiceResult<PagedResult<Vocabulary>>.Fail($"Lỗi không xác định: {ex.Message}");
+                _logger.LogError(ex, "Lỗi không xác định");
+                return ServiceResult<T>.Fail($"Lỗi không xác định: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Lấy danh sách từ vựng từ API
+        /// </summary>
+        public async Task<ServiceResult<PagedResult<Vocabulary>>> GetVocabularyAsync(int page = 1, int pageSize = 20, DateTime? lastSync = null)
+        {
+            string url = $"{_baseUrl}/api/v1/vocabulary?page={page}&pageSize={pageSize}";
+            if (lastSync.HasValue)
+            {
+                url += $"&lastSync={lastSync.Value:yyyy-MM-ddTHH:mm:ss}";
+            }
+
+            var result = await SendRequestWithTokenHandlingAsync<VocabularyListResponse>(
+                () => _httpClient.GetAsync(url));
+
+            if (result.SuccessResult && result.Data != null)
+            {
+                var pagedResult = new PagedResult<Vocabulary>
+                {
+                    Items = result.Data.Data,
+                    Page = result.Data.Pagination.Page,
+                    PageSize = result.Data.Pagination.PageSize,
+                    TotalCount = result.Data.Pagination.TotalCount,
+                    TotalPages = result.Data.Pagination.TotalPages
+                };
+                return ServiceResult<PagedResult<Vocabulary>>.Success(pagedResult);
+            }
+
+            return ServiceResult<PagedResult<Vocabulary>>.Fail(result.Message, result.SessionExpired);
         }
 
         /// <summary>
@@ -224,56 +276,15 @@ namespace LexiFlow.Core.Services
         /// </summary>
         public async Task<ServiceResult<Vocabulary>> GetVocabularyByIdAsync(int id)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(_accessToken))
-                {
-                    return ServiceResult<Vocabulary>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-                }
+            var result = await SendRequestWithTokenHandlingAsync<VocabularyResponse>(
+                () => _httpClient.GetAsync($"{_baseUrl}/api/v1/vocabulary/{id}"));
 
-                var response = await _httpClient.GetAsync($"{_baseUrl}/api/v1/vocabulary/{id}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<VocabularyResponse>(
-                        content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result != null && result.Data != null)
-                    {
-                        return ServiceResult<Vocabulary>.Success(result.Data);
-                    }
-                    else
-                    {
-                        return ServiceResult<Vocabulary>.Fail("Không tìm thấy từ vựng yêu cầu");
-                    }
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return ServiceResult<Vocabulary>.Fail("Không tìm thấy từ vựng với ID đã cho");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    ClearAccessToken();
-                    return ServiceResult<Vocabulary>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<Vocabulary>.Fail($"Lỗi lấy dữ liệu: {response.StatusCode} - {errorContent}");
-                }
-            }
-            catch (HttpRequestException ex)
+            if (result.SuccessResult && result.Data != null && result.Data.Data != null)
             {
-                _logger.LogError(ex, "Lỗi kết nối khi lấy thông tin từ vựng");
-                return ServiceResult<Vocabulary>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+                return ServiceResult<Vocabulary>.Success(result.Data.Data);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi không xác định khi lấy thông tin từ vựng");
-                return ServiceResult<Vocabulary>.Fail($"Lỗi không xác định: {ex.Message}");
-            }
+
+            return ServiceResult<Vocabulary>.Fail(result.Message, result.SessionExpired);
         }
 
         /// <summary>
@@ -281,62 +292,20 @@ namespace LexiFlow.Core.Services
         /// </summary>
         public async Task<ServiceResult<Vocabulary>> CreateVocabularyAsync(CreateVocabularyRequest request)
         {
-            try
+            var content = new StringContent(
+                JsonSerializer.Serialize(request),
+                Encoding.UTF8,
+                "application/json");
+
+            var result = await SendRequestWithTokenHandlingAsync<VocabularyResponse>(
+                () => _httpClient.PostAsync($"{_baseUrl}/api/v1/vocabulary", content));
+
+            if (result.SuccessResult && result.Data != null && result.Data.Data != null)
             {
-                if (string.IsNullOrEmpty(_accessToken))
-                {
-                    return ServiceResult<Vocabulary>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-                }
-
-                var content = new StringContent(
-                    JsonSerializer.Serialize(request),
-                    Encoding.UTF8,
-                    "application/json");
-
-                var response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/vocabulary", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<VocabularyResponse>(
-                        responseContent,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result != null && result.Data != null)
-                    {
-                        return ServiceResult<Vocabulary>.Success(result.Data);
-                    }
-                    else
-                    {
-                        return ServiceResult<Vocabulary>.Fail("Không thể phân tích dữ liệu phản hồi từ server");
-                    }
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    ClearAccessToken();
-                    return ServiceResult<Vocabulary>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<Vocabulary>.Fail($"Dữ liệu không hợp lệ: {errorContent}");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<Vocabulary>.Fail($"Lỗi tạo từ vựng: {response.StatusCode} - {errorContent}");
-                }
+                return ServiceResult<Vocabulary>.Success(result.Data.Data);
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Lỗi kết nối khi tạo từ vựng mới");
-                return ServiceResult<Vocabulary>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi không xác định khi tạo từ vựng mới");
-                return ServiceResult<Vocabulary>.Fail($"Lỗi không xác định: {ex.Message}");
-            }
+
+            return ServiceResult<Vocabulary>.Fail(result.Message, result.SessionExpired);
         }
 
         /// <summary>
@@ -344,66 +313,20 @@ namespace LexiFlow.Core.Services
         /// </summary>
         public async Task<ServiceResult<Vocabulary>> UpdateVocabularyAsync(int id, UpdateVocabularyRequest request)
         {
-            try
+            var content = new StringContent(
+                JsonSerializer.Serialize(request),
+                Encoding.UTF8,
+                "application/json");
+
+            var result = await SendRequestWithTokenHandlingAsync<VocabularyResponse>(
+                () => _httpClient.PutAsync($"{_baseUrl}/api/v1/vocabulary/{id}", content));
+
+            if (result.SuccessResult && result.Data != null && result.Data.Data != null)
             {
-                if (string.IsNullOrEmpty(_accessToken))
-                {
-                    return ServiceResult<Vocabulary>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
-                }
-
-                var content = new StringContent(
-                    JsonSerializer.Serialize(request),
-                    Encoding.UTF8,
-                    "application/json");
-
-                var response = await _httpClient.PutAsync($"{_baseUrl}/api/v1/vocabulary/{id}", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<VocabularyResponse>(
-                        responseContent,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (result != null && result.Data != null)
-                    {
-                        return ServiceResult<Vocabulary>.Success(result.Data);
-                    }
-                    else
-                    {
-                        return ServiceResult<Vocabulary>.Fail("Không thể phân tích dữ liệu phản hồi từ server");
-                    }
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return ServiceResult<Vocabulary>.Fail("Không tìm thấy từ vựng với ID đã cho");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    ClearAccessToken();
-                    return ServiceResult<Vocabulary>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<Vocabulary>.Fail($"Dữ liệu không hợp lệ: {errorContent}");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return ServiceResult<Vocabulary>.Fail($"Lỗi cập nhật từ vựng: {response.StatusCode} - {errorContent}");
-                }
+                return ServiceResult<Vocabulary>.Success(result.Data.Data);
             }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Lỗi kết nối khi cập nhật từ vựng");
-                return ServiceResult<Vocabulary>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi không xác định khi cập nhật từ vựng");
-                return ServiceResult<Vocabulary>.Fail($"Lỗi không xác định: {ex.Message}");
-            }
+
+            return ServiceResult<Vocabulary>.Fail(result.Message, result.SessionExpired);
         }
 
         /// <summary>
@@ -430,6 +353,18 @@ namespace LexiFlow.Core.Services
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
+                    // Thử làm mới token một lần
+                    var refreshResult = await RefreshTokenAsync();
+                    if (refreshResult.SuccessResult)
+                    {
+                        // Thử lại yêu cầu ban đầu
+                        response = await _httpClient.DeleteAsync($"{_baseUrl}/api/v1/vocabulary/{id}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return ServiceResult<bool>.Success(true);
+                        }
+                    }
+
                     ClearAccessToken();
                     return ServiceResult<bool>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
                 }
@@ -475,7 +410,7 @@ namespace LexiFlow.Core.Services
                     if (result != null && !string.IsNullOrEmpty(result.Token))
                     {
                         // Cập nhật token mới
-                        SetAccessToken(result.Token);
+                        SetAccessToken(result.Token, result.ExpiresAt ?? DateTime.Now.AddHours(8));
                         return ServiceResult<string>.Success(result.Token);
                     }
                     else

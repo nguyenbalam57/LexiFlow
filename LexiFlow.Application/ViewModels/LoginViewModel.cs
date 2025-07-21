@@ -1,25 +1,35 @@
 ﻿using LexiFlow.Core.Interfaces;
-using Microsoft.Data.SqlClient;
+using LexiFlow.Core.Models;
+using LexiFlow.Core.Models.Responses;
+using LexiFlow.Core.Services;
 using Microsoft.Extensions.Logging;
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System;
-using System.Threading.Tasks;
+using System.Windows.Threading;
 
-
-namespace LexiFlow.Application.ViewModels
+namespace LexiFlow.App.ViewModels
 {
+    /// <summary>
+    /// ViewModel cho màn hình đăng nhập
+    /// </summary>
     public class LoginViewModel : INotifyPropertyChanged
     {
         private readonly IAuthService _authService;
+        private readonly IApiService _apiService;
+        private readonly IAppSettingsService _appSettings;
+        private readonly TokenManager _tokenManager;
+        private readonly SessionManager _sessionManager;
         private readonly ILogger<LoginViewModel> _logger;
 
         // Properties
         private string _username = string.Empty;
         private string _password = string.Empty;
         private bool _rememberMe;
+        private bool _autoLogin;
         private bool _isLoading;
         private string _errorMessage = string.Empty;
         private bool _hasError;
@@ -51,6 +61,28 @@ namespace LexiFlow.Application.ViewModels
             {
                 _rememberMe = value;
                 OnPropertyChanged();
+
+                // Nếu bỏ chọn RememberMe, cũng bỏ chọn AutoLogin
+                if (!value && AutoLogin)
+                {
+                    AutoLogin = false;
+                }
+            }
+        }
+
+        public bool AutoLogin
+        {
+            get => _autoLogin;
+            set
+            {
+                _autoLogin = value;
+                OnPropertyChanged();
+
+                // Nếu chọn AutoLogin, cũng chọn RememberMe
+                if (value && !RememberMe)
+                {
+                    RememberMe = true;
+                }
             }
         }
 
@@ -97,6 +129,18 @@ namespace LexiFlow.Application.ViewModels
             _authService = App.ServiceProvider.GetService(typeof(IAuthService)) as IAuthService
                 ?? throw new InvalidOperationException("IAuthService not found in service provider");
 
+            _apiService = App.ServiceProvider.GetService(typeof(IApiService)) as IApiService
+                ?? throw new InvalidOperationException("IApiService not found in service provider");
+
+            _appSettings = App.ServiceProvider.GetService(typeof(IAppSettingsService)) as IAppSettingsService
+                ?? throw new InvalidOperationException("IAppSettingsService not found in service provider");
+
+            _tokenManager = App.ServiceProvider.GetService(typeof(TokenManager)) as TokenManager
+                ?? throw new InvalidOperationException("TokenManager not found in service provider");
+
+            _sessionManager = App.ServiceProvider.GetService(typeof(SessionManager)) as SessionManager
+                ?? throw new InvalidOperationException("SessionManager not found in service provider");
+
             _logger = App.ServiceProvider.GetService(typeof(ILogger<LoginViewModel>)) as ILogger<LoginViewModel>
                 ?? throw new InvalidOperationException("ILogger<LoginViewModel> not found in service provider");
 
@@ -104,6 +148,19 @@ namespace LexiFlow.Application.ViewModels
             LoginCommand = new RelayCommand(async _ => await LoginAsync());
             ForgotPasswordCommand = new RelayCommand(_ => NavigateToForgotPassword());
             SignUpCommand = new RelayCommand(_ => NavigateToSignUp());
+
+            // Load saved username if remember me is checked
+            LoadSavedCredentials();
+        }
+
+        private void LoadSavedCredentials()
+        {
+            if (_appSettings.RememberLogin)
+            {
+                Username = _appSettings.SavedUsername;
+                RememberMe = true;
+                AutoLogin = _appSettings.AutoLogin;
+            }
         }
 
         private async Task LoginAsync()
@@ -113,7 +170,7 @@ namespace LexiFlow.Application.ViewModels
                 // Validate input
                 if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
                 {
-                    ErrorMessage = "Please enter both username and password";
+                    ErrorMessage = "Vui lòng nhập cả tên đăng nhập và mật khẩu";
                     return;
                 }
 
@@ -122,11 +179,11 @@ namespace LexiFlow.Application.ViewModels
                 ErrorMessage = string.Empty;
 
                 // Attempt to authenticate
-                var result = await _authService.AuthenticateAsync(Username, Password);
+                var result = await _apiService.LoginAsync(Username, Password);
 
-                if (result.Success)
+                if (result.SuccessResult && result.Data != null)
                 {
-                    _logger.LogInformation("User {Username} logged in successfully", Username);
+                    _logger.LogInformation("Đăng nhập thành công cho người dùng {Username}", Username);
 
                     // Save credentials if remember me is checked
                     SaveCredentials();
@@ -137,15 +194,15 @@ namespace LexiFlow.Application.ViewModels
                 else
                 {
                     // Show error message
-                    ErrorMessage = result.Message ?? "Login failed. Please check your credentials.";
-                    _logger.LogWarning("Login failed for user {Username}: {Message}", Username, result.Message);
+                    ErrorMessage = result.Message ?? "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.";
+                    _logger.LogWarning("Đăng nhập thất bại cho người dùng {Username}: {Message}", Username, result.Message);
                 }
             }
             catch (Exception ex)
             {
                 // Handle exception
-                ErrorMessage = "An error occurred during login. Please try again.";
-                _logger.LogError(ex, "Login error for user {Username}", Username);
+                ErrorMessage = "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.";
+                _logger.LogError(ex, "Lỗi đăng nhập cho người dùng {Username}", Username);
             }
             finally
             {
@@ -157,9 +214,10 @@ namespace LexiFlow.Application.ViewModels
         private void SaveCredentials()
         {
             // Save username if remember me is checked
-            Properties.Settings.Default.RememberMe = RememberMe;
-            Properties.Settings.Default.SavedUsername = RememberMe ? Username : string.Empty;
-            Properties.Settings.Default.Save();
+            _appSettings.RememberLogin = RememberMe;
+            _appSettings.SavedUsername = RememberMe ? Username : string.Empty;
+            _appSettings.AutoLogin = AutoLogin;
+            _appSettings.SaveSettings();
         }
 
         private void OpenMainWindow()
@@ -173,7 +231,7 @@ namespace LexiFlow.Application.ViewModels
                 // Close login window
                 foreach (Window window in Application.Current.Windows)
                 {
-                    if (window is LoginView)
+                    if (window is Views.Login.LoginView)
                     {
                         window.Close();
                         break;
@@ -185,14 +243,14 @@ namespace LexiFlow.Application.ViewModels
         private void NavigateToForgotPassword()
         {
             // Implementation for forgot password navigation
-            MessageBox.Show("This feature is not implemented yet.", "Forgot Password",
+            MessageBox.Show("Tính năng này chưa được triển khai.", "Quên mật khẩu",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void NavigateToSignUp()
         {
             // Implementation for sign up navigation
-            MessageBox.Show("This feature is not implemented yet.", "Sign Up",
+            MessageBox.Show("Tính năng này chưa được triển khai.", "Đăng ký",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
@@ -205,62 +263,29 @@ namespace LexiFlow.Application.ViewModels
         }
     }
 
-    // Simple implementation of ICommand for the ViewModel
+    // Simple relay command implementation
     public class RelayCommand : ICommand
     {
-        private readonly Action<object?> _execute;
-        private readonly Func<object?, bool>? _canExecute;
+        private readonly Action<object> _execute;
+        private readonly Predicate<object> _canExecute;
 
-        public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
+        public RelayCommand(Action<object> execute, Predicate<object> canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object? parameter)
+        public bool CanExecute(object parameter)
         {
             return _canExecute == null || _canExecute(parameter);
         }
 
-        public void Execute(object? parameter)
+        public void Execute(object parameter)
         {
             _execute(parameter);
         }
 
-        public event EventHandler? CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
-
-        public void RaiseCanExecuteChanged()
-        {
-            CommandManager.InvalidateRequerySuggested();
-        }
-    }
-
-    public class RelayCommand<T> : ICommand
-    {
-        private readonly Action<T?> _execute;
-        private readonly Func<T?, bool>? _canExecute;
-
-        public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
-        {
-            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            _canExecute = canExecute;
-        }
-
-        public bool CanExecute(object? parameter)
-        {
-            return _canExecute == null || _canExecute((T?)parameter);
-        }
-
-        public void Execute(object? parameter)
-        {
-            _execute((T?)parameter);
-        }
-
-        public event EventHandler? CanExecuteChanged
+        public event EventHandler CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
