@@ -1,4 +1,4 @@
-﻿using LexiFlow.Application.Services;
+﻿using LexiFlow.App.Services;
 using LexiFlow.Core.Interfaces;
 using LexiFlow.Core.Models;
 using LexiFlow.Core.Services;
@@ -157,6 +157,8 @@ namespace LexiFlow.UI
             // Add token and session management
             services.AddSingleton<TokenManager>();
             services.AddSingleton<SessionManager>();
+            // Đăng ký TokenManager với dependency là IAppSettingsService
+            services.AddSingleton<TokenManager>();
 
             // Configure AppSettings service
             var appSettings = new AppSettings

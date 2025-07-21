@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using LexiFlow.Core.Interfaces; // Thêm namespace này
 
 namespace LexiFlow.Core.Services
 {
@@ -12,11 +13,13 @@ namespace LexiFlow.Core.Services
     public class TokenManager
     {
         private readonly ILogger<TokenManager> _logger;
+        private readonly IAppSettingsService _appSettings; // Thêm field mới
         private readonly string _encryptionEntropy = "LexiFlow_Secure_Token_Storage";
 
-        public TokenManager(ILogger<TokenManager> logger)
+        public TokenManager(ILogger<TokenManager> logger, IAppSettingsService appSettings) // Sửa constructor
         {
             _logger = logger;
+            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
         /// <summary>
@@ -47,9 +50,9 @@ namespace LexiFlow.Core.Services
                 // Mã hóa dữ liệu
                 byte[] encryptedData = ProtectData(Encoding.UTF8.GetBytes(json));
 
-                // Lưu vào settings
-                Properties.Settings.Default.AccessToken = Convert.ToBase64String(encryptedData);
-                Properties.Settings.Default.Save();
+                // Lưu vào settings thông qua IAppSettingsService
+                _appSettings.AccessToken = Convert.ToBase64String(encryptedData);
+                _appSettings.SaveSettings();
 
                 _logger.LogInformation("Token đã được lưu trữ an toàn");
             }
@@ -67,7 +70,7 @@ namespace LexiFlow.Core.Services
         {
             try
             {
-                string encryptedToken = Properties.Settings.Default.AccessToken;
+                string encryptedToken = _appSettings.AccessToken;
 
                 if (string.IsNullOrEmpty(encryptedToken))
                     return null;
@@ -92,8 +95,8 @@ namespace LexiFlow.Core.Services
         /// </summary>
         public void ClearToken()
         {
-            Properties.Settings.Default.AccessToken = string.Empty;
-            Properties.Settings.Default.Save();
+            _appSettings.AccessToken = string.Empty;
+            _appSettings.SaveSettings();
             _logger.LogInformation("Token đã được xóa khỏi bộ nhớ");
         }
 

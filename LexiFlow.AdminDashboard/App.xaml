@@ -2,9 +2,14 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:LexiFlow.AdminDashboard"
+             xmlns:converters="clr-namespace:LexiFlow.AdminDashboard.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Global converters -->
+            <!--<converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />-->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
             <!-- Merge all resource dictionaries -->
             <ResourceDictionary.MergedDictionaries>
                 <!-- Material Design -->

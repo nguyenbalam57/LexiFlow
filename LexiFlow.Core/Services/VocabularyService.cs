@@ -555,7 +555,7 @@ namespace LexiFlow.Core.Services
                 // Gọi API để đồng bộ
                 var response = await _apiService.SyncDataAsync(syncRequest);
 
-                if (response.Success && response.Data != null)
+                if (response.SuccessResult && response.Data != null)
                 {
                     // Cập nhật trạng thái đồng bộ cho các phần tử đã xử lý
                     foreach (var item in pendingItems)
@@ -564,7 +564,15 @@ namespace LexiFlow.Core.Services
                     }
 
                     // Cập nhật thời gian đồng bộ cuối cùng
-                    await _localStorage.UpdateLastSyncTimeAsync(response.Data.SyncedAt);
+                    if (response.Data.SyncedAt != default)
+                    {
+                        await _localStorage.UpdateLastSyncTimeAsync(response.Data.SyncedAt);
+                    }
+                    else
+                    {
+                        // Nếu server không trả về thời gian đồng bộ, sử dụng thời gian hiện tại
+                        await _localStorage.UpdateLastSyncTimeAsync(DateTime.UtcNow);
+                    }
 
                     return ServiceResult<SyncResult>.Success(response.Data);
                 }

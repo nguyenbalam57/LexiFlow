@@ -441,5 +441,80 @@ namespace LexiFlow.Core.Services
                 return ServiceResult<string>.Fail($"Lỗi không xác định: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Đồng bộ dữ liệu với server
+        /// </summary>
+        public async Task<ServiceResult<SyncResult>> SyncDataAsync(SyncRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_accessToken))
+                {
+                    return ServiceResult<SyncResult>.Fail("Không có quyền truy cập. Vui lòng đăng nhập lại.");
+                }
+
+                var requestContent = new StringContent(
+                    JsonSerializer.Serialize(request),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/sync", requestContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<SyncResult>(
+                        content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    return ServiceResult<SyncResult>.Success(result);
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    // Thử làm mới token một lần
+                    var refreshResult = await RefreshTokenAsync();
+                    if (refreshResult.SuccessResult)
+                    {
+                        // Thử lại yêu cầu ban đầu
+                        var retryRequestContent = new StringContent(
+                            JsonSerializer.Serialize(request),
+                            Encoding.UTF8,
+                            "application/json");
+
+                        response = await _httpClient.PostAsync($"{_baseUrl}/api/v1/sync", retryRequestContent);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var content = await response.Content.ReadAsStringAsync();
+                            var result = JsonSerializer.Deserialize<SyncResult>(
+                                content,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                            return ServiceResult<SyncResult>.Success(result);
+                        }
+                    }
+
+                    ClearAccessToken();
+                    return ServiceResult<SyncResult>.Fail("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", true);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return ServiceResult<SyncResult>.Fail($"Lỗi đồng bộ: {response.StatusCode} - {errorContent}");
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Lỗi kết nối khi đồng bộ dữ liệu");
+                return ServiceResult<SyncResult>.Fail("Lỗi kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi không xác định khi đồng bộ dữ liệu");
+                return ServiceResult<SyncResult>.Fail($"Lỗi không xác định: {ex.Message}");
+            }
+        }
+
     }
 }

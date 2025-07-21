@@ -69,16 +69,16 @@
             </Grid.RowDefinitions>
 
             <!-- Error/Success Messages -->
-            <materialDesign:Card Grid.Row="0" Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}"
-                               Background="#FEF2F2" UniformCornerRadius="8" Margin="0,0,0,16" Padding="16">
+            <materialDesign:Card Grid.Row="0" Visibility="{Binding HasErrorMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                   Background="#FEF2F2" UniformCornerRadius="8" Margin="0,0,0,16" Padding="16">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="Alert" Width="24" Height="24" Foreground="#DC2626"/>
                     <TextBlock Text="{Binding ErrorMessage}" Margin="8,0,0,0" Foreground="#DC2626" VerticalAlignment="Center"/>
                 </StackPanel>
             </materialDesign:Card>
 
-            <materialDesign:Card Grid.Row="0" Visibility="{Binding SuccessMessage, Converter={StaticResource StringToVisibilityConverter}}"
-                               Background="#ECFDF5" UniformCornerRadius="8" Margin="0,0,0,16" Padding="16">
+            <materialDesign:Card Grid.Row="0" Visibility="{Binding HasSuccessMessage, Converter={StaticResource BooleanToVisibilityConverter}}"
+                   Background="#ECFDF5" UniformCornerRadius="8" Margin="0,0,0,16" Padding="16">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="CheckCircle" Width="24" Height="24" Foreground="#059669"/>
                     <TextBlock Text="{Binding SuccessMessage}" Margin="8,0,0,0" Foreground="#059669" VerticalAlignment="Center"/>
@@ -431,6 +431,13 @@
 
         <!-- Footer -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="16">
+            
+            <StackPanel.Resources>
+                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                    <Setter Property="Margin" Value="8,0,0,0"/>
+                </Style>
+            </StackPanel.Resources>
+
             <Button Content="Reset to Defaults" 
                     Style="{StaticResource MaterialDesignOutlinedButton}" 
                     Command="{Binding ResetSettingsCommand}"
@@ -446,12 +453,6 @@
                         Value="0" IsIndeterminate="True" 
                         Visibility="{Binding IsTestingDatabase, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Margin="0,0,8,0"/>
-
-            <StackPanel.Resources>
-                <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                    <Setter Property="Margin" Value="8,0,0,0"/>
-                </Style>
-            </StackPanel.Resources>
 
             <Button Content="Save Settings" 
                     Command="{Binding SaveSettingsCommand}"

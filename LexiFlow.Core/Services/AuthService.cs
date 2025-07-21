@@ -1,4 +1,5 @@
-﻿using LexiFlow.Core.Interfaces;
+﻿using LexiFlow.Core.Entities;
+using LexiFlow.Core.Interfaces;
 using LexiFlow.Core.Models;
 using LexiFlow.Core.Models.Responses;
 using Microsoft.Extensions.Logging;
@@ -12,17 +13,67 @@ namespace LexiFlow.Core.Services
     {
         private readonly IApiService _apiService;
         private readonly IAppSettingsService _appSettings;
+        private readonly IUserRepository _userRepository; // Thêm repository người dùng
         private readonly ILogger<AuthService> _logger;
         private UserDto _currentUser;
 
         public AuthService(
             IApiService apiService,
             IAppSettingsService appSettings,
+            IUserRepository userRepository, // Thêm vào constructor
             ILogger<AuthService> logger)
         {
             _apiService = apiService;
             _appSettings = appSettings;
+            _userRepository = userRepository; // Khởi tạo repository
             _logger = logger;
+        }
+
+        public async Task<User> ValidateUserAsync(string username, string password)
+        {
+            try
+            {
+                // Triển khai xác thực người dùng
+                var user = await _userRepository.GetUserByUsernameAsync(username);
+                if (user != null && VerifyPassword(password, user.PasswordHash))
+                {
+                    return user;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi xác thực người dùng '{username}'");
+                return null;
+            }
+        }
+
+        public async Task<User> GetUserByIdAsync(int id)
+        {
+            try
+            {
+                // Triển khai lấy thông tin người dùng theo ID
+                return await _userRepository.GetUserByIdAsync(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi lấy thông tin người dùng ID {id}");
+                return null;
+            }
+        }
+
+        private bool VerifyPassword(string password, string passwordHash)
+        {
+            try
+            {
+                // Triển khai xác minh mật khẩu
+                return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xác minh mật khẩu");
+                return false;
+            }
         }
 
         /// <summary>
@@ -116,7 +167,7 @@ namespace LexiFlow.Core.Services
         /// </summary>
         public string GetCurrentToken()
         {
-            return _appSettings.AccessToken;
+            return _apiService.GetCurrentToken();
         }
 
         /// <summary>

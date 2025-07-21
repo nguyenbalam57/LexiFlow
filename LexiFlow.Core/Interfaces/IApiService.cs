@@ -56,5 +56,12 @@ namespace LexiFlow.Core.Interfaces
         /// Xóa từ vựng
         /// </summary>
         Task<ServiceResult<bool>> DeleteVocabularyAsync(int id);
+
+        /// <summary>
+        /// Đồng bộ dữ liệu với server
+        /// </summary>
+        /// <param name="request">Yêu cầu đồng bộ</param>
+        /// <returns>Kết quả đồng bộ</returns>
+        Task<ServiceResult<SyncResult>> SyncDataAsync(SyncRequest request);
     }
 }

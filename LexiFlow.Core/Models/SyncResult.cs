@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LexiFlow.Core.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,10 +12,12 @@ namespace LexiFlow.Core.Models
     /// </summary>
     public class SyncResult
     {
-        public int Added { get; set; }
-        public int Updated { get; set; }
-        public int Deleted { get; set; }
-        public int Failed { get; set; }
-        public string? LastSyncTime { get; set; }
+        public DateTime SyncedAt { get; set; }
+        public List<Vocabulary> UpdatedItems { get; set; } = new List<Vocabulary>();
+        public List<int> ProcessedDeletedIds { get; set; } = new List<int>();
+        public int TotalUpdated { get; set; }
+        public int TotalDeleted { get; set; }
+        public bool Success { get; set; }
+        public string Message { get; set; }
     }
 }
