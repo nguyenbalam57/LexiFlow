@@ -10,15 +10,10 @@ using System.Threading.Tasks;
 
 namespace LexiFlow.Application.ViewModels
 {
-    /// <summary>
-    /// ViewModel cho màn hình đăng nhập
-    /// </summary>
     public class LoginViewModel : INotifyPropertyChanged
     {
         private readonly IAuthService _authService;
-        private readonly IAppSettingsService _appSettings;
-        private readonly ILogger<LoginViewModel> _logger;
-
+        private readonly ISettingsService _settingsService;
         private string _username = string.Empty;
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
@@ -27,9 +22,6 @@ namespace LexiFlow.Application.ViewModels
         private bool _rememberMe;
         private string _selectedLanguage = "VN";
 
-        /// <summary>
-        /// Tên đăng nhập
-        /// </summary>
         public string Username
         {
             get => _username;
@@ -40,14 +32,11 @@ namespace LexiFlow.Application.ViewModels
                     _username = value;
                     OnPropertyChanged();
                     ClearMessages();
-                    CommandManager.InvalidateRequerySuggested();
+                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
                 }
             }
         }
 
-        /// <summary>
-        /// Mật khẩu
-        /// </summary>
         public string Password
         {
             get => _password;
@@ -58,14 +47,11 @@ namespace LexiFlow.Application.ViewModels
                     _password = value;
                     OnPropertyChanged();
                     ClearMessages();
-                    CommandManager.InvalidateRequerySuggested();
+                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
                 }
             }
         }
 
-        /// <summary>
-        /// Thông báo lỗi
-        /// </summary>
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -79,9 +65,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        /// <summary>
-        /// Thông báo thành công
-        /// </summary>
         public string SuccessMessage
         {
             get => _successMessage;
@@ -95,9 +78,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        /// <summary>
-        /// Trạng thái đang tải
-        /// </summary>
         public bool IsLoading
         {
             get => _isLoading;
@@ -108,19 +88,13 @@ namespace LexiFlow.Application.ViewModels
                     _isLoading = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(IsNotLoading));
-                    CommandManager.InvalidateRequerySuggested();
+                    ((RelayCommand)LoginCommand).RaiseCanExecuteChanged();
                 }
             }
         }
 
-        /// <summary>
-        /// Trạng thái không đang tải
-        /// </summary>
         public bool IsNotLoading => !IsLoading;
 
-        /// <summary>
-        /// Ghi nhớ đăng nhập
-        /// </summary>
         public bool RememberMe
         {
             get => _rememberMe;
@@ -134,9 +108,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        /// <summary>
-        /// Ngôn ngữ đã chọn
-        /// </summary>
         public string SelectedLanguage
         {
             get => _selectedLanguage;
@@ -146,73 +117,35 @@ namespace LexiFlow.Application.ViewModels
                 {
                     _selectedLanguage = value;
                     OnPropertyChanged();
-                    _appSettings.CurrentLanguage = value;
-                    _appSettings.SaveSettings();
-
-                    // Thông báo ngôn ngữ đã thay đổi
-                    LanguageChanged?.Invoke(this, value);
+                    ChangeLanguage();
                 }
             }
         }
 
-        /// <summary>
-        /// Lệnh đăng nhập
-        /// </summary>
+        public System.Collections.Generic.List<string> AvailableLanguages { get; } = new System.Collections.Generic.List<string> { "VN", "EN", "JP" };
+
         public ICommand LoginCommand { get; }
-
-        /// <summary>
-        /// Lệnh thay đổi ngôn ngữ
-        /// </summary>
         public ICommand ChangeLanguageCommand { get; }
-
-        /// <summary>
-        /// Lệnh quên mật khẩu
-        /// </summary>
         public ICommand ForgotPasswordCommand { get; }
-
-        /// <summary>
-        /// Lệnh đăng ký
-        /// </summary>
         public ICommand RegisterCommand { get; }
 
-        /// <summary>
-        /// Sự kiện đăng nhập thành công
-        /// </summary>
-        public event EventHandler LoginSuccessful;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler? LoginSuccessful;
 
-        /// <summary>
-        /// Sự kiện ngôn ngữ thay đổi
-        /// </summary>
-        public event EventHandler<string> LanguageChanged;
-
-        /// <summary>
-        /// Sự kiện thông báo thuộc tính thay đổi
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Khởi tạo ViewModel đăng nhập
-        /// </summary>
-        public LoginViewModel(IAuthService authService, IAppSettingsService appSettings, ILogger<LoginViewModel> logger = null)
+        public LoginViewModel(IAuthService authService, ISettingsService settingsService)
         {
             _authService = authService;
-            _appSettings = appSettings;
-            _logger = logger;
-
-            // Khởi tạo các lệnh
+            _settingsService = settingsService;
             LoginCommand = new RelayCommand(LoginAsync, CanLogin);
-            ChangeLanguageCommand = new RelayCommand<string>(ChangeLanguage);
+            ChangeLanguageCommand = new RelayCommand<string>(ChangeLanguageExecute);
             ForgotPasswordCommand = new RelayCommand(_ => ShowForgotPassword());
             RegisterCommand = new RelayCommand(_ => ShowRegister());
 
-            // Tải cài đặt đã lưu
-            LoadSavedSettings();
+            // Load saved login credentials if remember me was checked
+            LoadSavedCredentials();
         }
 
-        /// <summary>
-        /// Kiểm tra có thể đăng nhập không
-        /// </summary>
-        private bool CanLogin(object parameter)
+        private bool CanLogin(object? parameter)
         {
             return !string.IsNullOrWhiteSpace(Username) &&
                    !string.IsNullOrWhiteSpace(Password) &&
@@ -221,34 +154,31 @@ namespace LexiFlow.Application.ViewModels
                    Password.Length >= 6;
         }
 
-        /// <summary>
-        /// Xử lý đăng nhập
-        /// </summary>
-        private async void LoginAsync(object parameter)
+        private async void LoginAsync(object? parameter)
         {
             try
             {
                 IsLoading = true;
                 ClearMessages();
 
-                // Kiểm tra dữ liệu đầu vào
+                // Validate input
                 if (!ValidateInput())
                     return;
 
-                // Hiển thị thông báo đang xử lý
+                // Show progress message
                 SuccessMessage = GetLocalizedString("Login_Connecting");
 
-                // Tạo độ trễ giả lập để UX tốt hơn
+                // Simulate network delay for better UX
                 await Task.Delay(800);
 
-                // Xác thực người dùng
-                var result = await _authService.AuthenticateAsync(Username.Trim(), Password);
+                // Authenticate user
+                var user = await _authService.AuthenticateAsync(Username.Trim(), Password);
 
-                if (result.Success)
+                if (user != null)
                 {
                     SuccessMessage = GetLocalizedString("Login_Success");
 
-                    // Lưu thông tin đăng nhập nếu được chọn
+                    // Save credentials if remember me is checked
                     if (RememberMe)
                     {
                         SaveLoginCredentials();
@@ -258,30 +188,30 @@ namespace LexiFlow.Application.ViewModels
                         ClearSavedCredentials();
                     }
 
-                    // Giải phóng password khỏi bộ nhớ
-                    Password = string.Empty;
+                    // Update login attempts
+                    _settingsService.ResetFailedLoginAttempts();
 
-                    // Tạo độ trễ ngắn để hiển thị thông báo thành công
+                    // Short delay to show success message
                     await Task.Delay(500);
 
-                    // Thông báo đăng nhập thành công
+                    // Notify login successful
                     LoginSuccessful?.Invoke(this, EventArgs.Empty);
                 }
                 else
                 {
-                    ErrorMessage = result.Message ?? GetLocalizedString("Login_InvalidCredentials");
+                    ErrorMessage = GetLocalizedString("Login_InvalidCredentials");
 
-                    // Tăng số lần đăng nhập thất bại
-                    IncrementFailedLoginAttempts();
+                    // Update failed login attempts
+                    _settingsService.UpdateFailedLoginAttempts();
 
-                    // Xóa mật khẩu khi đăng nhập thất bại
+                    // Clear password on failed login
                     Password = string.Empty;
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Lỗi trong quá trình đăng nhập");
                 ErrorMessage = string.Format(GetLocalizedString("Login_GeneralError"), ex.Message);
+                System.Diagnostics.Debug.WriteLine($"Login error: {ex}");
             }
             finally
             {
@@ -289,9 +219,6 @@ namespace LexiFlow.Application.ViewModels
             }
         }
 
-        /// <summary>
-        /// Kiểm tra dữ liệu đầu vào
-        /// </summary>
         private bool ValidateInput()
         {
             if (string.IsNullOrWhiteSpace(Username))
@@ -318,7 +245,7 @@ namespace LexiFlow.Application.ViewModels
                 return false;
             }
 
-            // Kiểm tra ký tự không hợp lệ trong tên đăng nhập
+            // Check for common invalid characters
             if (Username.Contains(" ") || Username.Contains("'") || Username.Contains("\""))
             {
                 ErrorMessage = GetLocalizedString("Login_InvalidUsername");
@@ -328,190 +255,218 @@ namespace LexiFlow.Application.ViewModels
             return true;
         }
 
-        /// <summary>
-        /// Thay đổi ngôn ngữ
-        /// </summary>
-        private void ChangeLanguage(string language)
+        private void ChangeLanguageExecute(string? language)
         {
-            if (!string.IsNullOrEmpty(language))
+            if (!string.IsNullOrEmpty(language) && AvailableLanguages.Contains(language))
             {
                 SelectedLanguage = language;
             }
         }
 
-        /// <summary>
-        /// Xóa các thông báo
-        /// </summary>
+        private void ChangeLanguage()
+        {
+            try
+            {
+                // Clear any existing messages since they might be in the old language
+                ClearMessages();
+
+                // Change application language
+                var app = System.Windows.Application.Current;
+                if (app?.Resources != null)
+                {
+                    var resourceDictionaries = app.Resources.MergedDictionaries;
+
+                    // Find and remove existing language dictionary
+                    var existingLangDict = resourceDictionaries
+                        .FirstOrDefault(rd => rd.Source?.OriginalString?.Contains("Languages_") == true);
+
+                    if (existingLangDict != null)
+                    {
+                        resourceDictionaries.Remove(existingLangDict);
+                    }
+
+                    // Add new language dictionary
+                    var newLangDict = new ResourceDictionary
+                    {
+                        Source = new Uri($"/LexiFlow.UI;component/Resources/Languages/Languages_{SelectedLanguage}.xaml",
+                                       UriKind.RelativeOrAbsolute)
+                    };
+
+                    resourceDictionaries.Add(newLangDict);
+
+                    // Save language preference
+                    SaveLanguagePreference();
+
+                    // Show language changed message
+                    SuccessMessage = GetLocalizedString("Login_LanguageChanged");
+
+                    // Clear the message after a short delay
+                    Task.Delay(2000).ContinueWith(_ =>
+                    {
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => SuccessMessage = string.Empty);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = GetLocalizedString("Login_LanguageChangeError");
+                System.Diagnostics.Debug.WriteLine($"Language change error: {ex.Message}");
+            }
+        }
+
         private void ClearMessages()
         {
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
         }
 
-        /// <summary>
-        /// Hiển thị hộp thoại quên mật khẩu
-        /// </summary>
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private void ShowForgotPassword()
         {
-            // Thực hiện hiển thị thông báo hoặc hộp thoại quên mật khẩu
-            // Được triển khai trong lớp View
+            var message = GetLocalizedString("Login_ForgotPasswordMessage");
+            var title = GetLocalizedString("Login_ForgotPasswordTitle");
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        /// <summary>
-        /// Hiển thị hộp thoại đăng ký
-        /// </summary>
         private void ShowRegister()
         {
-            // Thực hiện hiển thị thông báo hoặc hộp thoại đăng ký
-            // Được triển khai trong lớp View
+            var message = GetLocalizedString("Login_RegisterMessage");
+            var title = GetLocalizedString("Login_RegisterTitle");
+            MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        /// <summary>
-        /// Tải cài đặt đã lưu
-        /// </summary>
-        private void LoadSavedSettings()
+        private void LoadSavedCredentials()
         {
             try
             {
-                // Tải ngôn ngữ
-                SelectedLanguage = _appSettings.CurrentLanguage ?? "VN";
-
-                // Tải thông tin đăng nhập đã lưu
-                if (_appSettings.RememberLogin && !string.IsNullOrEmpty(_appSettings.SavedUsername))
+                if (_settingsService.RememberMe && !string.IsNullOrEmpty(_settingsService.SavedUsername))
                 {
-                    Username = _appSettings.SavedUsername;
+                    Username = _settingsService.SavedUsername;
                     RememberMe = true;
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Lỗi khi tải cài đặt đã lưu");
+                System.Diagnostics.Debug.WriteLine($"Error loading saved credentials: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Lưu thông tin đăng nhập
-        /// </summary>
         private void SaveLoginCredentials()
         {
             try
             {
-                _appSettings.RememberLogin = true;
-                _appSettings.SavedUsername = Username;
-                _appSettings.SaveSettings();
+                _settingsService.SavedUsername = RememberMe ? Username : string.Empty;
+                _settingsService.RememberMe = RememberMe;
+                _settingsService.LastLoginDate = DateTime.Now;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Lỗi khi lưu thông tin đăng nhập");
+                System.Diagnostics.Debug.WriteLine($"Error saving credentials: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Xóa thông tin đăng nhập đã lưu
-        /// </summary>
         private void ClearSavedCredentials()
         {
             try
             {
-                _appSettings.RememberLogin = false;
-                _appSettings.SavedUsername = string.Empty;
-                _appSettings.SaveSettings();
+                _settingsService.SavedUsername = string.Empty;
+                _settingsService.RememberMe = false;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Lỗi khi xóa thông tin đăng nhập đã lưu");
+                System.Diagnostics.Debug.WriteLine($"Error clearing saved credentials: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Tăng số lần đăng nhập thất bại
-        /// </summary>
-        private void IncrementFailedLoginAttempts()
+        private void SaveLanguagePreference()
         {
             try
             {
-                // TODO: Triển khai tính năng khóa tài khoản tạm thời sau nhiều lần đăng nhập thất bại
+                _settingsService.PreferredLanguage = SelectedLanguage;
+                _settingsService.SaveSettings();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Lỗi khi cập nhật số lần đăng nhập thất bại");
+                System.Diagnostics.Debug.WriteLine($"Error saving language preference: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Lấy chuỗi đa ngôn ngữ
-        /// </summary>
         private string GetLocalizedString(string key)
         {
-            // Được triển khai trong lớp View
-            return key;
-        }
-
-        /// <summary>
-        /// Thông báo thuộc tính thay đổi
-        /// </summary>
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            try
+            {
+                var resource = System.Windows.Application.Current.TryFindResource(key);
+                return resource?.ToString() ?? key;
+            }
+            catch
+            {
+                return key;
+            }
         }
     }
 
-    /// <summary>
-    /// Lớp lệnh tổng quát
-    /// </summary>
+    // Simple implementation of ICommand for the ViewModel
     public class RelayCommand : ICommand
     {
-        private readonly Action<object> _execute;
-        private readonly Func<object, bool> _canExecute;
+        private readonly Action<object?> _execute;
+        private readonly Func<object?, bool>? _canExecute;
 
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+        public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             return _canExecute == null || _canExecute(parameter);
         }
 
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             _execute(parameter);
         }
 
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
+
+        public void RaiseCanExecuteChanged()
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
-    /// <summary>
-    /// Lớp lệnh tổng quát có tham số
-    /// </summary>
     public class RelayCommand<T> : ICommand
     {
-        private readonly Action<T> _execute;
-        private readonly Func<T, bool> _canExecute;
+        private readonly Action<T?> _execute;
+        private readonly Func<T?, bool>? _canExecute;
 
-        public RelayCommand(Action<T> execute, Func<T, bool> canExecute = null)
+        public RelayCommand(Action<T?> execute, Func<T?, bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
-            return _canExecute == null || _canExecute((T)parameter);
+            return _canExecute == null || _canExecute((T?)parameter);
         }
 
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
-            _execute((T)parameter);
+            _execute((T?)parameter);
         }
 
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }

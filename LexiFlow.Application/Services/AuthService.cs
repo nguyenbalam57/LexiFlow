@@ -23,10 +23,20 @@ namespace LexiFlow.Application.Services
             try
             {
                 // Log login attempt
-                _logger.LogInformation($"Login attempt for user: {username}");
+                _logger?.LogInformation($"Login attempt for user: {username}");
 
-                // Existing authentication logic...
-                var user = await _sqlAdapter.GetUserByUsernameAsync(username);
+                // Thử đầu tiên với SQL adapter (truy cập trực tiếp DB)
+                User? user = null;
+                try
+                {
+                    user = await _sqlAdapter.GetUserByUsernameAsync(username);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning($"SQL adapter failed: {ex.Message}, falling back to repository");
+                    // Nếu không thành công, thử với repository (Entity Framework)
+                    user = await _userRepository.GetByUsernameAsync(username);
+                }
 
                 if (user == null || !user.IsActive)
                 {
@@ -42,14 +52,23 @@ namespace LexiFlow.Application.Services
                 }
 
                 // Update last login time
-                await _sqlAdapter.UpdateUserLastLoginAsync(user.Id);
+                try
+                {
+                    await _sqlAdapter.UpdateUserLastLoginAsync(user.Id);
+                }
+                catch
+                {
+                    // Nếu cập nhật qua SQL adapter thất bại, cập nhật qua repository
+                    user.LastLoginAt = DateTime.Now;
+                    await _userRepository.UpdateAsync(user);
+                }
 
-                _logger.LogInformation($"Successful login for user: {username}");
+                _logger?.LogInformation($"Successful login for user: {username}");
                 return user;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Authentication error for user: {username}");
+                _logger?.LogError(ex, $"Authentication error for user: {username}");
                 throw;
             }
         }
@@ -58,7 +77,7 @@ namespace LexiFlow.Application.Services
         {
             try
             {
-                // Đầu tiên thử dùng SQL adapter
+                // Thử dùng SQL adapter
                 return await _sqlAdapter.ValidateUserCredentialsAsync(username, password);
             }
             catch
@@ -77,7 +96,7 @@ namespace LexiFlow.Application.Services
         {
             try
             {
-                // Đầu tiên thử dùng SQL adapter
+                // Thử dùng SQL adapter
                 return await _sqlAdapter.UserExistsAsync(username);
             }
             catch
@@ -91,7 +110,7 @@ namespace LexiFlow.Application.Services
         {
             try
             {
-                // Đầu tiên thử dùng SQL adapter
+                // Thử dùng SQL adapter
                 return await _sqlAdapter.GetUserByUsernameAsync(username);
             }
             catch
@@ -105,7 +124,7 @@ namespace LexiFlow.Application.Services
         {
             try
             {
-                // Đầu tiên thử dùng SQL adapter
+                // Thử dùng SQL adapter
                 await _sqlAdapter.UpdateUserLastLoginAsync(userId);
             }
             catch
@@ -123,7 +142,7 @@ namespace LexiFlow.Application.Services
 
         private bool VerifyPassword(string password, string passwordHash)
         {
-            // Using direct BCrypt verification to avoid dependency issues
+            // Using BCrypt verification
             return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
     }

@@ -178,7 +178,7 @@ namespace LexiFlow.UI.Helpers
    - Kiểm tra Windows Firewall
 
 4. Cập nhật file appsettings.json:
-   - Server: .\SQLEXPRESS hoặc (local)\SQLEXPRESS
+   - Server: .\\SQLEXPRESS hoặc (local)\\SQLEXPRESS
    - Database: LexiFlow
    - Trusted_Connection: True (cho Windows Authentication)
 
