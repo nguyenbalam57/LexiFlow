@@ -1,253 +1,142 @@
-﻿using LexiFlow.AdminDashboard.Models;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using LexiFlow.AdminDashboard.Models;
 using LexiFlow.AdminDashboard.Services;
-using LexiFlow.AdminDashboard.ViewModels.Base;
 using LiveCharts;
 using LiveCharts.Wpf;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace LexiFlow.AdminDashboard.ViewModels
 {
+    /// <summary>
+    /// View model for the admin dashboard
+    /// </summary>
     public class AdminDashboardViewModel : ViewModelBase
     {
         private readonly IAdminDashboardService _dashboardService;
         private readonly ILogger<AdminDashboardViewModel> _logger;
+        private readonly IApiSyncService _syncService;
 
-        private DashboardStatistics _statistics = new();
-        private bool _isLoading;
-        private string _errorMessage = string.Empty;
-        private string _currentUser = string.Empty;
-        private ObservableCollection<UserActivity> _recentActivities = new();
-        private ObservableCollection<MenuItemModel> _menuItems = new();
-        private MenuItemModel? _selectedMenuItem;
+        private DashboardStatistics _statistics = new DashboardStatistics();
+        private ObservableCollection<UserActivity> _recentActivities = new ObservableCollection<UserActivity>();
+        private bool _isRefreshing;
+        private string _syncStatus = "Not synced";
+        private int _syncProgress;
+        private DateTime? _lastSyncTime;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public AdminDashboardViewModel(
+            IAdminDashboardService dashboardService,
+            IApiSyncService syncService,
+            ILogger<AdminDashboardViewModel> logger)
+        {
+            _dashboardService = dashboardService ?? throw new ArgumentNullException(nameof(dashboardService));
+            _syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Initialize commands
+            RefreshCommand = CreateCommand(RefreshAsync);
+            SyncCommand = CreateCommand(SyncAsync);
+
+            // Initialize chart series
+            UserSeries = new SeriesCollection();
+            ContentSeries = new SeriesCollection();
+
+            // Subscribe to sync events
+            _syncService.SyncStatusChanged += OnSyncStatusChanged;
+
+            // Get initial sync status
+            UpdateSyncInfo();
+        }
+
+        /// <summary>
+        /// Dashboard statistics
+        /// </summary>
         public DashboardStatistics Statistics
         {
             get => _statistics;
             set => SetProperty(ref _statistics, value);
         }
 
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        public string ErrorMessage
-        {
-            get => _errorMessage;
-            set => SetProperty(ref _errorMessage, value);
-        }
-
-        public string CurrentUser
-        {
-            get => _currentUser;
-            set => SetProperty(ref _currentUser, value);
-        }
-
+        /// <summary>
+        /// Recent user activities
+        /// </summary>
         public ObservableCollection<UserActivity> RecentActivities
         {
             get => _recentActivities;
             set => SetProperty(ref _recentActivities, value);
         }
 
-        public ObservableCollection<MenuItemModel> MenuItems
+        /// <summary>
+        /// Flag indicating if the view model is refreshing data
+        /// </summary>
+        public bool IsRefreshing
         {
-            get => _menuItems;
-            set => SetProperty(ref _menuItems, value);
+            get => _isRefreshing;
+            set => SetProperty(ref _isRefreshing, value);
         }
 
-        public MenuItemModel? SelectedMenuItem
+        /// <summary>
+        /// Sync status
+        /// </summary>
+        public string SyncStatus
         {
-            get => _selectedMenuItem;
-            set => SetProperty(ref _selectedMenuItem, value);
+            get => _syncStatus;
+            set => SetProperty(ref _syncStatus, value);
         }
 
-        // Chart Properties
-        public SeriesCollection UserSeries { get; set; } = new SeriesCollection();
-        public SeriesCollection ContentSeries { get; set; } = new SeriesCollection();
-        public string[] MonthLabels { get; set; } = Array.Empty<string>();
-        public Func<double, string> YFormatter { get; set; } = value => value.ToString("N0");
+        /// <summary>
+        /// Sync progress
+        /// </summary>
+        public int SyncProgress
+        {
+            get => _syncProgress;
+            set => SetProperty(ref _syncProgress, value);
+        }
 
+        /// <summary>
+        /// Last sync time
+        /// </summary>
+        public DateTime? LastSyncTime
+        {
+            get => _lastSyncTime;
+            set => SetProperty(ref _lastSyncTime, value);
+        }
+
+        /// <summary>
+        /// User chart series
+        /// </summary>
+        public SeriesCollection UserSeries { get; private set; }
+
+        /// <summary>
+        /// Content chart series
+        /// </summary>
+        public SeriesCollection ContentSeries { get; private set; }
+
+        /// <summary>
+        /// Month labels for charts
+        /// </summary>
+        public string[] MonthLabels { get; private set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// Refresh command
+        /// </summary>
         public ICommand RefreshCommand { get; }
-        public ICommand NavigateCommand { get; }
-        public ICommand OpenUserManagementCommand { get; }
-        public ICommand OpenVocabularyManagementCommand { get; }
-        public ICommand OpenSystemConfigCommand { get; }
 
-        public AdminDashboardViewModel(
-            IAdminDashboardService dashboardService,
-            ILogger<AdminDashboardViewModel> logger)
-        {
-            _dashboardService = dashboardService;
-            _logger = logger;
+        /// <summary>
+        /// Sync command
+        /// </summary>
+        public ICommand SyncCommand { get; }
 
-            // Initialize commands
-            RefreshCommand = new AsyncRelayCommand(LoadDashboardDataAsync);
-            NavigateCommand = new RelayCommand(Navigate);
-            OpenUserManagementCommand = new RelayCommand(_ => Navigate("UserManagement"));
-            OpenVocabularyManagementCommand = new RelayCommand(_ => Navigate("VocabularyManagement"));
-            OpenSystemConfigCommand = new RelayCommand(_ => Navigate("SystemConfig"));
-
-            // Initialize menu
-            InitializeMenu();
-        }
-
-        private void InitializeMenu()
-        {
-            MenuItems.Clear();
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "Dashboard",
-                Icon = "ViewDashboard",
-                ViewName = "Dashboard",
-                IsSelected = true
-            });
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "User Management",
-                Icon = "AccountMultiple",
-                ViewName = "UserManagement"
-            });
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "Content Management",
-                Icon = "BookOpenVariant",
-                ViewName = "ContentManagement",
-                IsExpanded = false,
-                SubItems = new List<MenuItemModel>
-                {
-                    new MenuItemModel
-                    {
-                        Name = "Vocabulary",
-                        Icon = "TextBox",
-                        ViewName = "VocabularyManagement"
-                    },
-                    new MenuItemModel
-                    {
-                        Name = "Kanji",
-                        Icon = "AlphabetJapanese",
-                        ViewName = "KanjiManagement"
-                    },
-                    new MenuItemModel
-                    {
-                        Name = "Grammar",
-                        Icon = "TextBoxCheck",
-                        ViewName = "GrammarManagement"
-                    }
-                }
-            });
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "Test Management",
-                Icon = "TestTube",
-                ViewName = "TestManagement"
-            });
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "Submissions",
-                Icon = "InboxArrowUp",
-                ViewName = "Submissions"
-            });
-
-            MenuItems.Add(new MenuItemModel
-            {
-                Name = "System",
-                Icon = "Cog",
-                ViewName = "System",
-                IsExpanded = false,
-                SubItems = new List<MenuItemModel>
-                {
-                    new MenuItemModel
-                    {
-                        Name = "Configuration",
-                        Icon = "Tune",
-                        ViewName = "SystemConfig"
-                    },
-                    new MenuItemModel
-                    {
-                        Name = "Backup & Restore",
-                        Icon = "DatabaseSync",
-                        ViewName = "BackupRestore"
-                    },
-                    new MenuItemModel
-                    {
-                        Name = "Activity Logs",
-                        Icon = "FileDocument",
-                        ViewName = "ActivityLogs"
-                    }
-                }
-            });
-
-            SelectedMenuItem = MenuItems.FirstOrDefault();
-        }
-
-        private void Navigate(object? parameter)
-        {
-            if (parameter is not string viewName)
-                return;
-
-            // Find the menu item with the specified view name
-            var menuItem = FindMenuItemByViewName(viewName);
-            if (menuItem != null)
-            {
-                // Deselect all items
-                foreach (var item in MenuItems)
-                {
-                    item.IsSelected = false;
-                    foreach (var subItem in item.SubItems)
-                    {
-                        subItem.IsSelected = false;
-                    }
-                }
-
-                // Select the target item
-                menuItem.IsSelected = true;
-
-                // If it's a sub-item, expand its parent
-                if (menuItem.ViewName != viewName)
-                {
-                    var parentItem = MenuItems.FirstOrDefault(m => m.SubItems.Contains(menuItem));
-                    if (parentItem != null)
-                    {
-                        parentItem.IsExpanded = true;
-                    }
-                }
-
-                SelectedMenuItem = menuItem;
-
-                // Refresh menu to update UI
-                OnPropertyChanged(nameof(MenuItems));
-            }
-        }
-
-        private MenuItemModel? FindMenuItemByViewName(string viewName)
-        {
-            foreach (var item in MenuItems)
-            {
-                if (item.ViewName == viewName)
-                    return item;
-
-                var subItem = item.SubItems.FirstOrDefault(s => s.ViewName == viewName);
-                if (subItem != null)
-                    return subItem;
-            }
-
-            return null;
-        }
-
-        public async Task LoadDashboardDataAsync(object? parameter = null)
+        /// <summary>
+        /// Loads the dashboard data
+        /// </summary>
+        protected override async Task LoadDataAsync(object? parameter = null)
         {
             try
             {
@@ -278,6 +167,67 @@ namespace LexiFlow.AdminDashboard.ViewModels
             }
         }
 
+        /// <summary>
+        /// Refreshes the dashboard data
+        /// </summary>
+        private async Task RefreshAsync(object? parameter = null)
+        {
+            try
+            {
+                IsRefreshing = true;
+                ErrorMessage = string.Empty;
+
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error refreshing dashboard data");
+                ErrorMessage = $"Error refreshing dashboard data: {ex.Message}";
+            }
+            finally
+            {
+                IsRefreshing = false;
+            }
+        }
+
+        /// <summary>
+        /// Synchronizes the data
+        /// </summary>
+        private async Task SyncAsync(object? parameter = null)
+        {
+            try
+            {
+                ErrorMessage = string.Empty;
+                SuccessMessage = string.Empty;
+
+                // Start synchronization
+                var result = await _syncService.SyncAllAsync();
+
+                if (result.Success)
+                {
+                    SuccessMessage = result.Message;
+
+                    // Refresh dashboard data
+                    await LoadAsync();
+                }
+                else
+                {
+                    ErrorMessage = result.Message;
+                }
+
+                // Update sync info
+                UpdateSyncInfo();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error synchronizing data");
+                ErrorMessage = $"Error synchronizing data: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Updates the charts
+        /// </summary>
         private void UpdateCharts()
         {
             try
@@ -323,6 +273,47 @@ namespace LexiFlow.AdminDashboard.ViewModels
             {
                 _logger.LogError(ex, "Error updating charts");
             }
+        }
+
+        /// <summary>
+        /// Updates the sync information
+        /// </summary>
+        private void UpdateSyncInfo()
+        {
+            var syncInfo = _syncService.GetSyncInfo();
+
+            SyncStatus = syncInfo.Status.ToString();
+            SyncProgress = syncInfo.Progress;
+            LastSyncTime = syncInfo.LastSyncTime;
+        }
+
+        /// <summary>
+        /// Handles the sync status changed event
+        /// </summary>
+        private void OnSyncStatusChanged(object? sender, SyncStatusChangedEventArgs e)
+        {
+            SyncStatus = e.Status.ToString();
+            SyncProgress = e.Progress;
+
+            if (e.Status == SyncStatus.Completed || e.Status == SyncStatus.Failed || e.Status == SyncStatus.Cancelled)
+            {
+                LastSyncTime = DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Disposes the view model
+        /// </summary>
+        /// <param name="disposing">True if disposing, false if finalizing</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Unsubscribe from events
+                _syncService.SyncStatusChanged -= OnSyncStatusChanged;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }
