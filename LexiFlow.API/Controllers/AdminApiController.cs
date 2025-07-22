@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using LexiFlow.AdminDashboard.Models;
 using LexiFlow.API.Models;
 using LexiFlow.Core.Entities;
 using LexiFlow.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace LexiFlow.API.Controllers
 {
@@ -68,9 +70,9 @@ namespace LexiFlow.API.Controllers
                     TotalUsers = await _unitOfWork.Users.CountAsync(u => true),
                     ActiveUsers = await _unitOfWork.Users.CountAsync(u => u.IsActive),
                     InactiveUsers = await _unitOfWork.Users.CountAsync(u => !u.IsActive),
-                    AdminUsers = await _unitOfWork.Users.CountAsync(u => u.RoleNames.Contains("Admin")),
-                    TeacherUsers = await _unitOfWork.Users.CountAsync(u => u.RoleNames.Contains("Teacher")),
-                    StudentUsers = await _unitOfWork.Users.CountAsync(u => u.RoleNames.Contains("Student")),
+                    AdminUsers = await _unitOfWork.Users.CountAsync(u => u.Role.Name == "Admin"),
+                    TeacherUsers = await _unitOfWork.Users.CountAsync(u => u.Role.Name == "Teacher"),
+                    StudentUsers = await _unitOfWork.Users.CountAsync(u => u.Role.Name == "Student"),
                     NewUsersToday = await _unitOfWork.Users.CountAsync(u => u.CreatedAt >= DateTime.UtcNow.Date),
                     NewUsersThisWeek = await _unitOfWork.Users.CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-7)),
                     NewUsersThisMonth = await _unitOfWork.Users.CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddMonths(-1))
@@ -94,16 +96,19 @@ namespace LexiFlow.API.Controllers
         {
             try
             {
-                var (users, totalCount) = await _unitOfWork.Users.GetPagedAsync(
+                var pagedResult = await _unitOfWork.Users.GetPagedAsync(
                     u => true,
                     page,
                     pageSize,
                     "Username",
                     true);
 
+                var items = pagedResult.Items;
+                var totalCount = pagedResult.TotalCount;
+
                 var result = new PaginatedResultDto<UserDto>
                 {
-                    Items = users.Select(MapUserToDto).ToList(),
+                    Items = items.Select(MapUserToDto).ToList(),
                     TotalCount = totalCount,
                     PageSize = pageSize,
                     CurrentPage = page
@@ -164,14 +169,14 @@ namespace LexiFlow.API.Controllers
                 {
                     Username = dto.User.Username,
                     Email = dto.User.Email,
-                    FirstName = dto.User.FirstName,
-                    LastName = dto.User.LastName,
+                    FullName = $"{dto.User.FirstName} {dto.User.LastName}",
                     IsActive = dto.User.IsActive,
                     // Hash the password - implementation depends on your authentication system
-                    // PasswordHash = HashPassword(dto.Password)
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
                 };
 
                 await _unitOfWork.Users.AddAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -226,8 +231,7 @@ namespace LexiFlow.API.Controllers
                 // Update the user
                 user.Username = dto.Username;
                 user.Email = dto.Email;
-                user.FirstName = dto.FirstName;
-                user.LastName = dto.LastName;
+                user.FullName = $"{dto.FirstName} {dto.LastName}";
                 user.IsActive = dto.IsActive;
 
                 // Set the row version for concurrency check
@@ -237,6 +241,7 @@ namespace LexiFlow.API.Controllers
                 }
 
                 await _unitOfWork.Users.UpdateAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -282,6 +287,7 @@ namespace LexiFlow.API.Controllers
 
                 // Delete the user (soft delete)
                 await _unitOfWork.Users.DeleteAsync(id, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -323,6 +329,7 @@ namespace LexiFlow.API.Controllers
                 // Deactivate the user
                 user.IsActive = false;
                 await _unitOfWork.Users.UpdateAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -358,6 +365,7 @@ namespace LexiFlow.API.Controllers
                 // Activate the user
                 user.IsActive = true;
                 await _unitOfWork.Users.UpdateAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -390,9 +398,10 @@ namespace LexiFlow.API.Controllers
                 // Get the current user ID
                 int currentUserId = GetCurrentUserId();
 
-                // Reset the password - implementation depends on your authentication system
-                // user.PasswordHash = HashPassword(dto.NewPassword);
+                // Reset the password
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
                 await _unitOfWork.Users.UpdateAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
                 // Log the activity
                 await LogActivityAsync(
@@ -432,26 +441,19 @@ namespace LexiFlow.API.Controllers
                 // Get the current user ID
                 int currentUserId = GetCurrentUserId();
 
-                // Add role to user - implementation depends on your authorization system
-                // For simplicity, we'll just add the role ID to the user's RoleIds list
-                if (!user.RoleIds.Contains(dto.RoleId))
-                {
-                    user.RoleIds.Add(dto.RoleId);
+                // Add role to user
+                user.RoleId = dto.RoleId;
+                user.Role = role;
 
-                    if (!user.RoleNames.Contains(role.Name))
-                    {
-                        user.RoleNames.Add(role.Name);
-                    }
+                await _unitOfWork.Users.UpdateAsync(user, currentUserId);
+                await _unitOfWork.SaveChangesAsync();
 
-                    await _unitOfWork.Users.UpdateAsync(user, currentUserId);
-
-                    // Log the activity
-                    await LogActivityAsync(
-                        currentUserId,
-                        "User",
-                        "AssignRole",
-                        $"Assigned role {role.Name} to user {user.Username} (ID: {user.Id})");
-                }
+                // Log the activity
+                await LogActivityAsync(
+                    currentUserId,
+                    "User",
+                    "AssignRole",
+                    $"Assigned role {role.Name} to user {user.Username} (ID: {user.Id})");
 
                 return Ok(new ApiResponse { Success = true, Message = $"Role {role.Name} assigned to user {user.Username}" });
             }
@@ -603,6 +605,7 @@ namespace LexiFlow.API.Controllers
                 }
 
                 await _unitOfWork.UserActivities.AddAsync(activity, userId);
+                await _unitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -695,15 +698,15 @@ namespace LexiFlow.API.Controllers
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
+                FirstName = user.FullName.Split(' ').FirstOrDefault() ?? "",
+                LastName = user.FullName.Split(' ').Skip(1).FirstOrDefault() ?? "",
                 IsActive = user.IsActive,
-                IsEmailVerified = user.IsEmailVerified,
+                IsEmailVerified = false, // Not available in your User entity
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt,
-                RoleIds = user.RoleIds,
-                RoleNames = user.RoleNames,
-                RowVersionString = user.RowVersionString
+                RoleIds = new List<int> { user.RoleId },
+                RoleNames = new List<string> { user.Role?.Name ?? "" },
+                RowVersionString = Convert.ToBase64String(user.RowVersion ?? Array.Empty<byte>())
             };
         }
 
@@ -714,9 +717,9 @@ namespace LexiFlow.API.Controllers
                 Id = role.Id,
                 Name = role.Name,
                 Description = role.Description,
-                IsSystemRole = role.IsSystemRole,
-                Permissions = role.Permissions,
-                UsersCount = role.UsersCount
+                IsSystemRole = false, // Not available in your Role entity
+                Permissions = new List<string>(), // Not available in your Role entity
+                UsersCount = role.Users?.Count ?? 0
             };
         }
 
