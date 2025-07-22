@@ -1,16 +1,15 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LexiFlow.AdminDashboard.Models;
-using Microsoft.Extensions.Logging;
 
 namespace LexiFlow.AdminDashboard.Services
 {
     /// <summary>
-    /// Handles HTTP errors from API calls and provides standardized error handling
+    /// Class for handling API errors
     /// </summary>
     public class ApiErrorHandler
     {
@@ -22,20 +21,20 @@ namespace LexiFlow.AdminDashboard.Services
             _logger = logger;
             _jsonOptions = new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
         }
 
         /// <summary>
-        /// Handle HTTP exceptions and extract error information
+        /// Handle HTTP exceptions and return standardized error result
         /// </summary>
-        public async Task<ApiErrorResult> HandleHttpExceptionAsync(HttpRequestException ex, string requestUri)
+        public ApiErrorResult HandleHttpException(Exception ex, string requestUri)
         {
             var result = new ApiErrorResult
             {
-                Message = $"Error communicating with the server: {ex.Message}",
-                StatusCode = ex.StatusCode ?? HttpStatusCode.InternalServerError,
+                Message = "Could not connect to the server. Please check your internet connection and try again.",
+                StatusCode = ex is HttpRequestException httpEx ? httpEx.StatusCode ?? HttpStatusCode.InternalServerError : HttpStatusCode.InternalServerError,
                 ErrorCode = "ApiCommunicationError"
             };
 
@@ -99,68 +98,43 @@ namespace LexiFlow.AdminDashboard.Services
                 HttpStatusCode.NotFound => "The requested resource was not found on the server.",
                 HttpStatusCode.BadRequest => "The server could not process the request. Please check your input and try again.",
                 HttpStatusCode.InternalServerError => "An error occurred on the server. Please try again later or contact support if the problem persists.",
+                HttpStatusCode.BadGateway => "The server encountered a temporary error. Please try again later.",
                 HttpStatusCode.ServiceUnavailable => "The service is currently unavailable. Please try again later.",
-                HttpStatusCode.GatewayTimeout => "The server took too long to respond. Please try again later.",
+                HttpStatusCode.GatewayTimeout => "The server did not respond in time. Please try again later.",
                 _ => defaultMessage
-            };
-        }
-
-        /// <summary>
-        /// Create a network error result
-        /// </summary>
-        public ApiErrorResult CreateNetworkErrorResult(string message, Exception? exception = null)
-        {
-            var errorMessage = $"Network error: {message}";
-
-            if (exception != null)
-            {
-                _logger.LogError(exception, errorMessage);
-            }
-            else
-            {
-                _logger.LogError(errorMessage);
-            }
-
-            return new ApiErrorResult
-            {
-                Message = errorMessage,
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                ErrorCode = "NetworkError"
             };
         }
     }
 
     /// <summary>
-    /// Represents an API error result
+    /// API error result
     /// </summary>
     public class ApiErrorResult
     {
-        public string Message { get; set; } = string.Empty;
-        public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.InternalServerError;
-        public string ErrorCode { get; set; } = string.Empty;
-        public string? Details { get; set; }
-        public List<ValidationError>? ValidationErrors { get; set; }
+        public HttpStatusCode StatusCode { get; set; }
+        public string ErrorCode { get; set; }
+        public string Message { get; set; }
+        public string Details { get; set; }
+        public ValidationError[] ValidationErrors { get; set; }
+    }
 
-        public bool IsAuthenticationError =>
-            StatusCode == HttpStatusCode.Unauthorized ||
-            StatusCode == HttpStatusCode.Forbidden;
+    /// <summary>
+    /// API error
+    /// </summary>
+    public class ApiError
+    {
+        public string Code { get; set; }
+        public string Message { get; set; }
+        public string Details { get; set; }
+        public ValidationError[] ValidationErrors { get; set; }
+    }
 
-        public bool IsNetworkError =>
-            ErrorCode == "NetworkError" ||
-            StatusCode == HttpStatusCode.ServiceUnavailable ||
-            StatusCode == HttpStatusCode.GatewayTimeout;
-
-        public bool IsValidationError =>
-            ValidationErrors != null && ValidationErrors.Count > 0;
-
-        public string GetFormattedValidationErrors()
-        {
-            if (ValidationErrors == null || ValidationErrors.Count == 0)
-            {
-                return string.Empty;
-            }
-
-            return string.Join("\n", ValidationErrors.Select(e => $"• {e.Field}: {e.Message}"));
-        }
+    /// <summary>
+    /// Validation error
+    /// </summary>
+    public class ValidationError
+    {
+        public string Field { get; set; }
+        public string Message { get; set; }
     }
 }
