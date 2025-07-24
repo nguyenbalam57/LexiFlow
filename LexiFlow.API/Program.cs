@@ -1,36 +1,64 @@
-using System.Text;
-using LexiFlow.API.Data;
+using LexiFlow.API.Data.Context;
+using LexiFlow.API.Data.UnitOfWork;
 using LexiFlow.API.Middleware;
 using LexiFlow.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Add Serilog
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
-// Configure Swagger with JWT Authentication
-builder.Services.AddSwaggerGen(c =>
+builder.Host.UseSerilog();
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Configure CORS
+builder.Services.AddCors(options =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    options.AddPolicy("AllowSpecificOrigins",
+        builder =>
+        {
+            builder.WithOrigins(
+                    "http://localhost:3000", // React development server
+                    "http://localhost:8080"  // Vue development server
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
+
+// Add Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "LexiFlow API",
         Version = "v1",
-        Description = "API for LexiFlow Japanese Vocabulary Learning Application",
+        Description = "REST API for LexiFlow Japanese Learning Application",
         Contact = new OpenApiContact
         {
             Name = "LexiFlow Team",
-            Email = "support@lexiflow.app",
-            Url = new Uri("https://lexiflow.app")
+            Email = "support@lexiflow.com",
+            Url = new Uri("https://lexiflow.com/contact")
         }
     });
 
     // Add JWT Authentication to Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
@@ -39,7 +67,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -53,102 +81,84 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+
+    // Use XML comments for Swagger documentation
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
 });
 
-// Add Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Add Database Context
+builder.Services.AddDbContext<LexiFlowContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+// Add Unit of Work
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Add Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<ISyncService, SyncService>();
+builder.Services.AddScoped<ILearningService, LearningService>();
 
-// Add Authentication
+// Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+                builder.Configuration["Jwt:Key"] ?? "DefaultSecretKeyForDevelopment12345678901234")),
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured")))
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
         };
     });
 
-// Add Authorization
-builder.Services.AddAuthorization();
-
-// Add CORS for client applications
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", policy =>
-    {
-        policy.WithOrigins(builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? new[] { "*" })
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
-
-    // Add LANPolicy for local network access (mobile apps)
-    options.AddPolicy("LANPolicy", policy =>
-    {
-        policy.WithOrigins("http://192.168.*.*", "http://10.*.*.*")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-// Add Health Checks
-builder.Services.AddHealthChecks();
-
-// Configure HTTP Client factory for the BasicSyncService
-builder.Services.AddHttpClient();
+// Add AutoMapper
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 var app = builder.Build();
 
-// Configure pipeline
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
     });
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    // Use HTTPS Redirection in production
-    app.UseHttpsRedirection();
 }
 
-// Add error handling middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseHttpsRedirection();
 
 // Use CORS
-app.UseCors("CorsPolicy");
+app.UseCors("AllowSpecificOrigins");
 
-// Use Authentication and Authorization
+// Use custom exception middleware
+app.UseExceptionMiddleware();
+
+// Use Serilog request logging
+app.UseSerilogRequestLogging();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map endpoints
 app.MapControllers();
-app.MapHealthChecks("/health");
 
-// Apply database migrations on startup in development
+// Apply migrations at startup in development environment
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<LexiFlowContext>();
+        dbContext.Database.Migrate();
+    }
 }
 
 app.Run();

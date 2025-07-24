@@ -1,4 +1,5 @@
-﻿using System;
+﻿// LexiFlow.Infrastructure/UnitOfWork.cs
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,67 +10,6 @@ using Microsoft.Extensions.Logging;
 namespace LexiFlow.Infrastructure
 {
     /// <summary>
-    /// Interface for unit of work pattern
-    /// </summary>
-    public interface IUnitOfWork : IDisposable, IAsyncDisposable
-    {
-        /// <summary>
-        /// Gets a repository for the specified entity type
-        /// </summary>
-        IRepository<T> GetRepository<T>() where T : BaseEntity;
-
-        /// <summary>
-        /// Gets the repository for User entities
-        /// </summary>
-        IRepository<User> Users { get; }
-
-        /// <summary>
-        /// Gets the repository for Role entities
-        /// </summary>
-        IRepository<Role> Roles { get; }
-
-        /// <summary>
-        /// Gets the repository for Category entities
-        /// </summary>
-        IRepository<Category> Categories { get; }
-
-        /// <summary>
-        /// Gets the repository for VocabularyItem entities
-        /// </summary>
-        IRepository<VocabularyItem> VocabularyItems { get; }
-
-        /// <summary>
-        /// Gets the repository for Lesson entities
-        /// </summary>
-        IRepository<Lesson> Lessons { get; }
-
-        /// <summary>
-        /// Gets the repository for Course entities
-        /// </summary>
-        IRepository<Course> Courses { get; }
-
-        /// <summary>
-        /// Gets the repository for Exercise entities
-        /// </summary>
-        IRepository<Exercise> Exercises { get; }
-
-        /// <summary>
-        /// Gets the repository for UserActivity entities
-        /// </summary>
-        IRepository<UserActivity> UserActivities { get; }
-
-        /// <summary>
-        /// Begins a transaction
-        /// </summary>
-        Task<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Saves all changes made in this unit of work to the database
-        /// </summary>
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-    }
-
-    /// <summary>
     /// Implementation of unit of work pattern using Entity Framework
     /// </summary>
     public class UnitOfWork : IUnitOfWork
@@ -78,6 +18,7 @@ namespace LexiFlow.Infrastructure
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly ILogger<UnitOfWork> _logger;
         private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
+        private IDbTransaction _currentTransaction;
         private bool _disposed = false;
 
         public UnitOfWork(
@@ -90,71 +31,104 @@ namespace LexiFlow.Infrastructure
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        // Frequently used repositories - lazy initialized
-        private IRepository<User>? _users;
-        public IRepository<User> Users => _users ??= GetRepository<User>();
+        // Implement specific repository properties
+        private IUserRepository _users;
+        public IUserRepository Users => _users ??= _repositoryFactory.GetRepository<IUserRepository>();
 
-        private IRepository<Role>? _roles;
-        public IRepository<Role> Roles => _roles ??= GetRepository<Role>();
+        private IRoleRepository _roles;
+        public IRoleRepository Roles => _roles ??= _repositoryFactory.GetRepository<IRoleRepository>();
 
-        private IRepository<Category>? _categories;
-        public IRepository<Category> Categories => _categories ??= GetRepository<Category>();
+        private IVocabularyRepository _vocabularyItems;
+        public IVocabularyRepository VocabularyItems => _vocabularyItems ??= _repositoryFactory.GetRepository<IVocabularyRepository>();
 
-        private IRepository<VocabularyItem>? _vocabularyItems;
-        public IRepository<VocabularyItem> VocabularyItems => _vocabularyItems ??= GetRepository<VocabularyItem>();
+        private ICategoryRepository _categories;
+        public ICategoryRepository Categories => _categories ??= _repositoryFactory.GetRepository<ICategoryRepository>();
 
-        private IRepository<Lesson>? _lessons;
-        public IRepository<Lesson> Lessons => _lessons ??= GetRepository<Lesson>();
-
-        private IRepository<Course>? _courses;
-        public IRepository<Course> Courses => _courses ??= GetRepository<Course>();
-
-        private IRepository<Exercise>? _exercises;
-        public IRepository<Exercise> Exercises => _exercises ??= GetRepository<Exercise>();
-
-        private IRepository<UserActivity>? _userActivities;
-        public IRepository<UserActivity> UserActivities => _userActivities ??= GetRepository<UserActivity>();
+        private IUserActivityRepository _userActivities;
+        public IUserActivityRepository UserActivities => _userActivities ??= _repositoryFactory.GetRepository<IUserActivityRepository>();
 
         public IRepository<T> GetRepository<T>() where T : BaseEntity
         {
-            var type = typeof(T);
-
-            if (_repositories.ContainsKey(type))
+            if (_repositories.TryGetValue(typeof(T), out var repository))
             {
-                return (IRepository<T>)_repositories[type];
+                return (IRepository<T>)repository;
             }
 
-            var repository = _repositoryFactory.GetRepository<T>();
-            _repositories.Add(type, repository);
-
-            return repository;
-        }
-
-        public async Task<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                _logger.LogDebug("Beginning transaction");
-                return await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error beginning transaction");
-                throw;
-            }
+            var newRepo = _repositoryFactory.GetRepository<T>();
+            _repositories[typeof(T)] = newRepo;
+            return newRepo;
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                _logger.LogDebug("Saving changes");
+                _logger.LogDebug("Saving changes to database");
                 return await _dbContext.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving changes");
+                _logger.LogError(ex, "Error saving changes to database");
                 throw;
+            }
+        }
+
+        public async Task<IDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            if (_currentTransaction != null)
+            {
+                _logger.LogWarning("Transaction already in progress");
+                return _currentTransaction;
+            }
+
+            _logger.LogDebug("Beginning new transaction");
+            _currentTransaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            return _currentTransaction;
+        }
+
+        public async Task CommitTransactionAsync()
+        {
+            try
+            {
+                if (_currentTransaction == null)
+                {
+                    _logger.LogWarning("No transaction to commit");
+                    return;
+                }
+
+                _logger.LogDebug("Committing transaction");
+                await _currentTransaction.CommitAsync();
+            }
+            finally
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
+            }
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            try
+            {
+                if (_currentTransaction == null)
+                {
+                    _logger.LogWarning("No transaction to rollback");
+                    return;
+                }
+
+                _logger.LogDebug("Rolling back transaction");
+                await _currentTransaction.RollbackAsync();
+            }
+            finally
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
             }
         }
 
@@ -170,6 +144,7 @@ namespace LexiFlow.Infrastructure
             {
                 if (disposing)
                 {
+                    _currentTransaction?.Dispose();
                     _dbContext.Dispose();
                 }
 
@@ -180,16 +155,21 @@ namespace LexiFlow.Infrastructure
         public async ValueTask DisposeAsync()
         {
             await DisposeAsyncCore();
-
             Dispose(false);
             GC.SuppressFinalize(this);
         }
 
         protected virtual async ValueTask DisposeAsyncCore()
         {
-            if (_dbContext != null)
+            if (!_disposed)
             {
-                await _dbContext.DisposeAsync().ConfigureAwait(false);
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                }
+
+                await _dbContext.DisposeAsync();
+                _disposed = true;
             }
         }
     }

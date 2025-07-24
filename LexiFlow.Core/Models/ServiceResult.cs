@@ -11,7 +11,7 @@ namespace LexiFlow.Core.Models
     /// </summary>
     public class ServiceResult<T>
     {
-        public bool SuccessResult { get; set; }
+        public bool Success { get; set; }
         public string? Message { get; set; }
         public bool SessionExpired { get; set; }
         public T? Data { get; set; }
@@ -20,17 +20,17 @@ namespace LexiFlow.Core.Models
         {
             return new ServiceResult<T>
             {
-                SuccessResult = false,
+                Success = false,
                 Message = message,
                 SessionExpired = sessionExpired
             };
         }
 
-        public static ServiceResult<T> Success(T data)
+        public static ServiceResult<T> CreateSuccess(T data)
         {
             return new ServiceResult<T>
             {
-                SuccessResult = true,
+                Success = true,
                 Data = data
             };
         }

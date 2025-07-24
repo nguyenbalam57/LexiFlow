@@ -1,14 +1,9 @@
-﻿using LexiFlow.AdminDashboard.Models;
+﻿using LexiFlow.AdminDashboard;
 using LexiFlow.API.Models;
-using LexiFlow.Core.Entities;
 using LexiFlow.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using LexiFlow.Models;
 
 namespace LexiFlow.API.Controllers
 {
@@ -695,7 +690,7 @@ namespace LexiFlow.API.Controllers
         {
             return new UserDto
             {
-                Id = user.Id,
+                Id = user.UserID,
                 Username = user.Username,
                 Email = user.Email,
                 FirstName = user.FullName.Split(' ').FirstOrDefault() ?? "",

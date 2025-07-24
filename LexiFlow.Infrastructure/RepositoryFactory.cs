@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Concurrent;
-using LexiFlow.Core.Entities;
+﻿// LexiFlow.Infrastructure/RepositoryFactory.cs (Complete implementation)
 using LexiFlow.Core.Interfaces;
 using LexiFlow.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace LexiFlow.Infrastructure
 {
     /// <summary>
-    /// Factory for creating repositories
+    /// Interface for repository factory
     /// </summary>
     public interface IRepositoryFactory
     {
@@ -19,21 +20,28 @@ namespace LexiFlow.Infrastructure
         IRepository<T> GetRepository<T>() where T : BaseEntity;
 
         /// <summary>
-        /// Creates a unit of work
+        /// Gets a specific repository implementation
+        /// </summary>
+        TRepo GetRepository<TRepo>() where TRepo : class;
+
+        /// <summary>
+        /// Creates a new unit of work
         /// </summary>
         IUnitOfWork CreateUnitOfWork();
     }
 
     /// <summary>
-    /// Factory implementation for creating repositories and unit of work
+    /// Repository factory implementation
     /// </summary>
     public class RepositoryFactory : IRepositoryFactory
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ConcurrentDictionary<Type, object> _repositories = new ConcurrentDictionary<Type, object>();
         private readonly ILogger<RepositoryFactory> _logger;
+        private readonly ConcurrentDictionary<Type, object> _repositories = new ConcurrentDictionary<Type, object>();
 
-        public RepositoryFactory(IServiceProvider serviceProvider, ILogger<RepositoryFactory> logger)
+        public RepositoryFactory(
+            IServiceProvider serviceProvider,
+            ILogger<RepositoryFactory> logger)
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -42,6 +50,11 @@ namespace LexiFlow.Infrastructure
         public IRepository<T> GetRepository<T>() where T : BaseEntity
         {
             return (IRepository<T>)_repositories.GetOrAdd(typeof(T), CreateRepository<T>);
+        }
+
+        public TRepo GetRepository<TRepo>() where TRepo : class
+        {
+            return (TRepo)_repositories.GetOrAdd(typeof(TRepo), CreateSpecificRepository<TRepo>);
         }
 
         public IUnitOfWork CreateUnitOfWork()
@@ -79,6 +92,53 @@ namespace LexiFlow.Infrastructure
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating repository for {EntityType}", typeof(T).Name);
+                throw;
+            }
+        }
+
+        private object CreateSpecificRepository<TRepo>() where TRepo : class
+        {
+            try
+            {
+                var repo = _serviceProvider.GetService<TRepo>();
+                if (repo != null)
+                {
+                    _logger.LogDebug("Using registered repository for {RepositoryType}", typeof(TRepo).Name);
+                    return repo;
+                }
+
+                // Handle specific repository types
+                if (typeof(TRepo) == typeof(IUserRepository))
+                {
+                    _logger.LogDebug("Creating UserRepository");
+                    return _serviceProvider.GetRequiredService<IUserRepository>();
+                }
+                else if (typeof(TRepo) == typeof(IRoleRepository))
+                {
+                    _logger.LogDebug("Creating RoleRepository");
+                    return _serviceProvider.GetRequiredService<IRoleRepository>();
+                }
+                else if (typeof(TRepo) == typeof(IVocabularyRepository))
+                {
+                    _logger.LogDebug("Creating VocabularyRepository");
+                    return _serviceProvider.GetRequiredService<IVocabularyRepository>();
+                }
+                else if (typeof(TRepo) == typeof(ICategoryRepository))
+                {
+                    _logger.LogDebug("Creating CategoryRepository");
+                    return _serviceProvider.GetRequiredService<ICategoryRepository>();
+                }
+                else if (typeof(TRepo) == typeof(IUserActivityRepository))
+                {
+                    _logger.LogDebug("Creating UserActivityRepository");
+                    return _serviceProvider.GetRequiredService<IUserActivityRepository>();
+                }
+
+                throw new InvalidOperationException($"Repository type {typeof(TRepo).Name} is not registered");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating repository for {RepositoryType}", typeof(TRepo).Name);
                 throw;
             }
         }

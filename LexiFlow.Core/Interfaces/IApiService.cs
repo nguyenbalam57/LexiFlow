@@ -1,4 +1,4 @@
-﻿using LexiFlow.Core.Entities;
+﻿using LexiFlow.Models;
 using LexiFlow.Core.Models;
 using LexiFlow.Core.Models.Requests;
 using LexiFlow.Core.Models.Responses;

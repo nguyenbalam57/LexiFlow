@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using LexiFlow.Core.Entities;
+using LexiFlow.Models;
 using LexiFlow.Core.Models;
 using LexiFlow.Core.Models.Requests;
 

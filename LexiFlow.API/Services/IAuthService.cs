@@ -1,10 +1,14 @@
-﻿namespace LexiFlow.API.Services
+﻿using LexiFlow.API.DTOs;
+using LexiFlow.API.DTOs.Auth;
+
+namespace LexiFlow.API.Services
 {
     public interface IAuthService
     {
-        Task<User> ValidateUserAsync(string username, string password);
-        Task<User> GetUserByIdAsync(int userId);
-        Task<User> GetUserByUsernameAsync(string username);
-        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginDto loginDto);
+        Task<ApiResponse<UserDto>> RegisterAsync(RegisterUserDto registerDto);
+        Task<ApiResponse<LoginResponseDto>> RefreshTokenAsync(string refreshToken);
+        Task<ApiResponse<bool>> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto);
+        Task<ApiResponse<bool>> RevokeTokenAsync(string username);
     }
 }

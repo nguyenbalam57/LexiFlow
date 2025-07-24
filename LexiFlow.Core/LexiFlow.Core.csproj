@@ -18,4 +18,8 @@
     <Folder Include="Enums\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LexiFlow.Models\LexiFlow.Models.csproj" />
+  </ItemGroup>
+
 </Project>

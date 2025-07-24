@@ -1,4 +1,5 @@
-﻿using System;
+﻿// LexiFlow.Core/Interfaces/IDbTransaction.cs
+using System;
 using System.Threading.Tasks;
 
 namespace LexiFlow.Core.Interfaces
@@ -6,7 +7,7 @@ namespace LexiFlow.Core.Interfaces
     /// <summary>
     /// Interface for database transactions
     /// </summary>
-    public interface IDbTransaction : IDisposable, IAsyncDisposable
+    public interface IDbTransaction : IAsyncDisposable, IDisposable
     {
         /// <summary>
         /// Commits the transaction
