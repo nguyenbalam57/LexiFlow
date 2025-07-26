@@ -1,5 +1,6 @@
 ﻿using LexiFlow.API.Models;
 using Microsoft.EntityFrameworkCore;
+using LexiFlow.Models;
 
 namespace LexiFlow.API.Data
 {
@@ -10,9 +11,33 @@ namespace LexiFlow.API.Data
         {
         }
 
+        // Core entities
         public DbSet<User> Users { get; set; }
-        public DbSet<Vocabulary> Vocabulary { get; set; }
-        public DbSet<SyncMetadata> SyncMetadata { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+
+        // Vocabulary related entities
+        public DbSet<Vocabulary> VocabularyItems { get; set; }
+        public DbSet<Definition> Definitions { get; set; }
+        public DbSet<Example> Examples { get; set; }
+        public DbSet<Translation> Translations { get; set; }
+        public DbSet<Category> Categories { get; set; }
+
+        // Learning related entities
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<CourseModule> CourseModules { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<LessonSection> LessonSections { get; set; }
+        public DbSet<Exercise> Exercises { get; set; }
+        public DbSet<ExerciseQuestion> ExerciseQuestions { get; set; }
+
+        // User progress entities
+        public DbSet<UserVocabularyProgress> UserVocabularyProgresses { get; set; }
+        public DbSet<UserLessonProgress> UserLessonProgresses { get; set; }
+        public DbSet<UserEnrollment> UserEnrollments { get; set; }
+        public DbSet<UserExerciseAttempt> UserExerciseAttempts { get; set; }
+        public DbSet<UserActivity> UserActivities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
