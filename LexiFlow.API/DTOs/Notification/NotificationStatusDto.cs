@@ -1,9 +1,9 @@
-﻿namespace LexiFlow.API.DTOs.UserSubmission
+﻿namespace LexiFlow.API.DTOs.Notification
 {
     /// <summary>
-    /// DTO cho trạng thái đơn nộp
+    /// DTO cho trạng thái thông báo
     /// </summary>
-    public class SubmissionStatusDto
+    public class NotificationStatusDto
     {
         /// <summary>
         /// ID trạng thái
@@ -24,20 +24,5 @@
         /// Mã màu
         /// </summary>
         public string ColorCode { get; set; }
-
-        /// <summary>
-        /// Thứ tự hiển thị
-        /// </summary>
-        public int DisplayOrder { get; set; }
-
-        /// <summary>
-        /// Là trạng thái cuối
-        /// </summary>
-        public bool IsTerminal { get; set; }
-
-        /// <summary>
-        /// Là trạng thái mặc định
-        /// </summary>
-        public bool IsDefault { get; set; }
     }
 }

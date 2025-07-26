@@ -1,23 +1,16 @@
-﻿namespace LexiFlow.API.DTOs.TestAndExam
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.TestAndExam
 {
     /// <summary>
-    /// DTO cho lựa chọn câu hỏi
+    /// DTO cho tạo lựa chọn câu hỏi
     /// </summary>
-    public class QuestionOptionDto
+    public class CreateQuestionOptionDto
     {
-        /// <summary>
-        /// ID lựa chọn
-        /// </summary>
-        public int OptionID { get; set; }
-
-        /// <summary>
-        /// ID câu hỏi
-        /// </summary>
-        public int QuestionID { get; set; }
-
         /// <summary>
         /// Nội dung lựa chọn
         /// </summary>
+        [Required]
         public string OptionText { get; set; }
 
         /// <summary>

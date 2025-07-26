@@ -1,28 +1,24 @@
-﻿namespace LexiFlow.API.DTOs.TestAndExam
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.TestAndExam
 {
     /// <summary>
-    /// DTO cho phần thi
+    /// DTO cho tạo phần thi
     /// </summary>
-    public class ExamSectionDto
+    public class CreateExamSectionDto
     {
-        /// <summary>
-        /// ID phần thi
-        /// </summary>
-        public int SectionID { get; set; }
-
-        /// <summary>
-        /// ID bài kiểm tra
-        /// </summary>
-        public int ExamID { get; set; }
-
         /// <summary>
         /// Tên phần thi
         /// </summary>
+        [Required]
+        [StringLength(100)]
         public string SectionName { get; set; }
 
         /// <summary>
         /// Loại phần thi
         /// </summary>
+        [Required]
+        [StringLength(50)]
         public string SectionType { get; set; }
 
         /// <summary>
@@ -33,12 +29,9 @@
         /// <summary>
         /// Thời gian làm bài (phút)
         /// </summary>
+        [Required]
+        [Range(1, 180)]
         public int DurationMinutes { get; set; }
-
-        /// <summary>
-        /// Tổng điểm
-        /// </summary>
-        public int TotalPoints { get; set; }
 
         /// <summary>
         /// Hướng dẫn
@@ -48,6 +41,6 @@
         /// <summary>
         /// Danh sách câu hỏi
         /// </summary>
-        public List<QuestionDto> Questions { get; set; } = new List<QuestionDto>();
+        public List<CreateQuestionDto> Questions { get; set; } = new List<CreateQuestionDto>();
     }
 }

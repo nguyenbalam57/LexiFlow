@@ -1,33 +1,30 @@
-﻿namespace LexiFlow.API.DTOs.TestAndExam
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.TestAndExam
 {
     /// <summary>
-    /// DTO cho câu hỏi
+    /// DTO cho tạo câu hỏi
     /// </summary>
-    public class QuestionDto
+    public class CreateQuestionDto
     {
-        /// <summary>
-        /// ID câu hỏi
-        /// </summary>
-        public int QuestionID { get; set; }
-
-        /// <summary>
-        /// ID phần thi
-        /// </summary>
-        public int SectionID { get; set; }
-
         /// <summary>
         /// Nội dung câu hỏi
         /// </summary>
+        [Required]
         public string QuestionText { get; set; }
 
         /// <summary>
         /// Loại câu hỏi
         /// </summary>
+        [Required]
+        [StringLength(50)]
         public string QuestionType { get; set; }
 
         /// <summary>
         /// Điểm số
         /// </summary>
+        [Required]
+        [Range(1, 100)]
         public int Points { get; set; }
 
         /// <summary>
@@ -38,6 +35,7 @@
         /// <summary>
         /// Độ khó
         /// </summary>
+        [StringLength(20)]
         public string DifficultyLevel { get; set; }
 
         /// <summary>
@@ -48,7 +46,6 @@
         /// <summary>
         /// Danh sách lựa chọn
         /// </summary>
-        public List<QuestionOptionDto> Options { get; set; } = new List<QuestionOptionDto>();
+        public List<CreateQuestionOptionDto> Options { get; set; } = new List<CreateQuestionOptionDto>();
     }
-
 }

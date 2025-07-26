@@ -1,43 +1,34 @@
-﻿namespace LexiFlow.API.DTOs.UserSubmission
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.UserSubmission
 {
     /// <summary>
-    /// DTO cho tệp đính kèm đơn nộp
+    /// DTO cho tạo tệp đính kèm đơn nộp
     /// </summary>
-    public class SubmissionAttachmentDto
+    public class CreateSubmissionAttachmentDto
     {
-        /// <summary>
-        /// ID tệp đính kèm
-        /// </summary>
-        public int AttachmentID { get; set; }
-
-        /// <summary>
-        /// ID đơn nộp
-        /// </summary>
-        public int SubmissionID { get; set; }
-
         /// <summary>
         /// Tên tệp
         /// </summary>
+        [Required]
         public string FileName { get; set; }
 
         /// <summary>
         /// Đường dẫn tệp
         /// </summary>
+        [Required]
         public string FilePath { get; set; }
 
         /// <summary>
         /// Kích thước tệp
         /// </summary>
+        [Required]
         public long FileSize { get; set; }
 
         /// <summary>
         /// Loại tệp
         /// </summary>
+        [Required]
         public string FileType { get; set; }
-
-        /// <summary>
-        /// Thời gian tải lên
-        /// </summary>
-        public DateTime UploadedAt { get; set; }
     }
 }
