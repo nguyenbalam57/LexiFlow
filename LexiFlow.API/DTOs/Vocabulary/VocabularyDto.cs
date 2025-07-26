@@ -1,4 +1,4 @@
-﻿namespace LexiFlow.API.Models.DTOs
+﻿namespace LexiFlow.API.DTOs.Vocabulary
 {
     public class VocabularyDto
     {

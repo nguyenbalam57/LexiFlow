@@ -1,4 +1,4 @@
-﻿namespace LexiFlow.API.Models.Responses
+﻿namespace LexiFlow.API.DTOs.Common
 {
     public class ApiResponse
     {

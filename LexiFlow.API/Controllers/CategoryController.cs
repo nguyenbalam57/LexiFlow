@@ -1,6 +1,6 @@
-﻿using LexiFlow.API.Data;
+﻿using LexiFlow.API.Models.DTOs;
 using LexiFlow.API.Models.Responses;
-using LexiFlow.Models;
+using LexiFlow.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,40 +11,47 @@ namespace LexiFlow.API.Controllers
     [ApiController]
     [Route("api/v1/[controller]")]
     [Authorize]
+    [Produces("application/json")]
+    [SwaggerTag("Manage categories")]
     public class CategoryController : ControllerBase
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly ICategoryService _categoryService;
         private readonly ILogger<CategoryController> _logger;
 
         public CategoryController(
-            ApplicationDbContext dbContext,
+            ICategoryService categoryService,
             ILogger<CategoryController> logger)
         {
-            _dbContext = dbContext;
+            _categoryService = categoryService;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Get all categories with optional filtering
+        /// </summary>
+        /// <param name="includeInactive">Whether to include inactive categories</param>
+        /// <param name="level">Filter by level</param>
+        /// <returns>List of categories</returns>
+        /// <response code="200">Returns the list of categories</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
         [HttpGet]
-        public async Task<IActionResult> GetCategories([FromQuery] int? parentId = null)
+        [SwaggerOperation(
+            Summary = "Get all categories",
+            Description = "Retrieves all categories with optional filtering",
+            OperationId = "GetCategories",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetCategories(
+            [FromQuery] bool includeInactive = false,
+            [FromQuery] string? level = null)
         {
             try
             {
-                var query = _dbContext.Categories.AsQueryable();
-
-                if (parentId.HasValue)
-                {
-                    query = query.Where(c => c.ParentId == parentId);
-                }
-                else
-                {
-                    query = query.Where(c => c.ParentId == null);
-                }
-
-                var categories = await query
-                    .Where(c => !c.IsDeleted && c.Status == "Active")
-                    .OrderBy(c => c.SortOrder)
-                    .ThenBy(c => c.Name)
-                    .ToListAsync();
+                var categories = await _categoryService.GetAllAsync(includeInactive, level);
 
                 return Ok(new ApiResponse
                 {
@@ -64,13 +71,31 @@ namespace LexiFlow.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get a category by ID
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <returns>Category details</returns>
+        /// <response code="200">Returns the category</response>
+        /// <response code="404">Category not found</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
         [HttpGet("{id}")]
+        [SwaggerOperation(
+            Summary = "Get category by ID",
+            Description = "Retrieves a specific category by its ID",
+            OperationId = "GetCategoryById",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCategoryById(int id)
         {
             try
             {
-                var category = await _dbContext.Categories
-                    .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+                var category = await _categoryService.GetByIdAsync(id);
 
                 if (category == null)
                 {
@@ -99,9 +124,28 @@ namespace LexiFlow.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a new category
+        /// </summary>
+        /// <param name="dto">Category data</param>
+        /// <returns>Created category</returns>
+        /// <response code="201">Category created successfully</response>
+        /// <response code="400">Invalid input data</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateCategory([FromBody] CategoryDto dto)
+        [Authorize(Roles = "Administrator,Teacher")]
+        [SwaggerOperation(
+            Summary = "Create a new category",
+            Description = "Creates a new category with the provided data",
+            OperationId = "CreateCategory",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
         {
             try
             {
@@ -115,39 +159,23 @@ namespace LexiFlow.API.Controllers
                     });
                 }
 
-                // Check for duplicate name in same parent
-                var exists = await _dbContext.Categories
-                    .AnyAsync(c => c.Name == dto.Name && c.ParentId == dto.ParentId && !c.IsDeleted);
+                var userId = GetUserId();
+                var createdCategory = await _categoryService.CreateAsync(dto, userId);
 
-                if (exists)
+                if (createdCategory == null)
                 {
-                    return BadRequest(new ApiResponse
+                    return StatusCode(500, new ApiResponse
                     {
                         Success = false,
-                        Message = "A category with this name already exists at this level"
+                        Message = "Failed to create category"
                     });
                 }
 
-                var userId = GetUserId();
-                var category = new Category
-                {
-                    Name = dto.Name,
-                    Description = dto.Description,
-                    ParentId = dto.ParentId,
-                    Status = dto.Status ?? "Active",
-                    SortOrder = dto.SortOrder ?? 0,
-                    CreatedBy = userId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _dbContext.Categories.Add(category);
-                await _dbContext.SaveChangesAsync();
-
-                return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, new ApiResponse
+                return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.CategoryID }, new ApiResponse
                 {
                     Success = true,
                     Message = "Category created successfully",
-                    Data = category
+                    Data = createdCategory
                 });
             }
             catch (Exception ex)
@@ -161,9 +189,33 @@ namespace LexiFlow.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Update an existing category
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <param name="dto">Updated category data</param>
+        /// <returns>Updated category</returns>
+        /// <response code="200">Category updated successfully</response>
+        /// <response code="400">Invalid input data</response>
+        /// <response code="404">Category not found</response>
+        /// <response code="409">Concurrency conflict</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryDto dto)
+        [Authorize(Roles = "Administrator,Teacher")]
+        [SwaggerOperation(
+            Summary = "Update an existing category",
+            Description = "Updates an existing category with the provided data",
+            OperationId = "UpdateCategory",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDto dto)
         {
             try
             {
@@ -177,45 +229,32 @@ namespace LexiFlow.API.Controllers
                     });
                 }
 
-                var category = await _dbContext.Categories.FindAsync(id);
-                if (category == null || category.IsDeleted)
+                var userId = GetUserId();
+                var updatedCategory = await _categoryService.UpdateAsync(id, dto, userId);
+
+                if (updatedCategory == null)
                 {
                     return NotFound(new ApiResponse
                     {
                         Success = false,
-                        Message = "Category not found"
+                        Message = "Category not found or could not be updated"
                     });
                 }
-
-                // Check for duplicate name in same parent
-                var exists = await _dbContext.Categories
-                    .AnyAsync(c => c.Name == dto.Name && c.ParentId == dto.ParentId && c.Id != id && !c.IsDeleted);
-
-                if (exists)
-                {
-                    return BadRequest(new ApiResponse
-                    {
-                        Success = false,
-                        Message = "A category with this name already exists at this level"
-                    });
-                }
-
-                var userId = GetUserId();
-                category.Name = dto.Name;
-                category.Description = dto.Description;
-                category.ParentId = dto.ParentId;
-                category.Status = dto.Status ?? category.Status;
-                category.SortOrder = dto.SortOrder ?? category.SortOrder;
-                category.ModifiedBy = userId;
-                category.ModifiedAt = DateTime.UtcNow;
-
-                await _dbContext.SaveChangesAsync();
 
                 return Ok(new ApiResponse
                 {
                     Success = true,
                     Message = "Category updated successfully",
-                    Data = category
+                    Data = updatedCategory
+                });
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogWarning(ex, "Concurrency conflict when updating category {Id}", id);
+                return Conflict(new ApiResponse
+                {
+                    Success = false,
+                    Message = "The category has been modified by another user. Please refresh and try again."
                 });
             }
             catch (Exception ex)
@@ -229,54 +268,42 @@ namespace LexiFlow.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Delete a category
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <returns>Success indicator</returns>
+        /// <response code="200">Category deleted successfully</response>
+        /// <response code="404">Category not found</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Administrator")]
+        [SwaggerOperation(
+            Summary = "Delete a category",
+            Description = "Deletes a category with the specified ID",
+            OperationId = "DeleteCategory",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             try
             {
-                var category = await _dbContext.Categories.FindAsync(id);
-                if (category == null || category.IsDeleted)
+                var userId = GetUserId();
+                var result = await _categoryService.DeleteAsync(id, userId);
+
+                if (!result)
                 {
                     return NotFound(new ApiResponse
                     {
                         Success = false,
-                        Message = "Category not found"
+                        Message = "Category not found or could not be deleted"
                     });
                 }
-
-                // Check if category has child categories
-                var hasChildren = await _dbContext.Categories
-                    .AnyAsync(c => c.ParentId == id && !c.IsDeleted);
-
-                if (hasChildren)
-                {
-                    return BadRequest(new ApiResponse
-                    {
-                        Success = false,
-                        Message = "Cannot delete category with child categories. Remove or reassign them first."
-                    });
-                }
-
-                // Check if category has vocabulary items
-                var hasVocabularyItems = await _dbContext.VocabularyItems
-                    .AnyAsync(v => v.CategoryId == id && !v.IsDeleted);
-
-                if (hasVocabularyItems)
-                {
-                    return BadRequest(new ApiResponse
-                    {
-                        Success = false,
-                        Message = "Cannot delete category with vocabulary items. Remove or reassign them first."
-                    });
-                }
-
-                var userId = GetUserId();
-                category.IsDeleted = true;
-                category.DeletedBy = userId;
-                category.DeletedAt = DateTime.UtcNow;
-
-                await _dbContext.SaveChangesAsync();
 
                 return Ok(new ApiResponse
                 {
@@ -295,6 +322,64 @@ namespace LexiFlow.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Get vocabulary groups by category ID
+        /// </summary>
+        /// <param name="id">Category ID</param>
+        /// <param name="includeInactive">Whether to include inactive groups</param>
+        /// <returns>List of vocabulary groups in the category</returns>
+        /// <response code="200">Returns the list of vocabulary groups</response>
+        /// <response code="404">Category not found</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("{id}/groups")]
+        [SwaggerOperation(
+            Summary = "Get vocabulary groups by category",
+            Description = "Retrieves all vocabulary groups associated with a specific category",
+            OperationId = "GetVocabularyGroupsByCategory",
+            Tags = new[] { "Categories" }
+        )]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetVocabularyGroupsByCategory(
+            int id,
+            [FromQuery] bool includeInactive = false)
+        {
+            try
+            {
+                // Check if category exists
+                var category = await _categoryService.GetByIdAsync(id);
+                if (category == null)
+                {
+                    return NotFound(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Category not found"
+                    });
+                }
+
+                var groups = await _categoryService.GetGroupsByCategoryAsync(id, includeInactive);
+
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Vocabulary groups retrieved successfully",
+                    Data = groups
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving vocabulary groups for category ID: {Id}", id);
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "An error occurred while retrieving vocabulary groups"
+                });
+            }
+        }
+
         private int GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -304,14 +389,5 @@ namespace LexiFlow.API.Controllers
             }
             throw new UnauthorizedAccessException("Invalid user ID in token");
         }
-    }
-
-    public class CategoryDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public int? ParentId { get; set; }
-        public string? Status { get; set; }
-        public int? SortOrder { get; set; }
     }
 }
