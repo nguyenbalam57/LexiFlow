@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LexiFlow.API.Models.DTOs
+namespace LexiFlow.API.DTOs.Auth
 {
     public class LoginDto
     {
@@ -12,4 +12,5 @@ namespace LexiFlow.API.Models.DTOs
 
         public string? DeviceId { get; set; }
     }
+
 }

@@ -12,7 +12,6 @@ namespace LexiFlow.API.Controllers
     [Route("api/v1/[controller]")]
     [Authorize]
     [Produces("application/json")]
-    [SwaggerTag("Manage categories")]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;

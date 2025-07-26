@@ -1,4 +1,4 @@
-﻿using LexiFlow.API.Models.DTOs;
+﻿using LexiFlow.API.DTOs.Sync;
 
 namespace LexiFlow.API.Services
 {

@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using LexiFlow.API.Data.Entities;
 using LexiFlow.API.DTOs.Auth;
 using LexiFlow.API.DTOs.Learning;
 using LexiFlow.API.DTOs.Vocabulary;

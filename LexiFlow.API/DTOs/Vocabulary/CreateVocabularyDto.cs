@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LexiFlow.API.Models.DTOs
+namespace LexiFlow.API.DTOs.Vocabulary
 {
     public class CreateVocabularyDto
     {
