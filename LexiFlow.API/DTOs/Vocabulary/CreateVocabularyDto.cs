@@ -32,39 +32,4 @@ namespace LexiFlow.API.DTOs.Vocabulary
         public string? Tags { get; set; }
     }
 
-    public class DefinitionDto
-    {
-        [Required]
-        [StringLength(500)]
-        public string Text { get; set; } = string.Empty;
-
-        [StringLength(50)]
-        public string PartOfSpeech { get; set; } = string.Empty;
-
-        public int SortOrder { get; set; } = 0;
-    }
-
-    public class ExampleDto
-    {
-        [Required]
-        [StringLength(500)]
-        public string Text { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string Translation { get; set; } = string.Empty;
-
-        [Range(1, 5)]
-        public int DifficultyLevel { get; set; } = 3;
-    }
-
-    public class TranslationDto
-    {
-        [Required]
-        [StringLength(100)]
-        public string Text { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(10)]
-        public string LanguageCode { get; set; } = "en";
-    }
 }

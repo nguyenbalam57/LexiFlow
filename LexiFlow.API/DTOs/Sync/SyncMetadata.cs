@@ -1,4 +1,4 @@
-﻿namespace LexiFlow.API.Models
+﻿namespace LexiFlow.API.DTOs.Sync
 {
     public class SyncMetadata
     {

@@ -15,7 +15,7 @@
     /// <summary>
     /// Paged response DTO
     /// </summary>
-    public class PagedResponseDto<T>
+    public class PagedResponseDto<T> 
     {
         public IEnumerable<T> Items { get; set; } = new List<T>();
         public int PageIndex { get; set; }

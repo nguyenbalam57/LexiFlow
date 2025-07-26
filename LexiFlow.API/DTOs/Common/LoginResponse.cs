@@ -1,4 +1,6 @@
-﻿namespace LexiFlow.API.Models.Responses
+﻿using LexiFlow.API.DTOs.User;
+
+namespace LexiFlow.API.DTOs.Common
 {
     public class LoginResponse
     {

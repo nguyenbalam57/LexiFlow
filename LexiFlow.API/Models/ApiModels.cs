@@ -3,25 +3,6 @@ using System.Collections.Generic;
 
 namespace LexiFlow.API.Models
 {
-    /// <summary>
-    /// API response model
-    /// </summary>
-    public class ApiResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public object Data { get; set; }
-    }
-
-    /// <summary>
-    /// Generic API response with typed data
-    /// </summary>
-    public class ApiResponse<T>
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public T Data { get; set; }
-    }
 
     /// <summary>
     /// Paginated result DTO
@@ -35,33 +16,6 @@ namespace LexiFlow.API.Models
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
     }
 
-    /// <summary>
-    /// User DTO
-    /// </summary>
-    public class UserDto
-    {
-        public int Id { get; set; }
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsEmailVerified { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? LastLoginAt { get; set; }
-        public List<int> RoleIds { get; set; } = new List<int>();
-        public List<string> RoleNames { get; set; } = new List<string>();
-        public string RowVersionString { get; set; }
-    }
-
-    /// <summary>
-    /// Create user DTO
-    /// </summary>
-    public class CreateUserDto
-    {
-        public UserDto User { get; set; }
-        public string Password { get; set; }
-    }
 
     /// <summary>
     /// Role DTO
