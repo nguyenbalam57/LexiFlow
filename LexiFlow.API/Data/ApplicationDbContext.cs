@@ -1,6 +1,6 @@
 ﻿using LexiFlow.API.Models;
-using Microsoft.EntityFrameworkCore;
 using LexiFlow.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace LexiFlow.API.Data
 {
@@ -11,39 +11,38 @@ namespace LexiFlow.API.Data
         {
         }
 
-        // Core entities
+        // User related entities
         public DbSet<User> Users { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<Permission> Permissions { get; set; }
-        public DbSet<RolePermission> RolePermissions { get; set; }
 
         // Vocabulary related entities
-        public DbSet<Vocabulary> VocabularyItems { get; set; }
-        public DbSet<Definition> Definitions { get; set; }
-        public DbSet<Example> Examples { get; set; }
-        public DbSet<Translation> Translations { get; set; }
-        public DbSet<Category> Categories { get; set; }
+        public DbSet<Vocabulary> Vocabulary { get; set; }
+        public DbSet<VocabularyGroup> VocabularyGroups { get; set; }
 
-        // Learning related entities
-        public DbSet<Course> Courses { get; set; }
-        public DbSet<CourseModule> CourseModules { get; set; }
-        public DbSet<Lesson> Lessons { get; set; }
-        public DbSet<LessonSection> LessonSections { get; set; }
-        public DbSet<Exercise> Exercises { get; set; }
-        public DbSet<ExerciseQuestion> ExerciseQuestions { get; set; }
-
-        // User progress entities
-        public DbSet<UserVocabularyProgress> UserVocabularyProgresses { get; set; }
-        public DbSet<UserLessonProgress> UserLessonProgresses { get; set; }
-        public DbSet<UserEnrollment> UserEnrollments { get; set; }
-        public DbSet<UserExerciseAttempt> UserExerciseAttempts { get; set; }
-        public DbSet<UserActivity> UserActivities { get; set; }
+        // Synchronization related entities
+        public DbSet<SyncMetadata> SyncMetadata { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // Configure User entity
+            ConfigureUsers(modelBuilder);
+
+            // Configure Vocabulary entity
+            ConfigureVocabulary(modelBuilder);
+
+            // Configure VocabularyGroup entity
+            ConfigureVocabularyGroups(modelBuilder);
+
+            // Configure SyncMetadata entity
+            ConfigureSyncMetadata(modelBuilder);
+
+            // Add seed data
+            SeedData(modelBuilder);
+        }
+
+        private void ConfigureUsers(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
@@ -52,11 +51,18 @@ namespace LexiFlow.API.Data
                 entity.Property(e => e.PasswordHash).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.FullName).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Email).HasMaxLength(255);
+                entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+                entity.Property(e => e.Position).HasMaxLength(100);
+                entity.Property(e => e.Department).HasMaxLength(100);
                 entity.Property(e => e.Role).HasMaxLength(50);
                 entity.HasIndex(e => e.Username).IsUnique();
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.RowVersion).IsRowVersion();
             });
+        }
 
-            // Configure Vocabulary entity
+        private void ConfigureVocabulary(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Vocabulary>(entity =>
             {
                 entity.ToTable("Vocabulary");
@@ -70,6 +76,10 @@ namespace LexiFlow.API.Data
                 entity.Property(e => e.Notes).HasColumnType("nvarchar(max)");
                 entity.Property(e => e.Level).HasMaxLength(20);
                 entity.Property(e => e.PartOfSpeech).HasMaxLength(50);
+                entity.Property(e => e.AudioFile).HasMaxLength(255);
+                entity.Property(e => e.Version).HasMaxLength(50);
+                entity.Property(e => e.SyncStatus).HasMaxLength(20);
+                entity.Property(e => e.RowVersion).IsRowVersion();
 
                 // Set foreign keys
                 entity.HasOne<User>()
@@ -80,9 +90,45 @@ namespace LexiFlow.API.Data
                     .WithMany()
                     .HasForeignKey(e => e.UpdatedByUserID)
                     .IsRequired(false);
-            });
 
-            // Configure SyncMetadata entity
+                entity.HasOne<VocabularyGroup>()
+                    .WithMany(g => g.Vocabularies)
+                    .HasForeignKey(e => e.GroupID)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // Add indexes for better performance
+                entity.HasIndex(e => e.Level);
+                entity.HasIndex(e => e.PartOfSpeech);
+                entity.HasIndex(e => e.GroupID);
+                entity.HasIndex(e => e.CreatedByUserID);
+            });
+        }
+
+        private void ConfigureVocabularyGroups(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<VocabularyGroup>(entity =>
+            {
+                entity.ToTable("VocabularyGroups");
+                entity.HasKey(e => e.GroupID);
+                entity.Property(e => e.GroupName).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                // Set foreign keys
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedByUserID)
+                    .IsRequired(false);
+
+                // Add indexes
+                entity.HasIndex(e => e.GroupName);
+                entity.HasIndex(e => e.CategoryID);
+                entity.HasIndex(e => e.CreatedByUserID);
+            });
+        }
+
+        private void ConfigureSyncMetadata(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<SyncMetadata>(entity =>
             {
                 entity.ToTable("SyncMetadata");
@@ -94,9 +140,6 @@ namespace LexiFlow.API.Data
                     .WithMany()
                     .HasForeignKey(e => e.UserID);
             });
-
-            // Add seed data
-            SeedData(modelBuilder);
         }
 
         private void SeedData(ModelBuilder modelBuilder)
@@ -107,42 +150,40 @@ namespace LexiFlow.API.Data
                 {
                     UserID = 1,
                     Username = "admin",
-                    // This is just a placeholder hash - in production, use a proper password hashing mechanism
-                    PasswordHash = "AQAAAAEAACcQAAAAELGAeQ+wfIZ+JX+m4BhJBwLQVXSuTXzfza9xg8ZPcx3r98U0BZiJ1zMF+oLAE7Y7iQ==", // Password: Admin@123
+                    PasswordHash = "AQAAAAIAAYagAAAAEGxTLQQa/1iCzdkB8dHtHNNEcfzGwH2TYP7Hxi3LuYn+JpO3V5UdqbXH4nCiUmb3+w==", // hashed "Admin@123"
                     FullName = "System Administrator",
-                    Role = "Admin",
+                    Email = "admin@lexiflow.app",
+                    Role = "Administrator",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }
             );
 
-            // Seed sample vocabulary
-            modelBuilder.Entity<Vocabulary>().HasData(
-                new Vocabulary
+            // Seed basic vocabulary groups
+            modelBuilder.Entity<VocabularyGroup>().HasData(
+                new VocabularyGroup
                 {
-                    VocabularyID = 1,
-                    Japanese = "こんにちは",
-                    Kana = "こんにちは",
-                    Romaji = "konnichiwa",
-                    Vietnamese = "Xin chào",
-                    English = "Hello",
-                    Example = "こんにちは、元気ですか？",
-                    Level = "N5",
-                    CreatedByUserID = 1,
+                    GroupID = 1,
+                    GroupName = "N5 Basic Vocabulary",
+                    Description = "Basic vocabulary for JLPT N5 level",
+                    IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
-                new Vocabulary
+                new VocabularyGroup
                 {
-                    VocabularyID = 2,
-                    Japanese = "ありがとう",
-                    Kana = "ありがとう",
-                    Romaji = "arigatou",
-                    Vietnamese = "Cảm ơn",
-                    English = "Thank you",
-                    Example = "ありがとう、助かりました。",
-                    Level = "N5",
-                    CreatedByUserID = 1,
+                    GroupID = 2,
+                    GroupName = "N4 Intermediate Vocabulary",
+                    Description = "Intermediate vocabulary for JLPT N4 level",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new VocabularyGroup
+                {
+                    GroupID = 3,
+                    GroupName = "Common Expressions",
+                    Description = "Everyday Japanese expressions",
+                    IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 }
             );

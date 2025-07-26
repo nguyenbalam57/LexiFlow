@@ -1,8 +1,15 @@
-﻿namespace LexiFlow.API.Models.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.Models.DTOs
 {
     public class LoginDto
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        [Required]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+
+        public string? DeviceId { get; set; }
     }
 }

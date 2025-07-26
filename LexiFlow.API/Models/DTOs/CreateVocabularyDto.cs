@@ -1,16 +1,70 @@
-﻿namespace LexiFlow.API.Models.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.Models.DTOs
 {
     public class CreateVocabularyDto
     {
-        public string Japanese { get; set; }
-        public string? Kana { get; set; }
-        public string? Romaji { get; set; }
-        public string? Vietnamese { get; set; }
-        public string? English { get; set; }
-        public string? Example { get; set; }
+        [Required]
+        [StringLength(100)]
+        public string Term { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja";
+
+        [StringLength(200)]
+        public string Reading { get; set; } = string.Empty;
+
+        public int? CategoryId { get; set; }
+
+        [Required]
+        public List<DefinitionDto> Definitions { get; set; } = new();
+
+        public List<ExampleDto>? Examples { get; set; }
+
+        public List<TranslationDto>? Translations { get; set; }
+
+        [Range(1, 5)]
+        public int DifficultyLevel { get; set; } = 3;
+
         public string? Notes { get; set; }
-        public string? Level { get; set; }
-        public string? PartOfSpeech { get; set; }
-        public int? GroupID { get; set; }
+
+        public string? Tags { get; set; }
+    }
+
+    public class DefinitionDto
+    {
+        [Required]
+        [StringLength(500)]
+        public string Text { get; set; } = string.Empty;
+
+        [StringLength(50)]
+        public string PartOfSpeech { get; set; } = string.Empty;
+
+        public int SortOrder { get; set; } = 0;
+    }
+
+    public class ExampleDto
+    {
+        [Required]
+        [StringLength(500)]
+        public string Text { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string Translation { get; set; } = string.Empty;
+
+        [Range(1, 5)]
+        public int DifficultyLevel { get; set; } = 3;
+    }
+
+    public class TranslationDto
+    {
+        [Required]
+        [StringLength(100)]
+        public string Text { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "en";
     }
 }

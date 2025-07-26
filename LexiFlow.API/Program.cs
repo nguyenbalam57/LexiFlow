@@ -1,64 +1,55 @@
-using LexiFlow.API.Data.Context;
-using LexiFlow.API.Data.UnitOfWork;
+using System.Text;
+using LexiFlow.API.Data;
 using LexiFlow.API.Middleware;
 using LexiFlow.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using System.Reflection;
-using System.Text;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Serilog
+// Configure Serilog
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/lexiflow-api-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-// Add services to the container.
-builder.Services.AddControllers();
-
-// Configure CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigins",
-        builder =>
-        {
-            builder.WithOrigins(
-                    "http://localhost:3000", // React development server
-                    "http://localhost:8080"  // Vue development server
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        });
-});
-
-// Add Swagger/OpenAPI
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
+// Add services
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        Title = "LexiFlow API",
-        Version = "v1",
-        Description = "REST API for LexiFlow Japanese Learning Application",
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
+
+builder.Services.AddEndpointsApiExplorer();
+
+// Configure Swagger with JWT Authentication
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = builder.Configuration["API:Title"] ?? "LexiFlow API",
+        Version = builder.Configuration["API:Version"] ?? "v1",
+        Description = builder.Configuration["API:Description"] ?? "API for LexiFlow Japanese Vocabulary Learning Application",
         Contact = new OpenApiContact
         {
-            Name = "LexiFlow Team",
-            Email = "support@lexiflow.com",
-            Url = new Uri("https://lexiflow.com/contact")
+            Name = builder.Configuration["API:Contact:Name"] ?? "LexiFlow Team",
+            Email = builder.Configuration["API:Contact:Email"] ?? "support@lexiflow.app",
+            Url = new Uri(builder.Configuration["API:Contact:Url"] ?? "https://lexiflow.app")
         }
     });
 
     // Add JWT Authentication to Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
@@ -67,7 +58,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -81,84 +72,139 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
-
-    // Use XML comments for Swagger documentation
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
 });
 
-// Add Database Context
-builder.Services.AddDbContext<LexiFlowContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-
-// Add Unit of Work
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+// Add Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<ILearningService, LearningService>();
+builder.Services.AddScoped<ISyncService, SyncService>();
 
-// Configure JWT Authentication
+// Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
-                builder.Configuration["Jwt:Key"] ?? "DefaultSecretKeyForDevelopment12345678901234")),
             ValidateIssuer = true,
             ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
+                throw new InvalidOperationException("JWT Key is not configured")))
         };
     });
 
-// Add AutoMapper
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+// Add Authorization
+builder.Services.AddAuthorization();
+
+// Add CORS for client applications
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins(builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? new[] { "*" })
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+
+    // Add LANPolicy for local network access (mobile apps)
+    options.AddPolicy("LANPolicy", policy =>
+    {
+        policy.WithOrigins("http://192.168.*.*", "http://10.*.*.*")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// Add Health Checks
+builder.Services.AddHealthChecks();
+
+// Configure HTTP Client factory
+builder.Services.AddHttpClient();
+
+// Add API versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
+        c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
     });
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    // Use HTTPS Redirection in production
+    if (builder.Configuration.GetValue<bool>("Security:RequireHttps", true))
+    {
+        app.UseHttpsRedirection();
+    }
 }
 
-app.UseHttpsRedirection();
-
-// Use CORS
-app.UseCors("AllowSpecificOrigins");
-
-// Use custom exception middleware
-app.UseExceptionMiddleware();
+// Add error handling middleware
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Use Serilog request logging
 app.UseSerilogRequestLogging();
 
+// Use CORS
+app.UseCors("CorsPolicy");
+
+// Use Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map endpoints
 app.MapControllers();
+app.MapHealthChecks("/health");
 
-// Apply migrations at startup in development environment
+// Apply database migrations on startup in development
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<LexiFlowContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         dbContext.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "An error occurred while applying database migrations");
     }
 }
 
-app.Run();
+try
+{
+    Log.Information("Starting LexiFlow API");
+    app.Run();
+    return 0;
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly");
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

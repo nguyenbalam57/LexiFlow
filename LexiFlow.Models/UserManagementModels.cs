@@ -32,7 +32,7 @@ namespace LexiFlow.Models
         public string Description { get; set; }
 
         [StringLength(100)]
-        public string DepartmentName { get; set; }
+        public string Department { get; set; }
 
         [StringLength(255)]
         [EmailAddress]

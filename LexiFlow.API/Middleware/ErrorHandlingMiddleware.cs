@@ -1,33 +1,20 @@
-﻿using System;
-using System.Net;
+﻿using LexiFlow.API.Models.Responses;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
-using System.Threading.Tasks;
-using LexiFlow.API.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 
 namespace LexiFlow.API.Middleware
 {
-    /// <summary>
-    /// Middleware for handling exceptions and returning standardized error responses
-    /// </summary>
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
         public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
         {
-            _next = next ?? throw new ArgumentNullException(nameof(next));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _next = next;
+            _logger = logger;
         }
 
-        /// <summary>
-        /// Invokes the middleware
-        /// </summary>
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -40,81 +27,50 @@ namespace LexiFlow.API.Middleware
             }
         }
 
-        /// <summary>
-        /// Handles an exception and returns a standardized error response
-        /// </summary>
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            // Log the exception
             _logger.LogError(exception, "An unhandled exception occurred");
 
-            // Set response content type
-            context.Response.ContentType = "application/json";
-
-            // Set response status code and create response object
-            var response = new ApiResponse { Success = false };
-
-            switch (exception)
+            var response = new ApiResponse
             {
-                case UnauthorizedAccessException:
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    response.Message = "Unauthorized access";
-                    break;
+                Success = false,
+                Message = "An unexpected error occurred. Please try again later."
+            };
 
-                case ArgumentException:
-                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    response.Message = exception.Message;
-                    break;
+            var statusCode = StatusCodes.Status500InternalServerError;
 
-                case InvalidOperationException:
-                    context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    response.Message = exception.Message;
-                    break;
-
-                case KeyNotFoundException:
-                    context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    response.Message = exception.Message;
-                    break;
-
-                case DbConcurrencyException:
-                    context.Response.StatusCode = (int)HttpStatusCode.Conflict;
-                    response.Message = "The record you attempted to edit was modified by another user. Please refresh and try again.";
-                    break;
-
-                default:
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    response.Message = "An error occurred while processing your request";
-                    break;
+            // Customize status code and message based on exception type
+            if (exception is UnauthorizedAccessException)
+            {
+                statusCode = StatusCodes.Status401Unauthorized;
+                response.Message = "Unauthorized access";
+            }
+            else if (exception is DbUpdateConcurrencyException)
+            {
+                statusCode = StatusCodes.Status409Conflict;
+                response.Message = "The resource has been modified by another user. Please refresh and try again.";
+            }
+            else if (exception is DbUpdateException)
+            {
+                statusCode = StatusCodes.Status400BadRequest;
+                response.Message = "Database update error. Please check your input.";
+            }
+            else if (exception is KeyNotFoundException)
+            {
+                statusCode = StatusCodes.Status404NotFound;
+                response.Message = "The requested resource was not found.";
             }
 
-            // Serialize and write the response
-            var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/json";
+
+            var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            };
 
+            var json = JsonSerializer.Serialize(response, options);
             await context.Response.WriteAsync(json);
         }
-    }
-
-    /// <summary>
-    /// Exception for database concurrency errors
-    /// </summary>
-    public class DbConcurrencyException : Exception
-    {
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public DbConcurrencyException() : base("A concurrency error occurred") { }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public DbConcurrencyException(string message) : base(message) { }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public DbConcurrencyException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

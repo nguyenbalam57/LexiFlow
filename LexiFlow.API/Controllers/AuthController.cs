@@ -1,174 +1,231 @@
-﻿using LexiFlow.API.DTOs.Auth;
+﻿using LexiFlow.API.Models.DTOs;
+using LexiFlow.API.Models.Responses;
 using LexiFlow.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace LexiFlow.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/v1/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, ILogger<AuthController> logger)
+        public AuthController(
+            IAuthService authService,
+            IConfiguration configuration,
+            ILogger<AuthController> logger)
         {
             _authService = authService;
+            _configuration = configuration;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Authenticate user and generate JWT token
-        /// </summary>
-        /// <param name="loginDto">Login credentials</param>
-        /// <returns>JWT token and user information</returns>
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             try
             {
-                var response = await _authService.LoginAsync(loginDto);
-                if (!response.Success)
+                var user = await _authService.ValidateUserAsync(loginDto.Username, loginDto.Password);
+
+                if (user == null)
                 {
-                    return Unauthorized(response);
+                    _logger.LogWarning("Failed login attempt for username: {Username}", loginDto.Username);
+                    return Unauthorized(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid username or password"
+                    });
                 }
 
-                return Ok(response);
+                var token = GenerateJwtToken(user);
+
+                _logger.LogInformation("User {Username} logged in successfully", user.Username);
+
+                return Ok(new LoginResponse
+                {
+                    Success = true,
+                    Token = token,
+                    ExpiresAt = DateTime.UtcNow.AddHours(8),
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Username = user.Username,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                        Role = user.Role?.Name ?? "User",
+                        IsActive = user.IsActive,
+                        CreatedAt = user.CreatedAt,
+                        LastLoginAt = user.LastLoginAt
+                    }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during login for user {Username}", loginDto.Username);
-                return BadRequest(new { Success = false, Message = "Login failed", Error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Register a new user
-        /// </summary>
-        /// <param name="registerDto">User registration details</param>
-        /// <returns>Created user information</returns>
-        [HttpPost("register")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register([FromBody] RegisterUserDto registerDto)
-        {
-            try
-            {
-                var response = await _authService.RegisterAsync(registerDto);
-                if (!response.Success)
+                _logger.LogError(ex, "Error during login process");
+                return StatusCode(500, new ApiResponse
                 {
-                    return BadRequest(response);
-                }
-
-                return Created($"api/users/{response.Data?.Id}", response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during user registration for username {Username}", registerDto.Username);
-                return BadRequest(new { Success = false, Message = "Registration failed", Error = ex.Message });
+                    Success = false,
+                    Message = "An error occurred during the login process. Please try again."
+                });
             }
         }
 
-        /// <summary>
-        /// Refresh JWT token using refresh token
-        /// </summary>
-        /// <param name="refreshTokenDto">Refresh token</param>
-        /// <returns>New JWT token and user information</returns>
-        [HttpPost("refresh-token")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
-        {
-            try
-            {
-                var response = await _authService.RefreshTokenAsync(refreshTokenDto.RefreshToken);
-                if (!response.Success)
-                {
-                    return Unauthorized(response);
-                }
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during token refresh");
-                return BadRequest(new { Success = false, Message = "Token refresh failed", Error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Change user password
-        /// </summary>
-        /// <param name="changePasswordDto">Password change details</param>
-        /// <returns>Success message</returns>
+        [HttpPost("refresh")]
         [Authorize]
-        [HttpPost("change-password")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        public async Task<IActionResult> RefreshToken()
         {
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 {
-                    return Unauthorized(new { Success = false, Message = "Invalid user identity" });
+                    return Unauthorized(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid token"
+                    });
                 }
 
-                var response = await _authService.ChangePasswordAsync(userId, changePasswordDto);
-                if (!response.Success)
+                var user = await _authService.GetUserByIdAsync(userId);
+                if (user == null)
                 {
-                    return BadRequest(response);
+                    return Unauthorized(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "User not found"
+                    });
                 }
 
-                return Ok(response);
+                var token = GenerateJwtToken(user);
+
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Token refreshed successfully",
+                    Data = new
+                    {
+                        token,
+                        expiresAt = DateTime.UtcNow.AddHours(8)
+                    }
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during password change for user ID {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                return BadRequest(new { Success = false, Message = "Password change failed", Error = ex.Message });
+                _logger.LogError(ex, "Error during token refresh");
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "An error occurred during token refresh. Please try again."
+                });
             }
         }
 
-        /// <summary>
-        /// Logout user by revoking refresh token
-        /// </summary>
-        /// <returns>Success message</returns>
+        [HttpPost("change-password")]
         [Authorize]
-        [HttpPost("logout")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
             try
             {
-                var username = User.FindFirst(ClaimTypes.Name)?.Value;
-                if (string.IsNullOrEmpty(username))
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 {
-                    return Unauthorized(new { Success = false, Message = "Invalid user identity" });
+                    return Unauthorized(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Invalid token"
+                    });
                 }
 
-                var response = await _authService.RevokeTokenAsync(username);
-                if (!response.Success)
+                if (string.IsNullOrEmpty(dto.CurrentPassword) || string.IsNullOrEmpty(dto.NewPassword))
                 {
-                    return BadRequest(response);
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Current password and new password are required"
+                    });
                 }
 
-                return Ok(response);
+                if (dto.NewPassword.Length < 6)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "New password must be at least 6 characters long"
+                    });
+                }
+
+                var result = await _authService.ChangePasswordAsync(userId, dto.CurrentPassword, dto.NewPassword);
+                if (!result)
+                {
+                    return BadRequest(new ApiResponse
+                    {
+                        Success = false,
+                        Message = "Current password is incorrect"
+                    });
+                }
+
+                return Ok(new ApiResponse
+                {
+                    Success = true,
+                    Message = "Password changed successfully"
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during logout for user {Username}", User.FindFirst(ClaimTypes.Name)?.Value);
-                return BadRequest(new { Success = false, Message = "Logout failed", Error = ex.Message });
+                _logger.LogError(ex, "Error changing password for user ID: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                return StatusCode(500, new ApiResponse
+                {
+                    Success = false,
+                    Message = "An error occurred while changing password. Please try again."
+                });
             }
         }
+
+        private string GenerateJwtToken(Core.Entities.User user)
+        {
+            var jwtSettings = _configuration.GetSection("Jwt");
+            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "LexiFlowDefaultSecretKey123!@#");
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? "User")
+            };
+
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                claims.Add(new Claim(ClaimTypes.Email, user.Email));
+            }
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(8),
+                Issuer = jwtSettings["Issuer"] ?? "LexiFlow.API",
+                Audience = jwtSettings["Audience"] ?? "LexiFlowClient",
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+    }
+
+    public class ChangePasswordDto
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

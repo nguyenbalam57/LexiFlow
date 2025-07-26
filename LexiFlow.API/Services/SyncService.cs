@@ -1,251 +1,391 @@
-﻿using LexiFlow.API.Models;
+﻿using LexiFlow.API.Data;
+using LexiFlow.API.Models.DTOs;
+using LexiFlow.Core.Entities;
+using LexiFlow.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace LexiFlow.API.Services
 {
     public class SyncService : ISyncService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<SyncService> _logger;
 
-        public SyncService(ApplicationDbContext context, ILogger<SyncService> logger)
+        public SyncService(ApplicationDbContext dbContext, ILogger<SyncService> logger)
         {
-            _context = context;
+            _dbContext = dbContext;
             _logger = logger;
         }
 
-        public async Task<SyncResult> SyncVocabularyAsync(int userId, DateTime? lastSync, List<PendingSyncItem> pendingItems)
+        public async Task<IEnumerable<SyncItemDto>> GetChangesAsync(string entityType, DateTime? lastSyncTime, int userId)
         {
-            var result = new SyncResult
-            {
-                Success = true,
-                SyncedAt = DateTime.UtcNow
-            };
+            var changes = new List<SyncItemDto>();
 
             try
             {
-                // Process pending uploads from client
-                if (pendingItems != null && pendingItems.Count > 0)
+                switch (entityType.ToLowerInvariant())
                 {
-                    foreach (var item in pendingItems)
-                    {
-                        try
-                        {
-                            await ProcessSyncItemAsync(userId, item);
-                            result.ItemsUploaded++;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error processing sync item {ItemId} for user {UserId}", item.Id, userId);
-                        }
-                    }
+                    case "vocabularyitems":
+                        changes = await GetVocabularyChangesAsync(lastSyncTime, userId);
+                        break;
+
+                    case "categories":
+                        changes = await GetCategoryChangesAsync(lastSyncTime, userId);
+                        break;
+
+                    // Add other entity types as needed
+                    default:
+                        _logger.LogWarning("Unsupported entity type for sync: {EntityType}", entityType);
+                        break;
                 }
-
-                // Download changes from server
-                var changedItems = await GetChangedItemsAsync(userId, lastSync);
-                result.ItemsDownloaded = changedItems.Count;
-
-                // Update last sync timestamp
-                await UpdateLastSyncTimestampAsync(userId, "Vocabulary", DateTime.UtcNow);
             }
             catch (Exception ex)
             {
-                result.Success = false;
-                result.ErrorMessage = ex.Message;
-                _logger.LogError(ex, "Sync operation failed for user {UserId}", userId);
+                _logger.LogError(ex, "Error getting changes for {EntityType}", entityType);
             }
 
-            return result;
+            return changes;
         }
 
-        public async Task<DateTime> GetLastSyncTimestampAsync(int userId, string tableName)
+        private async Task<List<SyncItemDto>> GetVocabularyChangesAsync(DateTime? lastSyncTime, int userId)
         {
-            var syncMetadata = await _context.SyncMetadata
-                .Where(sm => sm.UserID == userId && sm.TableName == tableName)
-                .FirstOrDefaultAsync();
+            var changes = new List<SyncItemDto>();
 
-            return syncMetadata?.LastSyncTimestamp ?? DateTime.MinValue;
-        }
+            // Get items that have been created or updated since the last sync
+            var query = _dbContext.VocabularyItems
+                .Include(v => v.Definitions)
+                .Include(v => v.Examples)
+                .Include(v => v.Translations)
+                .AsQueryable();
 
-        private async Task ProcessSyncItemAsync(int userId, PendingSyncItem item)
-        {
-            if (item.TableName.ToLower() != "vocabulary")
+            if (lastSyncTime.HasValue)
             {
-                _logger.LogWarning("Unsupported table name in sync item: {TableName}", item.TableName);
-                return;
+                query = query.Where(v =>
+                    v.CreatedAt >= lastSyncTime ||
+                    (v.ModifiedAt.HasValue && v.ModifiedAt >= lastSyncTime) ||
+                    (v.DeletedAt.HasValue && v.DeletedAt >= lastSyncTime)
+                );
             }
 
-            switch (item.Operation.ToUpper())
+            var items = await query.ToListAsync();
+
+            foreach (var item in items)
             {
-                case "INSERT":
-                    await ProcessInsertAsync(userId, item);
-                    break;
+                var action = item.IsDeleted ? "Delete" : (item.CreatedAt >= (lastSyncTime ?? DateTime.MinValue) ? "Create" : "Update");
 
-                case "UPDATE":
-                    await ProcessUpdateAsync(userId, item);
-                    break;
-
-                case "DELETE":
-                    await ProcessDeleteAsync(userId, item);
-                    break;
-
-                default:
-                    _logger.LogWarning("Unknown operation in sync item: {Operation}", item.Operation);
-                    break;
-            }
-        }
-
-        private async Task ProcessInsertAsync(int userId, PendingSyncItem item)
-        {
-            var vocabulary = JsonSerializer.Deserialize<Vocabulary>(item.Data);
-
-            if (vocabulary == null)
-            {
-                _logger.LogWarning("Failed to deserialize vocabulary data for INSERT operation");
-                return;
-            }
-
-            // Ensure user ID is set correctly
-            vocabulary.CreatedByUserID = userId;
-            vocabulary.CreatedAt = DateTime.UtcNow;
-            vocabulary.VocabularyID = 0; // Ensure auto-increment works
-
-            _context.Vocabulary.Add(vocabulary);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Inserted vocabulary item {Id} from sync for user {UserId}",
-                vocabulary.VocabularyID, userId);
-        }
-
-        private async Task ProcessUpdateAsync(int userId, PendingSyncItem item)
-        {
-            if (!item.RecordId.HasValue)
-            {
-                _logger.LogWarning("Missing RecordId for UPDATE operation");
-                return;
-            }
-
-            var existingVocabulary = await _context.Vocabulary
-                .Where(v => v.VocabularyID == item.RecordId.Value)
-                .FirstOrDefaultAsync();
-
-            if (existingVocabulary == null)
-            {
-                _logger.LogWarning("Vocabulary item {Id} not found for UPDATE operation", item.RecordId.Value);
-                return;
-            }
-
-            // Verify ownership
-            if (existingVocabulary.CreatedByUserID != userId)
-            {
-                _logger.LogWarning("User {UserId} attempted to update vocabulary item {Id} they don't own",
-                    userId, item.RecordId.Value);
-                return;
-            }
-
-            var updatedVocabulary = JsonSerializer.Deserialize<Vocabulary>(item.Data);
-
-            if (updatedVocabulary == null)
-            {
-                _logger.LogWarning("Failed to deserialize vocabulary data for UPDATE operation");
-                return;
-            }
-
-            // Update fields
-            existingVocabulary.Japanese = updatedVocabulary.Japanese;
-            existingVocabulary.Kana = updatedVocabulary.Kana;
-            existingVocabulary.Romaji = updatedVocabulary.Romaji;
-            existingVocabulary.Vietnamese = updatedVocabulary.Vietnamese;
-            existingVocabulary.English = updatedVocabulary.English;
-            existingVocabulary.Example = updatedVocabulary.Example;
-            existingVocabulary.Notes = updatedVocabulary.Notes;
-            existingVocabulary.Level = updatedVocabulary.Level;
-            existingVocabulary.UpdatedByUserID = userId;
-            existingVocabulary.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Updated vocabulary item {Id} from sync for user {UserId}",
-                existingVocabulary.VocabularyID, userId);
-        }
-
-        private async Task ProcessDeleteAsync(int userId, PendingSyncItem item)
-        {
-            if (!item.RecordId.HasValue)
-            {
-                _logger.LogWarning("Missing RecordId for DELETE operation");
-                return;
-            }
-
-            var existingVocabulary = await _context.Vocabulary
-                .Where(v => v.VocabularyID == item.RecordId.Value)
-                .FirstOrDefaultAsync();
-
-            if (existingVocabulary == null)
-            {
-                _logger.LogWarning("Vocabulary item {Id} not found for DELETE operation", item.RecordId.Value);
-                return;
-            }
-
-            // Verify ownership
-            if (existingVocabulary.CreatedByUserID != userId)
-            {
-                _logger.LogWarning("User {UserId} attempted to delete vocabulary item {Id} they don't own",
-                    userId, item.RecordId.Value);
-                return;
-            }
-
-            _context.Vocabulary.Remove(existingVocabulary);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Deleted vocabulary item {Id} from sync for user {UserId}",
-                existingVocabulary.VocabularyID, userId);
-        }
-
-        private async Task<List<Vocabulary>> GetChangedItemsAsync(int userId, DateTime? lastSync)
-        {
-            if (!lastSync.HasValue)
-            {
-                // If no last sync timestamp, return all vocabulary items for the user
-                return await _context.Vocabulary
-                    .Where(v => v.CreatedByUserID == userId)
-                    .ToListAsync();
-            }
-
-            // Return only items that have been created or updated since the last sync
-            return await _context.Vocabulary
-                .Where(v => v.CreatedByUserID == userId &&
-                           (v.CreatedAt > lastSync.Value ||
-                            (v.UpdatedAt.HasValue && v.UpdatedAt.Value > lastSync.Value)))
-                .ToListAsync();
-        }
-
-        private async Task UpdateLastSyncTimestampAsync(int userId, string tableName, DateTime timestamp)
-        {
-            var syncMetadata = await _context.SyncMetadata
-                .Where(sm => sm.UserID == userId && sm.TableName == tableName)
-                .FirstOrDefaultAsync();
-
-            if (syncMetadata == null)
-            {
-                // Create new record
-                syncMetadata = new SyncMetadata
+                changes.Add(new SyncItemDto
                 {
-                    UserID = userId,
-                    TableName = tableName,
-                    LastSyncTimestamp = timestamp,
-                    LastSyncVersion = 1
-                };
-                _context.SyncMetadata.Add(syncMetadata);
-            }
-            else
-            {
-                // Update existing record
-                syncMetadata.LastSyncTimestamp = timestamp;
-                syncMetadata.LastSyncVersion++;
+                    Id = item.Id,
+                    EntityType = "VocabularyItem",
+                    Action = action,
+                    Data = action != "Delete" ? item : null,
+                    Timestamp = item.ModifiedAt ?? item.CreatedAt,
+                    RowVersionString = Convert.ToBase64String(item.RowVersion)
+                });
             }
 
-            await _context.SaveChangesAsync();
+            return changes;
+        }
+
+        private async Task<List<SyncItemDto>> GetCategoryChangesAsync(DateTime? lastSyncTime, int userId)
+        {
+            var changes = new List<SyncItemDto>();
+
+            // Get categories that have been created or updated since the last sync
+            var query = _dbContext.Categories.AsQueryable();
+
+            if (lastSyncTime.HasValue)
+            {
+                query = query.Where(c =>
+                    c.CreatedAt >= lastSyncTime ||
+                    (c.ModifiedAt.HasValue && c.ModifiedAt >= lastSyncTime) ||
+                    (c.DeletedAt.HasValue && c.DeletedAt >= lastSyncTime)
+                );
+            }
+
+            var categories = await query.ToListAsync();
+
+            foreach (var category in categories)
+            {
+                var action = category.IsDeleted ? "Delete" : (category.CreatedAt >= (lastSyncTime ?? DateTime.MinValue) ? "Create" : "Update");
+
+                changes.Add(new SyncItemDto
+                {
+                    Id = category.Id,
+                    EntityType = "Category",
+                    Action = action,
+                    Data = action != "Delete" ? category : null,
+                    Timestamp = category.ModifiedAt ?? category.CreatedAt,
+                    RowVersionString = Convert.ToBase64String(category.RowVersion)
+                });
+            }
+
+            return changes;
+        }
+
+        public async Task<(int Created, int Updated, int Deleted, List<string> Errors)> ApplyChangesAsync(SyncBatchDto batch, int userId)
+        {
+            int created = 0;
+            int updated = 0;
+            int deleted = 0;
+            var errors = new List<string>();
+
+            // Start a transaction to ensure all changes are applied atomically
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                switch (batch.EntityType.ToLowerInvariant())
+                {
+                    case "vocabularyitems":
+                        (created, updated, deleted, errors) = await ApplyVocabularyChangesAsync(batch.Changes, userId);
+                        break;
+
+                    case "categories":
+                        (created, updated, deleted, errors) = await ApplyCategoryChangesAsync(batch.Changes, userId);
+                        break;
+
+                    // Add other entity types as needed
+                    default:
+                        errors.Add($"Unsupported entity type for sync: {batch.EntityType}");
+                        break;
+                }
+
+                if (errors.Count == 0)
+                {
+                    // Commit the transaction if there are no errors
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    // Rollback if there are errors
+                    await transaction.RollbackAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Rollback in case of exceptions
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error applying changes for {EntityType}", batch.EntityType);
+                errors.Add($"Error applying changes: {ex.Message}");
+            }
+
+            return (created, updated, deleted, errors);
+        }
+
+        private async Task<(int Created, int Updated, int Deleted, List<string> Errors)> ApplyVocabularyChangesAsync(
+            List<SyncItemDto> changes, int userId)
+        {
+            int created = 0;
+            int updated = 0;
+            int deleted = 0;
+            var errors = new List<string>();
+
+            foreach (var change in changes)
+            {
+                try
+                {
+                    switch (change.Action)
+                    {
+                        case "Create":
+                            var newItem = JsonSerializer.Deserialize<VocabularyItem>(
+                                JsonSerializer.Serialize(change.Data));
+
+                            if (newItem != null)
+                            {
+                                newItem.CreatedBy = userId;
+                                newItem.CreatedAt = DateTime.UtcNow;
+                                _dbContext.VocabularyItems.Add(newItem);
+                                await _dbContext.SaveChangesAsync();
+                                created++;
+                            }
+                            break;
+
+                        case "Update":
+                            var updateItem = JsonSerializer.Deserialize<VocabularyItem>(
+                                JsonSerializer.Serialize(change.Data));
+
+                            if (updateItem != null)
+                            {
+                                var existingItem = await _dbContext.VocabularyItems
+                                    .Include(v => v.Definitions)
+                                    .Include(v => v.Examples)
+                                    .Include(v => v.Translations)
+                                    .FirstOrDefaultAsync(v => v.Id == change.Id);
+
+                                if (existingItem != null)
+                                {
+                                    // Update basic properties
+                                    existingItem.Term = updateItem.Term;
+                                    existingItem.Reading = updateItem.Reading;
+                                    existingItem.CategoryId = updateItem.CategoryId;
+                                    existingItem.DifficultyLevel = updateItem.DifficultyLevel;
+                                    existingItem.Notes = updateItem.Notes;
+                                    existingItem.Tags = updateItem.Tags;
+                                    existingItem.ModifiedBy = userId;
+                                    existingItem.ModifiedAt = DateTime.UtcNow;
+
+                                    // Update related collections
+                                    UpdateVocabularyRelatedEntities(existingItem, updateItem, userId);
+
+                                    await _dbContext.SaveChangesAsync();
+                                    updated++;
+                                }
+                                else
+                                {
+                                    errors.Add($"Vocabulary item with ID {change.Id} not found for update");
+                                }
+                            }
+                            break;
+
+                        case "Delete":
+                            var existingItemToDelete = await _dbContext.VocabularyItems.FindAsync(change.Id);
+                            if (existingItemToDelete != null)
+                            {
+                                existingItemToDelete.IsDeleted = true;
+                                existingItemToDelete.DeletedBy = userId;
+                                existingItemToDelete.DeletedAt = DateTime.UtcNow;
+                                await _dbContext.SaveChangesAsync();
+                                deleted++;
+                            }
+                            else
+                            {
+                                errors.Add($"Vocabulary item with ID {change.Id} not found for deletion");
+                            }
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error applying vocabulary change for item {Id}", change.Id);
+                    errors.Add($"Error with vocabulary item {change.Id}: {ex.Message}");
+                }
+            }
+
+            return (created, updated, deleted, errors);
+        }
+
+        private void UpdateVocabularyRelatedEntities(VocabularyItem existingItem, VocabularyItem updateItem, int userId)
+        {
+            // Update definitions
+            _dbContext.Definitions.RemoveRange(existingItem.Definitions);
+            existingItem.Definitions = updateItem.Definitions.Select(d => new Definition
+            {
+                VocabularyItemId = existingItem.Id,
+                Text = d.Text,
+                PartOfSpeech = d.PartOfSpeech,
+                SortOrder = d.SortOrder,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+
+            // Update examples
+            _dbContext.Examples.RemoveRange(existingItem.Examples);
+            existingItem.Examples = updateItem.Examples.Select(e => new Example
+            {
+                VocabularyItemId = existingItem.Id,
+                Text = e.Text,
+                Translation = e.Translation,
+                DifficultyLevel = e.DifficultyLevel,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+
+            // Update translations
+            _dbContext.Translations.RemoveRange(existingItem.Translations);
+            existingItem.Translations = updateItem.Translations.Select(t => new Translation
+            {
+                VocabularyItemId = existingItem.Id,
+                Text = t.Text,
+                LanguageCode = t.LanguageCode,
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+        }
+
+        private async Task<(int Created, int Updated, int Deleted, List<string> Errors)> ApplyCategoryChangesAsync(
+            List<SyncItemDto> changes, int userId)
+        {
+            int created = 0;
+            int updated = 0;
+            int deleted = 0;
+            var errors = new List<string>();
+
+            foreach (var change in changes)
+            {
+                try
+                {
+                    switch (change.Action)
+                    {
+                        case "Create":
+                            var newCategory = JsonSerializer.Deserialize<Category>(
+                                JsonSerializer.Serialize(change.Data));
+
+                            if (newCategory != null)
+                            {
+                                newCategory.CreatedBy = userId;
+                                newCategory.CreatedAt = DateTime.UtcNow;
+                                _dbContext.Categories.Add(newCategory);
+                                await _dbContext.SaveChangesAsync();
+                                created++;
+                            }
+                            break;
+
+                        case "Update":
+                            var updateCategory = JsonSerializer.Deserialize<Category>(
+                                JsonSerializer.Serialize(change.Data));
+
+                            if (updateCategory != null)
+                            {
+                                var existingCategory = await _dbContext.Categories
+                                    .FirstOrDefaultAsync(c => c.Id == change.Id);
+
+                                if (existingCategory != null)
+                                {
+                                    existingCategory.Name = updateCategory.Name;
+                                    existingCategory.Description = updateCategory.Description;
+                                    existingCategory.ParentId = updateCategory.ParentId;
+                                    existingCategory.Status = updateCategory.Status;
+                                    existingCategory.SortOrder = updateCategory.SortOrder;
+                                    existingCategory.ModifiedBy = userId;
+                                    existingCategory.ModifiedAt = DateTime.UtcNow;
+
+                                    await _dbContext.SaveChangesAsync();
+                                    updated++;
+                                }
+                                else
+                                {
+                                    errors.Add($"Category with ID {change.Id} not found for update");
+                                }
+                            }
+                            break;
+
+                        case "Delete":
+                            var existingCategoryToDelete = await _dbContext.Categories.FindAsync(change.Id);
+                            if (existingCategoryToDelete != null)
+                            {
+                                existingCategoryToDelete.IsDeleted = true;
+                                existingCategoryToDelete.DeletedBy = userId;
+                                existingCategoryToDelete.DeletedAt = DateTime.UtcNow;
+                                await _dbContext.SaveChangesAsync();
+                                deleted++;
+                            }
+                            else
+                            {
+                                errors.Add($"Category with ID {change.Id} not found for deletion");
+                            }
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error applying category change for item {Id}", change.Id);
+                    errors.Add($"Error with category {change.Id}: {ex.Message}");
+                }
+            }
+
+            return (created, updated, deleted, errors);
         }
     }
 }
