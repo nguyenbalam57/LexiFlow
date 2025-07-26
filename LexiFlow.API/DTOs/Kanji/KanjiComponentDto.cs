@@ -1,13 +1,15 @@
-﻿namespace LexiFlow.API.DTOs.Kanji
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.Kanji
 {
     public class KanjiComponentDto
     {
-        public int ComponentID { get; set; }
-        public string ComponentName { get; set; }
-        public string Character { get; set; }
-        public string Meaning { get; set; }
+        public int Id { get; set; }
+        public int ComponentId { get; set; }
+
+        [StringLength(50)]
         public string Type { get; set; }
-        public int? StrokeCount { get; set; }
+
         public string Position { get; set; }
     }
 }

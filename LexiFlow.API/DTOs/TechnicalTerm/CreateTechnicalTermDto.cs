@@ -7,80 +7,37 @@ namespace LexiFlow.API.DTOs.TechnicalTerm
     /// </summary>
     public class CreateTechnicalTermDto
     {
-        /// <summary>
-        /// Thuật ngữ tiếng Nhật
-        /// </summary>
         [Required]
         [StringLength(100)]
-        public string Japanese { get; set; }
+        public string Term { get; set; }
 
-        /// <summary>
-        /// Kana của thuật ngữ
-        /// </summary>
-        [StringLength(100)]
-        public string Kana { get; set; }
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja";
 
-        /// <summary>
-        /// Romaji của thuật ngữ
-        /// </summary>
-        [StringLength(100)]
-        public string Romaji { get; set; }
+        [StringLength(200)]
+        public string Reading { get; set; }
 
-        /// <summary>
-        /// Nghĩa tiếng Việt
-        /// </summary>
-        [StringLength(255)]
-        public string Vietnamese { get; set; }
-
-        /// <summary>
-        /// Nghĩa tiếng Anh
-        /// </summary>
-        [StringLength(255)]
-        public string English { get; set; }
-
-        /// <summary>
-        /// Lĩnh vực thuật ngữ
-        /// </summary>
         [StringLength(100)]
         public string Field { get; set; }
 
-        /// <summary>
-        /// Lĩnh vực con
-        /// </summary>
         [StringLength(100)]
         public string SubField { get; set; }
 
-        /// <summary>
-        /// Định nghĩa chi tiết
-        /// </summary>
-        public string Definition { get; set; }
-
-        /// <summary>
-        /// Ngữ cảnh sử dụng
-        /// </summary>
-        public string Context { get; set; }
-
-        /// <summary>
-        /// Ví dụ sử dụng
-        /// </summary>
-        public string Examples { get; set; }
-
-        /// <summary>
-        /// Viết tắt
-        /// </summary>
         [StringLength(50)]
         public string Abbreviation { get; set; }
 
-        /// <summary>
-        /// Các thuật ngữ liên quan
-        /// </summary>
-        [StringLength(255)]
-        public string RelatedTerms { get; set; }
-
-        /// <summary>
-        /// Phòng ban liên quan
-        /// </summary>
         [StringLength(100)]
         public string Department { get; set; }
+
+        public string Definition { get; set; }
+
+        public string Context { get; set; }
+
+        public string RelatedTerms { get; set; }
+
+        public List<TermExampleDto> Examples { get; set; } = new List<TermExampleDto>();
+
+        public List<TermTranslationDto> Translations { get; set; } = new List<TermTranslationDto>();
     }
 }

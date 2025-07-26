@@ -6,27 +6,32 @@ namespace LexiFlow.API.DTOs.Grammar
     {
         [Required]
         [StringLength(100)]
-        public string GrammarPoint { get; set; }
-
-        [StringLength(10)]
-        public string JLPTLevel { get; set; }
-
-        [StringLength(255)]
         public string Pattern { get; set; }
 
-        public string Meaning { get; set; }
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja";
 
-        public string Usage { get; set; }
+        [StringLength(200)]
+        public string Reading { get; set; }
+
+        [StringLength(100)]
+        public string Level { get; set; }
+
+        public int? CategoryId { get; set; }
+
+        [Range(1, 5)]
+        public int DifficultyLevel { get; set; } = 3;
 
         public string Notes { get; set; }
 
-        public string Conjugation { get; set; }
+        public string Tags { get; set; }
 
-        [StringLength(255)]
-        public string RelatedGrammar { get; set; }
+        [Required]
+        public List<GrammarDefinitionDto> Definitions { get; set; } = new List<GrammarDefinitionDto>();
 
-        public int? CategoryID { get; set; }
+        public List<GrammarExampleDto> Examples { get; set; } = new List<GrammarExampleDto>();
 
-        public List<CreateGrammarExampleDto> Examples { get; set; } = new List<CreateGrammarExampleDto>();
+        public List<GrammarTranslationDto> Translations { get; set; } = new List<GrammarTranslationDto>();
     }
 }

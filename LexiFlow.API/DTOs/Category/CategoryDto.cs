@@ -38,6 +38,8 @@ namespace LexiFlow.API.DTOs.Category
         /// </summary>
         public bool IsActive { get; set; }
 
+        public int? ParentCategoryID { get; set; }
+
         /// <summary>
         /// Số nhóm từ vựng trong danh mục
         /// </summary>

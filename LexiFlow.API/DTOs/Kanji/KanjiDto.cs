@@ -4,23 +4,21 @@ namespace LexiFlow.API.DTOs.Kanji
 {
     public class KanjiDto
     {
-        public int KanjiID { get; set; }
+        public int Id { get; set; }
         public string Character { get; set; }
-        public string Onyomi { get; set; }
-        public string Kunyomi { get; set; }
-        public string Meaning { get; set; }
-        public int? StrokeCount { get; set; }
-        public string JLPTLevel { get; set; }
-        public int? Grade { get; set; }
-        public string Radicals { get; set; }
-        public string Components { get; set; }
-        public string Examples { get; set; }
-        public string MnemonicHint { get; set; }
-        public string WritingOrderImage { get; set; }
+        public string OnYomi { get; set; }
+        public string KunYomi { get; set; }
+        public int Strokes { get; set; }
+        public string JLPT { get; set; }
+        public string Grade { get; set; }
+        public string RadicalName { get; set; }
+        public string StrokeOrder { get; set; }
+        public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public List<KanjiComponentDto> KanjiComponents { get; set; } = new List<KanjiComponentDto>();
-        public List<VocabularyReferenceDto> RelatedVocabulary { get; set; } = new List<VocabularyReferenceDto>();
+        public DateTime ModifiedAt { get; set; }
+        public string RowVersionString { get; set; }
+        public List<KanjiMeaningDto> Meanings { get; set; } = new List<KanjiMeaningDto>();
+        public List<KanjiExampleDto> Examples { get; set; } = new List<KanjiExampleDto>();
     }
 
 }

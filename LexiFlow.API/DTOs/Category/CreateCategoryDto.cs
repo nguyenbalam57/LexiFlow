@@ -30,5 +30,9 @@ namespace LexiFlow.API.DTOs.Category
         /// Thứ tự hiển thị
         /// </summary>
         public int? DisplayOrder { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public int? ParentCategoryID { get; set; }
     }
 }

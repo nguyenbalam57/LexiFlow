@@ -9,34 +9,28 @@ namespace LexiFlow.API.DTOs.Kanji
         public string Character { get; set; }
 
         [StringLength(100)]
-        public string Onyomi { get; set; }
+        public string OnYomi { get; set; }
 
         [StringLength(100)]
-        public string Kunyomi { get; set; }
+        public string KunYomi { get; set; }
 
-        [StringLength(255)]
-        public string Meaning { get; set; }
+        public int Strokes { get; set; }
 
-        public int? StrokeCount { get; set; }
+        [StringLength(20)]
+        public string JLPT { get; set; }
 
-        [StringLength(10)]
-        public string JLPTLevel { get; set; }
+        [StringLength(20)]
+        public string Grade { get; set; }
 
-        public int? Grade { get; set; }
+        [StringLength(50)]
+        public string RadicalName { get; set; }
 
-        [StringLength(100)]
-        public string Radicals { get; set; }
+        public string StrokeOrder { get; set; }
 
-        [StringLength(100)]
-        public string Components { get; set; }
+        public List<KanjiMeaningDto> Meanings { get; set; } = new List<KanjiMeaningDto>();
 
-        public string Examples { get; set; }
+        public List<KanjiExampleDto> Examples { get; set; } = new List<KanjiExampleDto>();
 
-        public string MnemonicHint { get; set; }
-
-        [StringLength(255)]
-        public string WritingOrderImage { get; set; }
-
-        public List<int> ComponentIds { get; set; } = new List<int>();
+        public List<KanjiComponentDto> Components { get; set; } = new List<KanjiComponentDto>();
     }
 }
