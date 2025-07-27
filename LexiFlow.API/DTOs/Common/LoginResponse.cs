@@ -7,6 +7,6 @@ namespace LexiFlow.API.DTOs.Common
         public bool Success { get; set; }
         public string Token { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
-        public UserDto? User { get; set; }
+        public UserProfileDto? User { get; set; }
     }
 }
