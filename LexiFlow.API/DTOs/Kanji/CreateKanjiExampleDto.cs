@@ -1,32 +1,28 @@
-﻿using LexiFlow.Models;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace LexiFlow.API.DTOs.Kanji
 {
     /// <summary>
-    /// DTO for Kanji example
+    /// DTO for creating a Kanji example
     /// </summary>
-    public class KanjiExampleDto
+    public class CreateKanjiExampleDto
     {
-        /// <summary>
-        /// ID of the example
-        /// </summary>
-        public int ExampleID { get; set; }
-
         /// <summary>
         /// Japanese word or phrase
         /// </summary>
+        [Required]
+        [StringLength(100)]
         public string Japanese { get; set; }
 
         /// <summary>
         /// Kana reading
         /// </summary>
+        [StringLength(100)]
         public string Kana { get; set; }
 
         /// <summary>
         /// Meanings in different languages
         /// </summary>
-        public List<KanjiExampleMeaningDto> Meanings { get; set; } = new List<KanjiExampleMeaningDto>();
+        public List<CreateKanjiExampleMeaningDto> Meanings { get; set; } = new List<CreateKanjiExampleMeaningDto>();
     }
 }

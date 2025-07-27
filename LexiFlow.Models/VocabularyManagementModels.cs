@@ -289,7 +289,7 @@ namespace LexiFlow.Models
 
     #endregion
 
-   
+
 
     #region KANJI
 
@@ -299,11 +299,14 @@ namespace LexiFlow.Models
     /// Quan hệ: Có nhiều KanjiMeaning, KanjiExample, KanjiComponent.
     /// Đặc điểm: Cấu trúc đa ngôn ngữ thông qua KanjiMeaning.
     /// </summary>
+    /// <summary>
+    /// Represents a Kanji character
+    /// </summary>
     public class Kanji
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int KanjiID { get; set; }
 
         [Required]
         [StringLength(10)]
@@ -315,10 +318,10 @@ namespace LexiFlow.Models
         [StringLength(100)]
         public string KunYomi { get; set; }  // Âm Nhật (Kun-yomi)
 
-        public int Strokes { get; set; }  // Số nét
+        public int StrokeCount { get; set; }  // Số nét
 
         [StringLength(20)]
-        public string JLPT { get; set; }  // Cấp độ JLPT (N5-N1)
+        public string JLPTLevel { get; set; }  // Cấp độ JLPT (N5-N1)
 
         [StringLength(20)]
         public string Grade { get; set; }  // Lớp học (Tiểu học 1-6, v.v.)
@@ -328,20 +331,28 @@ namespace LexiFlow.Models
 
         public string StrokeOrder { get; set; }  // Thứ tự viết nét
 
+        [StringLength(20)]
         public string Status { get; set; } = "Active";
 
-        public int CreatedBy { get; set; }
-        public int? ModifiedBy { get; set; }
+        public int CreatedByUserID { get; set; }
+        public int? LastModifiedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
         [Timestamp]
         public byte[] RowVersion { get; set; }
 
         // Navigation properties
-        public virtual ICollection<KanjiMeaning> Meanings { get; set; }
-        public virtual ICollection<KanjiExample> Examples { get; set; }
-        public virtual ICollection<KanjiComponent> Components { get; set; }
-        public virtual ICollection<KanjiVocabulary> KanjiVocabularies { get; set; }
+        public virtual ICollection<KanjiMeaning> Meanings { get; set; } = new List<KanjiMeaning>();
+        public virtual ICollection<KanjiExample> Examples { get; set; } = new List<KanjiExample>();
+        public virtual ICollection<KanjiComponentMapping> ComponentMappings { get; set; } = new List<KanjiComponentMapping>();
+        public virtual ICollection<KanjiVocabulary> KanjiVocabularies { get; set; } = new List<KanjiVocabulary>();
+
+        [ForeignKey("CreatedByUserID")]
+        public virtual User CreatedBy { get; set; }
+
+        [ForeignKey("LastModifiedBy")]
+        public virtual User ModifiedBy { get; set; }
     }
     /// <summary>
     /// Mục đích: Lưu trữ nghĩa của Kanji trong các ngôn ngữ khác nhau.
@@ -352,18 +363,29 @@ namespace LexiFlow.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public int KanjiId { get; set; }
+        public int MeaningID { get; set; }
+
+        [Required]
+        public int KanjiID { get; set; }
+
         [Required]
         [StringLength(255)]
-        public string Text { get; set; }
+        public string Meaning { get; set; }
+
         [Required]
         [StringLength(10)]
-        public string LanguageCode { get; set; }
+        public string Language { get; set; }
+
         public int SortOrder { get; set; }
-        public int CreatedBy { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [ForeignKey("KanjiId")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation properties
+        [ForeignKey("KanjiID")]
         public virtual Kanji Kanji { get; set; }
     }
     /// <summary>
@@ -371,25 +393,69 @@ namespace LexiFlow.Models
     /// Thuộc tính chính: Id, KanjiId, Word, Reading, Meaning, LanguageCode
     /// Quan hệ: Thuộc về một Kanji.
     /// </summary>
+    /// <summary>
+    /// Represents an example of Kanji usage
+    /// </summary>
     public class KanjiExample
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public int KanjiId { get; set; }
+        public int ExampleID { get; set; }
+
+        [Required]
+        public int KanjiID { get; set; }
+
         [Required]
         [StringLength(100)]
-        public string Word { get; set; }  // Từ chứa Kanji
+        public string Japanese { get; set; }  // Ví dụ bằng tiếng Nhật
+
         [StringLength(100)]
-        public string Reading { get; set; }  // Cách đọc từ
-        [StringLength(255)]
-        public string Meaning { get; set; }  // Nghĩa của từ
-        [StringLength(10)]
-        public string LanguageCode { get; set; } = "vi";  // Ngôn ngữ của nghĩa
-        public int CreatedBy { get; set; }
+        public string Kana { get; set; }  // Phiên âm Hiragana/Katakana
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [ForeignKey("KanjiId")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation properties
+        [ForeignKey("KanjiID")]
         public virtual Kanji Kanji { get; set; }
+
+        // Collection of meanings in different languages
+        public virtual ICollection<KanjiExampleMeaning> Meanings { get; set; } = new List<KanjiExampleMeaning>();
+    }
+
+    /// <summary>
+    /// Represents a meaning of a Kanji example in a specific language
+    /// </summary>
+    public class KanjiExampleMeaning
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int MeaningID { get; set; }
+
+        [Required]
+        public int ExampleID { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        public string Meaning { get; set; }  // Nghĩa của ví dụ
+
+        [Required]
+        [StringLength(10)]
+        public string Language { get; set; }  // Mã ngôn ngữ (vi, en, ...)
+
+        public int SortOrder { get; set; }  // Thứ tự hiển thị
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation property
+        [ForeignKey("ExampleID")]
+        public virtual KanjiExample Example { get; set; }
     }
     /// <summary>
     /// Mục đích: Lưu trữ thông tin về các thành phần cấu tạo nên Kanji.
@@ -400,18 +466,65 @@ namespace LexiFlow.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public int KanjiId { get; set; }
-        public int ComponentId { get; set; }  // Tham chiếu đến một Kanji khác làm thành phần
+        public int ComponentID { get; set; }
+
+        [Required]
+        [StringLength(10)]
+        public string Character { get; set; }  // Ký tự thành phần
+
+        [Required]
         [StringLength(50)]
-        public string Type { get; set; }  // Radical, Phonetic, v.v.
-        public string Position { get; set; }  // Vị trí trong Kanji
+        public string Name { get; set; }  // Tên thành phần
+
+        [StringLength(100)]
+        public string Meaning { get; set; }  // Nghĩa của thành phần
+
+        [Required]
+        [StringLength(20)]
+        public string Type { get; set; }  // Loại: Radical, Element, etc.
+
+        public int StrokeCount { get; set; }  // Số nét
+
         public int CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        [ForeignKey("KanjiId")]
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation properties
+        public virtual ICollection<KanjiComponentMapping> ComponentMappings { get; set; } = new List<KanjiComponentMapping>();
+    }
+
+    /// <summary>
+    /// Represents a mapping between Kanji and its components
+    /// </summary>
+    public class KanjiComponentMapping
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int MappingID { get; set; }
+
+        [Required]
+        public int KanjiID { get; set; }
+
+        [Required]
+        public int ComponentID { get; set; }
+
+        [StringLength(50)]
+        public string Position { get; set; }  // Vị trí thành phần trong Kanji
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation properties
+        [ForeignKey("KanjiID")]
         public virtual Kanji Kanji { get; set; }
-        [ForeignKey("ComponentId")]
-        public virtual Kanji Component { get; set; }
+
+        [ForeignKey("ComponentID")]
+        public virtual KanjiComponent Component { get; set; }
     }
 
     /// <summary>
@@ -431,11 +544,10 @@ namespace LexiFlow.Models
         [Required]
         public int VocabularyID { get; set; }
 
-        public int? Position { get; set; }
+        public int? Position { get; set; }  // Vị trí Kanji trong từ vựng
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [Timestamp]
         public byte[] RowVersion { get; set; }
@@ -446,6 +558,49 @@ namespace LexiFlow.Models
 
         [ForeignKey("VocabularyID")]
         public virtual Vocabulary Vocabulary { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a user's progress in learning a Kanji
+    /// </summary>
+    public class UserKanjiProgress
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ProgressID { get; set; }
+
+        [Required]
+        public int UserID { get; set; }
+
+        [Required]
+        public int KanjiID { get; set; }
+
+        public int RecognitionLevel { get; set; } = 0;  // Mức độ nhận biết (0-10)
+
+        public int WritingLevel { get; set; } = 0;  // Mức độ viết (0-10)
+
+        public DateTime? LastPracticed { get; set; }  // Thời điểm luyện tập gần nhất
+
+        public int PracticeCount { get; set; } = 0;  // Số lần luyện tập
+
+        public int CorrectCount { get; set; } = 0;  // Số lần trả lời đúng
+
+        public DateTime? NextReviewDate { get; set; }  // Thời điểm ôn tập tiếp theo
+
+        public string Notes { get; set; }  // Ghi chú cá nhân
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
+        // Navigation properties
+        [ForeignKey("UserID")]
+        public virtual User User { get; set; }
+
+        [ForeignKey("KanjiID")]
+        public virtual Kanji Kanji { get; set; }
     }
 
     #endregion
@@ -910,50 +1065,6 @@ namespace LexiFlow.Models
     }
 
     /// <summary>
-    /// Represents a user's kanji learning progress
-    /// </summary>
-    public class UserKanjiProgress
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ProgressID { get; set; }
-
-        [Required]
-        public int UserID { get; set; }
-
-        [Required]
-        public int KanjiID { get; set; }
-
-        public int RecognitionLevel { get; set; } = 0;
-
-        public int WritingLevel { get; set; } = 0;
-
-        public DateTime? LastPracticed { get; set; }
-
-        public int PracticeCount { get; set; } = 0;
-
-        public int CorrectCount { get; set; } = 0;
-
-        public DateTime? NextReviewDate { get; set; }
-
-        public string Notes { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        [Timestamp]
-        public byte[] RowVersion { get; set; }
-
-        // Navigation properties
-        [ForeignKey("UserID")]
-        public virtual User User { get; set; }
-
-        [ForeignKey("KanjiID")]
-        public virtual Kanji Kanji { get; set; }
-    }
-
-    /// <summary>
     /// Represents a user's grammar learning progress
     /// </summary>
     public class UserGrammarProgress
@@ -1073,40 +1184,6 @@ namespace LexiFlow.Models
         public virtual Vocabulary Vocabulary2 { get; set; }
     }
 
-    
-
-    /// <summary>
-    /// Represents a mapping between kanji and its components
-    /// </summary>
-    public class KanjiComponentMapping
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int MappingID { get; set; }
-
-        [Required]
-        public int KanjiID { get; set; }
-
-        [Required]
-        public int ComponentID { get; set; }
-
-        [StringLength(50)]
-        public string Position { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        [Timestamp]
-        public byte[] RowVersion { get; set; }
-
-        // Navigation properties
-        [ForeignKey("KanjiID")]
-        public virtual Kanji Kanji { get; set; }
-
-        [ForeignKey("ComponentID")]
-        public virtual KanjiComponent Component { get; set; }
-    }
 
     /// <summary>
     /// Represents a vocabulary item for a department

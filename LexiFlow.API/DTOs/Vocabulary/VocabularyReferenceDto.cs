@@ -19,5 +19,7 @@
         /// Cách đọc
         /// </summary>
         public string Reading { get; set; } = string.Empty;
+        public string Meaning { get; set; }
+        public int Position { get; set; }
     }
 }

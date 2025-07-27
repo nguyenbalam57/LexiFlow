@@ -3,17 +3,12 @@
 namespace LexiFlow.API.DTOs.Kanji
 {
     /// <summary>
-    /// DTO for Kanji meaning
+    /// DTO for creating a Kanji example meaning
     /// </summary>
-    public class KanjiMeaningDto
+    public class CreateKanjiExampleMeaningDto
     {
         /// <summary>
-        /// Meaning ID
-        /// </summary>
-        public int MeaningID { get; set; }
-
-        /// <summary>
-        /// Meaning text
+        /// The meaning text
         /// </summary>
         [Required]
         [StringLength(255)]
@@ -24,10 +19,10 @@ namespace LexiFlow.API.DTOs.Kanji
         /// </summary>
         [Required]
         [StringLength(10)]
-        public string Language { get; set; }
+        public string Language { get; set; } = "vi";  // Default to Vietnamese
 
         /// <summary>
-        /// Display order
+        /// Order for display
         /// </summary>
         public int SortOrder { get; set; }
     }

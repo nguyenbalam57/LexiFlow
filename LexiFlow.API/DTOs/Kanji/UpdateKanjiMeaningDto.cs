@@ -3,9 +3,9 @@
 namespace LexiFlow.API.DTOs.Kanji
 {
     /// <summary>
-    /// DTO for Kanji meaning
+    /// DTO for updating a Kanji meaning
     /// </summary>
-    public class KanjiMeaningDto
+    public class UpdateKanjiMeaningDto
     {
         /// <summary>
         /// Meaning ID

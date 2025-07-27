@@ -1,33 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace LexiFlow.API.DTOs.Kanji
+﻿namespace LexiFlow.API.DTOs.Kanji
 {
     /// <summary>
-    /// DTO for Kanji meaning
+    /// DTO for Kanji example meaning
     /// </summary>
-    public class KanjiMeaningDto
+    public class KanjiExampleMeaningDto
     {
         /// <summary>
-        /// Meaning ID
+        /// ID of the meaning
         /// </summary>
         public int MeaningID { get; set; }
 
         /// <summary>
-        /// Meaning text
+        /// The meaning text
         /// </summary>
-        [Required]
-        [StringLength(255)]
         public string Meaning { get; set; }
 
         /// <summary>
         /// Language code (e.g., vi, en)
         /// </summary>
-        [Required]
-        [StringLength(10)]
         public string Language { get; set; }
 
         /// <summary>
-        /// Display order
+        /// Order for display
         /// </summary>
         public int SortOrder { get; set; }
     }

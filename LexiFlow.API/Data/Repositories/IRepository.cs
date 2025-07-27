@@ -11,6 +11,12 @@ namespace LexiFlow.API.Data.Repositories
         /// <summary>
         /// Get all entities
         /// </summary>
+        /// <returns>IQueryable of entities for further filtering</returns>
+        IQueryable<T> GetAll();
+
+        /// <summary>
+        /// Get all entities as an enumerable collection
+        /// </summary>
         /// <returns>IEnumerable of entities</returns>
         Task<IEnumerable<T>> GetAllAsync();
 
@@ -54,6 +60,12 @@ namespace LexiFlow.API.Data.Repositories
         void Update(T entity);
 
         /// <summary>
+        /// Update multiple entities
+        /// </summary>
+        /// <param name="entities">Entities to update</param>
+        void UpdateRange(IEnumerable<T> entities);
+
+        /// <summary>
         /// Remove an entity
         /// </summary>
         /// <param name="entity">Entity to remove</param>
@@ -69,45 +81,72 @@ namespace LexiFlow.API.Data.Repositories
         /// Check if any entity matches the predicate
         /// </summary>
         /// <param name="predicate">Filter predicate</param>
-        /// <returns>True if any entity matches, false otherwise</returns>
+        /// <returns>True if at least one entity matches, false otherwise</returns>
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
 
         /// <summary>
         /// Count entities matching the predicate
         /// </summary>
         /// <param name="predicate">Filter predicate</param>
-        /// <returns>Count of matching entities</returns>
+        /// <returns>Number of entities matching the predicate</returns>
         Task<int> CountAsync(Expression<Func<T, bool>> predicate);
 
         /// <summary>
-        /// Get entities with pagination
+        /// Get a paged result of entities
         /// </summary>
         /// <param name="filter">Filter predicate</param>
         /// <param name="orderBy">Order by function</param>
         /// <param name="includeProperties">Navigation properties to include</param>
-        /// <param name="pageIndex">Page index (0-based)</param>
+        /// <param name="page">Page number</param>
         /// <param name="pageSize">Page size</param>
-        /// <returns>Paged result</returns>
+        /// <returns>Paged result of entities</returns>
         Task<PagedResult<T>> GetPagedAsync(
             Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
             string includeProperties = "",
-            int pageIndex = 0,
+            int page = 1,
             int pageSize = 10);
     }
 
     /// <summary>
-    /// Paged result containing items and pagination metadata
+    /// Paged result of entities
     /// </summary>
-    /// <typeparam name="T">Item type</typeparam>
+    /// <typeparam name="T">Entity type</typeparam>
     public class PagedResult<T>
     {
-        public IEnumerable<T> Items { get; set; } = new List<T>();
+        /// <summary>
+        /// Total number of items
+        /// </summary>
         public int TotalCount { get; set; }
-        public int PageIndex { get; set; }
+
+        /// <summary>
+        /// Current page number
+        /// </summary>
+        public int Page { get; set; }
+
+        /// <summary>
+        /// Page size
+        /// </summary>
         public int PageSize { get; set; }
+
+        /// <summary>
+        /// Total number of pages
+        /// </summary>
         public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
-        public bool HasPreviousPage => PageIndex > 0;
-        public bool HasNextPage => PageIndex < TotalPages - 1;
+
+        /// <summary>
+        /// Items in the current page
+        /// </summary>
+        public IEnumerable<T> Items { get; set; } = new List<T>();
+
+        /// <summary>
+        /// Whether there is a previous page
+        /// </summary>
+        public bool HasPreviousPage => Page > 1;
+
+        /// <summary>
+        /// Whether there is a next page
+        /// </summary>
+        public bool HasNextPage => Page < TotalPages;
     }
 }
