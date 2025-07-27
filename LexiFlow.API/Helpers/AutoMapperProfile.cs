@@ -7,6 +7,7 @@ using LexiFlow.API.DTOs.Grammar;
 using LexiFlow.API.DTOs.User;
 using LexiFlow.API.DTOs.Category;
 using LexiFlow.API.DTOs.TechnicalTerm;
+using LexiFlow.API.DTOs.VocabularyGroup;
 using LexiFlow.Models;
 using System;
 
@@ -48,27 +49,101 @@ namespace LexiFlow.API.Helpers
             CreateMap<Department, DepartmentDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.DepartmentID))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.DepartmentName))
+                .ForMember(dest => dest.DepartmentCode, opt => opt.MapFrom(src => src.DepartmentCode))
+                .ForMember(dest => dest.ParentDepartmentID, opt => opt.MapFrom(src => src.ParentDepartmentID))
+                .ForMember(dest => dest.ParentDepartmentName, opt => opt.MapFrom(src => src.ParentDepartment != null ? src.ParentDepartment.DepartmentName : null))
+                .ForMember(dest => dest.ManagerID, opt => opt.MapFrom(src => src.ManagerUserID))
                 .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? $"{src.Manager.FirstName} {src.Manager.LastName}" : null))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)));
+
+            CreateMap<CreateDepartmentDto, Department>()
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore());
+
+            CreateMap<UpdateDepartmentDto, Department>()
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore());
 
             // Team Mappings
             CreateMap<Team, TeamDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.TeamID))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.TeamName))
+                .ForMember(dest => dest.DepartmentID, opt => opt.MapFrom(src => src.DepartmentID))
                 .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : null))
+                .ForMember(dest => dest.LeaderID, opt => opt.MapFrom(src => src.LeaderUserID))
                 .ForMember(dest => dest.LeaderName, opt => opt.MapFrom(src => src.Leader != null ? $"{src.Leader.FirstName} {src.Leader.LastName}" : null))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)));
+
+            CreateMap<CreateTeamDto, Team>()
+                .ForMember(dest => dest.TeamID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore());
+
+            CreateMap<UpdateTeamDto, Team>()
+                .ForMember(dest => dest.TeamID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore());
 
             // Role & Permission Mappings
             CreateMap<Role, RoleDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.RoleID))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.RoleName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.IsSystemRole, opt => opt.MapFrom(src => false)) // Không có trong model nên mặc định false
+                .ForMember(dest => dest.Permissions, opt => opt.Ignore()) // Sẽ được điền ở service
+                .ForMember(dest => dest.UsersCount, opt => opt.MapFrom(src => src.UserRoles != null ? src.UserRoles.Count : 0))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)));
+
+            CreateMap<CreateRoleDto, Role>()
+                .ForMember(dest => dest.RoleID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore())
+                .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+                .ForMember(dest => dest.RolePermissions, opt => opt.Ignore());
+
+            CreateMap<UpdateRoleDto, Role>()
+                .ForMember(dest => dest.RoleID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore())
+                .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+                .ForMember(dest => dest.RolePermissions, opt => opt.Ignore());
 
             CreateMap<Permission, PermissionDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.PermissionID))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.PermissionName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.Module, opt => opt.MapFrom(src => src.Module))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)));
+
+            CreateMap<CreatePermissionDto, Permission>()
+                .ForMember(dest => dest.PermissionID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore())
+                .ForMember(dest => dest.RolePermissions, opt => opt.Ignore())
+                .ForMember(dest => dest.UserPermissions, opt => opt.Ignore())
+                .ForMember(dest => dest.PermissionGroupMappings, opt => opt.Ignore());
+
+            CreateMap<UpdatePermissionDto, Permission>()
+                .ForMember(dest => dest.PermissionID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.RowVersion, opt => opt.Ignore())
+                .ForMember(dest => dest.RolePermissions, opt => opt.Ignore())
+                .ForMember(dest => dest.UserPermissions, opt => opt.Ignore())
+                .ForMember(dest => dest.PermissionGroupMappings, opt => opt.Ignore());
 
             #endregion
 
@@ -112,13 +187,22 @@ namespace LexiFlow.API.Helpers
             CreateMap<VocabularyGroup, VocabularyGroupDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.GroupID))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.GroupName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryID))
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : null))
+                .ForMember(dest => dest.CreatedByUserId, opt => opt.MapFrom(src => src.CreatedByUserID))
                 .ForMember(dest => dest.CreatedByUsername, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.Username : null))
-                .ForMember(dest => dest.VocabularyCount, opt => opt.Ignore())
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ForMember(dest => dest.VocabularyCount, opt => opt.Ignore()) // Sẽ được điền ở service
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)));
 
             CreateMap<CreateVocabularyGroupDto, VocabularyGroup>()
                 .ForMember(dest => dest.GroupID, opt => opt.Ignore())
+                .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.GroupName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.CategoryID, opt => opt.MapFrom(src => src.CategoryId))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.CreatedByUserID, opt => opt.Ignore())
@@ -127,6 +211,10 @@ namespace LexiFlow.API.Helpers
 
             CreateMap<UpdateVocabularyGroupDto, VocabularyGroup>()
                 .ForMember(dest => dest.GroupID, opt => opt.Ignore())
+                .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src => src.GroupName))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.CategoryID, opt => opt.MapFrom(src => src.CategoryId))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedByUserID, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
@@ -138,11 +226,11 @@ namespace LexiFlow.API.Helpers
 
             // Vocabulary Mappings
             CreateMap<Vocabulary, VocabularyDto>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.VocabularyID))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Term, opt => opt.MapFrom(src => src.Term))
                 .ForMember(dest => dest.LanguageCode, opt => opt.MapFrom(src => src.LanguageCode))
                 .ForMember(dest => dest.Reading, opt => opt.MapFrom(src => src.Reading))
-                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryID))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId))
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.CategoryName : null))
                 .ForMember(dest => dest.DifficultyLevel, opt => opt.MapFrom(src => src.DifficultyLevel))
                 .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
@@ -150,17 +238,16 @@ namespace LexiFlow.API.Helpers
                 .ForMember(dest => dest.AudioFile, opt => opt.MapFrom(src => src.AudioFile))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-                .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+                .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModifiedAt))
                 .ForMember(dest => dest.RowVersionString, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)))
                 .ForMember(dest => dest.Definitions, opt => opt.MapFrom(src => src.Definitions))
                 .ForMember(dest => dest.Examples, opt => opt.MapFrom(src => src.Examples))
                 .ForMember(dest => dest.Translations, opt => opt.MapFrom(src => src.Translations));
 
             CreateMap<CreateVocabularyDto, Vocabulary>()
-                .ForMember(dest => dest.VocabularyID, opt => opt.Ignore())
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.LastModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.LastModifiedBy, opt => opt.Ignore())
