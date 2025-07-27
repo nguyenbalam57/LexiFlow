@@ -26,7 +26,11 @@ namespace LexiFlow.Models
 
         [Required]
         [StringLength(100)]
-        public string FullName { get; set; }
+        public string FirstName { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string LastName { get; set; }
 
         [StringLength(255)]
         public string Description { get; set; }
