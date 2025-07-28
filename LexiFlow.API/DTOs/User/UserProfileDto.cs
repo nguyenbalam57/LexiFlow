@@ -1,4 +1,6 @@
-﻿namespace LexiFlow.API.DTOs.User
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LexiFlow.API.DTOs.User
 {
     /// <summary>
     /// DTO cho hồ sơ người dùng chi tiết

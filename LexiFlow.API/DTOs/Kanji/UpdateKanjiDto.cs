@@ -60,12 +60,12 @@ namespace LexiFlow.API.DTOs.Kanji
         /// <summary>
         /// Examples of Kanji usage
         /// </summary>
-        public List<UpdateKanjiExampleDto> Examples { get; set; } = new List<UpdateKanjiExampleDto>();
+        //public List<UpdateKanjiExampleDto> Examples { get; set; } = new List<UpdateKanjiExampleDto>();
 
         /// <summary>
         /// Components of the Kanji
         /// </summary>
-        public List<UpdateKanjiComponentMappingDto> Components { get; set; } = new List<UpdateKanjiComponentMappingDto>();
+        //public List<UpdateKanjiComponentMappingDto> Components { get; set; } = new List<UpdateKanjiComponentMappingDto>();
 
         /// <summary>
         /// Row version for concurrency control

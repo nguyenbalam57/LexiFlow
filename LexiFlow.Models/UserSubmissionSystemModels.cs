@@ -201,8 +201,6 @@ namespace LexiFlow.Models
         [ForeignKey("SubmissionID")]
         public virtual UserVocabularySubmission Submission { get; set; }
 
-        [ForeignKey("CategoryID")]
-        public virtual VocabularyCategory Category { get; set; }
     }
 
     /// <summary>
