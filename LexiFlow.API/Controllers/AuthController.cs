@@ -1,6 +1,5 @@
 ﻿using LexiFlow.API.DTOs.Auth;
 using LexiFlow.Models;
-using LexiFlow.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;

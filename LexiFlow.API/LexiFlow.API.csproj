@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="AutoMapper" Version="15.0.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
@@ -31,13 +32,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.AdminDashboard\LexiFlow.AdminDashboard.csproj" />
-    <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
     <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\LexiFlow.Models\LexiFlow.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Configurations\" />
+    <Folder Include="Data\Context\" />
     <Folder Include="Models\" />
     <Folder Include="Services\" />
   </ItemGroup>

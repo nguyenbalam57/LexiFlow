@@ -1,4 +1,4 @@
-﻿using LexiFlow.App.ViewModels;
+﻿
 using LexiFlow.UI.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -15,7 +15,7 @@ namespace LexiFlow.UI.Views.Login
     /// </summary>
     public partial class LoginView : Window
     {
-        private readonly LoginViewModel _viewModel;
+        //private readonly LoginViewModel _viewModel;
 
         public LoginView()
         {
@@ -25,8 +25,8 @@ namespace LexiFlow.UI.Views.Login
             InitializeComponent();
 
             // Create and set the view model
-            _viewModel = new LoginViewModel();
-            DataContext = _viewModel;
+            //_viewModel = new LoginViewModel();
+            //DataContext = _viewModel;
 
             // Set password changed event
             PasswordBox.PasswordChanged += PasswordBox_PasswordChanged;
@@ -53,8 +53,8 @@ namespace LexiFlow.UI.Views.Login
             var settings = Properties.Settings.Default;
             if (settings.RememberMe)
             {
-                _viewModel.Username = settings.SavedUsername;
-                _viewModel.RememberMe = true;
+                //_viewModel.Username = settings.SavedUsername;
+                //_viewModel.RememberMe = true;
             }
         }
 
@@ -63,7 +63,7 @@ namespace LexiFlow.UI.Views.Login
             // Update the password in view model when the password box content changes
             if (sender is PasswordBox passwordBox)
             {
-                _viewModel.Password = passwordBox.Password;
+                //_viewModel.Password = passwordBox.Password;
             }
         }
 

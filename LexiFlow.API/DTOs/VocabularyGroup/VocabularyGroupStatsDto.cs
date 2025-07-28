@@ -1,4 +1,4 @@
-﻿using LexiFlow.API.Models.DTOs;
+﻿using LexiFlow.API.DTOs.Category;
 
 namespace LexiFlow.API.DTOs.VocabularyGroup
 {

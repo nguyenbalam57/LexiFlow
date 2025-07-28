@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LexiFlow.Core\LexiFlow.Core.csproj" />
+    <ProjectReference Include="..\LexiFlow.Models\LexiFlow.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,6 +17,12 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Repositories\" />
   </ItemGroup>
 
   <PropertyGroup>

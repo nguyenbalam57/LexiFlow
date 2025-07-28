@@ -1,10 +1,9 @@
-using LexiFlow.AdminDashboard.Services;
+using Asp.Versioning;
 using LexiFlow.API.Data;
 using LexiFlow.API.Extensions;
 using LexiFlow.API.Middleware;
-using LexiFlow.API.Services;
+using LexiFlow.API.Configurations;
 using LexiFlow.Core.Interfaces;
-using LexiFlow.Core.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -45,7 +44,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = builder.Configuration["API:Title"] ?? "LexiFlow API",
-        Version = builder.Configuration["API:Version"] ?? "v1",
+        Version = "v1",
         Description = builder.Configuration["API:Description"] ?? "API for LexiFlow Japanese Vocabulary Learning Application",
         Contact = new OpenApiContact
         {
@@ -84,6 +83,9 @@ builder.Services.AddSwaggerGen(c =>
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
+
+    // Configure API versioning for Swagger
+    c.OperationFilter<SwaggerDefaultValues>();
 });
 
 // Add Database
@@ -91,9 +93,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-builder.Services.AddScoped<ISyncService, SyncService>();
+//builder.Services.AddScoped<IAuthService, AuthService>();
+//builder.Services.AddScoped<IVocabularyService, VocabularyService>();
+//builder.Services.AddScoped<ISyncService, SyncService>();
 
 // Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -142,10 +144,10 @@ builder.Services.AddHealthChecks();
 // Configure HTTP Client factory
 builder.Services.AddHttpClient();
 
-// Add API versioning
+// Add API versioning (simpler approach)
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.DefaultApiVersion = new ApiVersion(1, 0);
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
 });
