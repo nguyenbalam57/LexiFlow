@@ -15,6 +15,7 @@ namespace LexiFlow.Models.Learning.Grammar
     /// Điểm ngữ pháp
     /// </summary>
     [Index(nameof(Pattern), IsUnique = true, Name = "IX_Grammar_Pattern")]
+    [Index(nameof(Level), Name = "IX_Grammar_Level")]
     public class Grammar : AuditableEntity, ISoftDeletable
     {
         [Key]
@@ -33,7 +34,6 @@ namespace LexiFlow.Models.Learning.Grammar
         public string Reading { get; set; }  // Cách đọc mẫu ngữ pháp
 
         [StringLength(100)]
-        [Index(Name = "IX_Grammar_Level")]
         public string Level { get; set; }  // N5, N4, v.v.
 
         public int? CategoryId { get; set; }

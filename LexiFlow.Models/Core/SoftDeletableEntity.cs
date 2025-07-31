@@ -17,6 +17,6 @@ namespace LexiFlow.Models.Core
         public int? DeletedBy { get; set; }
 
         [ForeignKey("DeletedBy")]
-        public virtual User DeletedByUser { get; set; }
+        public virtual User.User DeletedByUser { get; set; }
     }
 }

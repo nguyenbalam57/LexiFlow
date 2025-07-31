@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LexiFlow.Models.User;
 
 namespace LexiFlow.Models.Core
 {
@@ -16,9 +17,9 @@ namespace LexiFlow.Models.Core
         public int? ModifiedBy { get; set; }
 
         [ForeignKey("CreatedBy")]
-        public virtual User CreatedByUser { get; set; }
+        public virtual User.User CreatedByUser { get; set; }
 
         [ForeignKey("ModifiedBy")]
-        public virtual User ModifiedByUser { get; set; }
+        public virtual User.User ModifiedByUser { get; set; }
     }
 }

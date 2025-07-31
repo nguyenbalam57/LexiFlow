@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.User;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -94,6 +95,6 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
         public virtual ICollection<TermTranslation> Translations { get; set; }
         public virtual ICollection<TermRelation> Relations { get; set; }
         public virtual ICollection<Media.MediaFile> MediaFiles { get; set; }
-        public virtual ICollection<User.UserTechnicalTerm> UserTechnicalTerms { get; set; }
+        public virtual ICollection<UserTechnicalTerm> UserTechnicalTerms { get; set; }
     }
 }

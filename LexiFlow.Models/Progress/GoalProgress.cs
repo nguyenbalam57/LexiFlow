@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Planning;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

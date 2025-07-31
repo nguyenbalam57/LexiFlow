@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using LexiFlow.Models.Core;
 using LexiFlow.Models.Media;
+using LexiFlow.Models.Progress;
 using Microsoft.EntityFrameworkCore;
 
 namespace LexiFlow.Models.Learning.Vocabulary

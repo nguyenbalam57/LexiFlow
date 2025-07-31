@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.User.UserRelations;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

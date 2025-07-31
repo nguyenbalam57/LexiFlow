@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LexiFlow.Models.Core;
+using LexiFlow.Models.Gamification;
 using LexiFlow.Models.Media;
 using LexiFlow.Models.Progress;
+using LexiFlow.Models.User.UserRelations;
 using Microsoft.EntityFrameworkCore;
 
 namespace LexiFlow.Models.User
