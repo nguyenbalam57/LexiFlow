@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using LexiFlow.Models;
 
 namespace LexiFlow.API.DTOs.Sync
 {
@@ -15,7 +16,6 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Định danh thiết bị thực hiện đồng bộ
         /// </summary>
-        [Required]
         [StringLength(100)]
         public string DeviceId { get; set; }
 
@@ -28,8 +28,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Danh sách từ vựng cần đồng bộ từ client lên server
         /// </summary>
-        [Required]
-        public List<VocabularySyncItem> Items { get; set; } = new List<VocabularySyncItem>();
+        public List<Models.Vocabulary> Items { get; set; } = new List<Models.Vocabulary>();
 
         /// <summary>
         /// Danh sách ID từ vựng đã xóa trên client

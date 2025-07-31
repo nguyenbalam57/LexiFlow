@@ -54,7 +54,7 @@ namespace LexiFlow.AdminDashboard.Services
             "Users",
             "Roles",
             "Categories",
-            "VocabularyItems",
+            "Vocabulary",
             "Lessons",
             "Courses",
             "Exercises"

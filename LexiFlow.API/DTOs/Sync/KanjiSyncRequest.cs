@@ -29,7 +29,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// Danh sách kanji cần đồng bộ từ client lên server
         /// </summary>
         [Required]
-        public List<KanjiSyncItem> Items { get; set; } = new List<KanjiSyncItem>();
+        public List<Models.Kanji> Items { get; set; } = new List<Models.Kanji>();
 
         /// <summary>
         /// Danh sách ID kanji đã xóa trên client

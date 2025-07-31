@@ -29,7 +29,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// Danh sách ngữ pháp cần đồng bộ từ client lên server
         /// </summary>
         [Required]
-        public List<GrammarSyncItem> Items { get; set; } = new List<GrammarSyncItem>();
+        public List<Models.Grammar> Items { get; set; } = new List<Models.Grammar>();
 
         /// <summary>
         /// Danh sách ID ngữ pháp đã xóa trên client

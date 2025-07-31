@@ -29,7 +29,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// Danh sách tiến trình học tập cần đồng bộ từ client lên server
         /// </summary>
         [Required]
-        public List<LearningProgressSyncItem> Items { get; set; } = new List<LearningProgressSyncItem>();
+        public List<Models.LearningProgress> Items { get; set; } = new List<Models.LearningProgress>();
 
         /// <summary>
         /// Danh sách ID tiến trình học tập đã xóa trên client
