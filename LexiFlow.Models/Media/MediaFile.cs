@@ -56,6 +56,13 @@ namespace LexiFlow.Models.Media
         public int? KanjiId { get; set; }
         public int? ExampleId { get; set; }
         public int? GrammarId { get; set; }
+        public int? QuestionId { get; set; }
+        public int? QuestionOptionId { get; set; }
+        public int? GrammarExampleId { get; set; }
+        public int? KanjiExampleId { get; set; }
+        public int? TechnicalTermId { get; set; }
+        public int? TermExampleId { get; set; }
+        public int? UserVocabularyDetaillId { get; set; }
 
         // Thứ tự hiển thị nếu có nhiều media
         public int DisplayOrder { get; set; } = 0;
@@ -104,6 +111,27 @@ namespace LexiFlow.Models.Media
 
         [ForeignKey("GrammarId")]
         public virtual Learning.Grammar.Grammar Grammar { get; set; }
+
+        [ForeignKey("QuestionId")]
+        public virtual Exam.Question Question { get; set; }
+
+        [ForeignKey("QuestionOptionId")]
+        public virtual Exam.QuestionOption QuestionOption { get; set; }
+
+        [ForeignKey("GrammarExampleId")]
+        public virtual Learning.Grammar.GrammarExample GrammarExample { get; set; }
+
+        [ForeignKey("KanjiExampleId")]
+        public virtual Learning.Kanji.KanjiExample KanjiExample { get; set; }
+
+        [ForeignKey("TechnicalTermId")]
+        public virtual Learning.TechnicalTerms.TechnicalTerm TechnicalTerm { get; set; }
+
+        [ForeignKey("TermExampleId")]
+        public virtual Learning.TechnicalTerms.TermExample TermExample { get; set; }
+
+        [ForeignKey("UserVocabularyDetaillId")]
+        public virtual Submission.UserVocabularyDetail UserVocabularyDetail { get; set; }
 
         [ForeignKey("DeletedBy")]
         public virtual User.User DeletedByUser { get; set; }

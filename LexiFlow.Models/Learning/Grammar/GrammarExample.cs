@@ -19,7 +19,7 @@ namespace LexiFlow.Models.Learning.Grammar
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int GrammarExampleId { get; set; }
 
         [Required]
         public int GrammarId { get; set; }

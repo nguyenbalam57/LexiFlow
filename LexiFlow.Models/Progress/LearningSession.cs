@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Learning.Vocabulary;
 using LexiFlow.Models.Planning;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -53,6 +54,8 @@ namespace LexiFlow.Models.Progress
         // Cải tiến: Phiên học với mục tiêu
         public int? GoalId { get; set; }
 
+        public int? GroupId { get; set; }
+
         // Cải tiến: Theo dõi cảm xúc
         [StringLength(50)]
         public string MoodBefore { get; set; }
@@ -69,6 +72,9 @@ namespace LexiFlow.Models.Progress
 
         [ForeignKey("GoalId")]
         public virtual StudyGoal Goal { get; set; }
+
+        [ForeignKey("GroupId")]
+        public virtual VocabularyGroup VocabularyGroup { get; set; }
 
         public virtual ICollection<LearningSessionDetail> SessionDetails { get; set; }
     }

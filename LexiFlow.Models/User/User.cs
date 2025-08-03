@@ -21,6 +21,7 @@ namespace LexiFlow.Models.User
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int UserId { get; set; }
+        public int? DepartmentId { get; set; }
 
         [Required]
         [StringLength(50)]
@@ -64,8 +65,13 @@ namespace LexiFlow.Models.User
 
         // Navigation properties
         public virtual UserProfile Profile { get; set; }
+
         public virtual UserLearningPreference LearningPreference { get; set; }
+        
         public virtual UserNotificationSetting NotificationSetting { get; set; }
+
+        [ForeignKey("DepartmentId")]
+        public virtual Department Department { get; set; }
 
         public virtual ICollection<UserRole> UserRoles { get; set; }
         public virtual ICollection<MediaFile> MediaFiles { get; set; }

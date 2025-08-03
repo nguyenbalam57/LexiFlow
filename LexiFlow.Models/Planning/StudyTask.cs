@@ -19,7 +19,7 @@ namespace LexiFlow.Models.Planning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TaskId { get; set; }
+        public int StudyTaskId { get; set; }
 
         [Required]
         public int GoalId { get; set; }

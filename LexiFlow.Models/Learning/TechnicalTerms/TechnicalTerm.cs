@@ -21,7 +21,7 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int TechnicalTermId { get; set; }
 
         [Required]
         [StringLength(100)]

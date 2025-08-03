@@ -19,7 +19,7 @@ namespace LexiFlow.Models.Learning.Kanji
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ExampleId { get; set; }
+        public int KanjiExampleId { get; set; }
 
         [Required]
         public int KanjiId { get; set; }

@@ -16,7 +16,7 @@ namespace LexiFlow.Models.Exam
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int OptionId { get; set; }
+        public int QuestionOptionId { get; set; }
 
         [Required]
         public int QuestionId { get; set; }

@@ -18,7 +18,7 @@ namespace LexiFlow.Models.Scheduling
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ItemId { get; set; }
+        public int ScheduleItemId { get; set; }
 
         [Required]
         public int ScheduleId { get; set; }
@@ -36,6 +36,8 @@ namespace LexiFlow.Models.Scheduling
         public int? TypeId { get; set; }
 
         public int? RecurrenceId { get; set; }
+
+        public int? StudyTaskId { get; set; }
 
         // Cải tiến: Chi tiết địa điểm
         [StringLength(255)]
@@ -97,6 +99,9 @@ namespace LexiFlow.Models.Scheduling
 
         [ForeignKey("RecurrenceId")]
         public virtual ScheduleRecurrence Recurrence { get; set; }
+
+        [ForeignKey("StudyTaskId")]
+        public virtual Planning.StudyTask StudyTask { get; set; }
 
         public virtual ICollection<ScheduleItemParticipant> Participants { get; set; }
         public virtual ICollection<ScheduleReminder> Reminders { get; set; }

@@ -19,7 +19,7 @@ namespace LexiFlow.Models.Submission
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int DetailId { get; set; }
+        public int UserVocabularyDetaillId { get; set; }
 
         [Required]
         public int SubmissionId { get; set; }

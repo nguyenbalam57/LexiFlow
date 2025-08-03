@@ -19,7 +19,7 @@ namespace LexiFlow.Models.Planning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PlanId { get; set; }
+        public int StudyPlanId { get; set; }
 
         [Required]
         public int UserId { get; set; }

@@ -48,6 +48,7 @@ namespace LexiFlow.Models.Scheduling
         public string EditPermissions { get; set; }
 
         public int? CreatedByUserId { get; set; }
+        public int? StudyPlanId { get; set; }
 
         public bool IsPublic { get; set; } = false;
         public bool IsActive { get; set; } = true;
@@ -63,6 +64,9 @@ namespace LexiFlow.Models.Scheduling
         // Navigation properties
         [ForeignKey("CreatedByUserId")]
         public virtual User.User CreatedByUser { get; set; }
+
+        [ForeignKey("StudyPlanId")]
+        public virtual Planning.StudyPlan StudyPlan { get; set; }
 
         public virtual ICollection<ScheduleItem> ScheduleItems { get; set; }
     }

@@ -1,12 +1,13 @@
-﻿using System;
+﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Learning.Kanji;
+using LexiFlow.Models.Media;
+using LexiFlow.Models.Progress;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using LexiFlow.Models.Core;
-using LexiFlow.Models.Media;
-using LexiFlow.Models.Progress;
-using Microsoft.EntityFrameworkCore;
 
 namespace LexiFlow.Models.Learning.Vocabulary
 {
@@ -31,6 +32,10 @@ namespace LexiFlow.Models.Learning.Vocabulary
 
         [StringLength(200)]
         public string Reading { get; set; }
+
+        [Required]
+        [StringLength(10)]
+        public string Level { get; set; }
 
         public int? CategoryId { get; set; }
 
@@ -72,6 +77,7 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public virtual ICollection<Translation> Translations { get; set; }
         public virtual ICollection<MediaFile> MediaFiles { get; set; }
         public virtual ICollection<LearningProgress> LearningProgresses { get; set; }
+        public virtual ICollection<KanjiVocabulary> KanjiVocabularies { get; set; }
 
         // Cải tiến: Properties không lưu DB
         [NotMapped]
