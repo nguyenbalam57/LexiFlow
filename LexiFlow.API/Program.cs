@@ -1,23 +1,25 @@
 using Asp.Versioning;
-using LexiFlow.API.Data;
 using LexiFlow.API.Extensions;
 using LexiFlow.API.Middleware;
-using LexiFlow.API.Configurations;
-using LexiFlow.Core.Interfaces;
+using LexiFlow.Infrastructure.Data;
+using LexiFlow.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using Serilog.Events;
+using System.Reflection;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
+// 1. Database Configuration - Use LexiFlowContext instead of ApplicationDbContext
+builder.Services.AddDbContext<LexiFlowContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// 2. Configure Serilog for logging
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .WriteTo.File("logs/lexiflow-api-.log", rollingInterval: RollingInterval.Day)
@@ -25,7 +27,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Add services
+// Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -33,12 +35,20 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+// Add API versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
+
 // Add FluentValidation
 builder.Services.AddValidationServices();
 
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger with JWT Authentication
+// 3. Configure Swagger with JWT Authentication
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -80,24 +90,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     // Include XML comments
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-
-    // Configure API versioning for Swagger
-    c.OperationFilter<SwaggerDefaultValues>();
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
 });
 
-// Add Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Add Services
-//builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<IVocabularyService, VocabularyService>();
-//builder.Services.AddScoped<ISyncService, SyncService>();
-
-// Add Authentication
+// 4. Configure JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -118,7 +119,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add Authorization
 builder.Services.AddAuthorization();
 
-// Add CORS for client applications
+// 5. Configure CORS for client applications
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -143,14 +144,6 @@ builder.Services.AddHealthChecks();
 
 // Configure HTTP Client factory
 builder.Services.AddHttpClient();
-
-// Add API versioning (simpler approach)
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.ReportApiVersions = true;
-});
 
 var app = builder.Build();
 
@@ -191,13 +184,16 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+// Seed database
+await app.Services.SeedDatabaseAsync();
+
 // Apply database migrations on startup in development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<LexiFlowContext>();
         dbContext.Database.Migrate();
         Log.Information("Database migrations applied successfully");
     }
