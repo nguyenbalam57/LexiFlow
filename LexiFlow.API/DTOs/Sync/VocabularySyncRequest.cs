@@ -28,7 +28,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Danh sách từ vựng cần đồng bộ từ client lên server
         /// </summary>
-        public List<Models.Vocabulary> Items { get; set; } = new List<Models.Vocabulary>();
+        //public List<Models.Vocabulary> Items { get; set; } = new List<Models.Vocabulary>();
 
         /// <summary>
         /// Danh sách ID từ vựng đã xóa trên client

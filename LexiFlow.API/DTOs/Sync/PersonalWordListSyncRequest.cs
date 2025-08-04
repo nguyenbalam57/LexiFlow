@@ -28,8 +28,8 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Danh sách từ vựng cá nhân cần đồng bộ từ client lên server
         /// </summary>
-        [Required]
-        public List<Models.PersonalWordList> Items { get; set; } = new List<Models.PersonalWordList>();
+        //[Required]
+        //public List<Models.PersonalWordList> Items { get; set; } = new List<Models.PersonalWordList>();
 
         /// <summary>
         /// Danh sách ID danh sách từ vựng cá nhân đã xóa trên client

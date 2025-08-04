@@ -1,4 +1,5 @@
-﻿using LexiFlow.Models.Core;
+﻿using LexiFlow.Models.Analytics;
+using LexiFlow.Models.Core;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -59,6 +60,6 @@ namespace LexiFlow.Models.Practice
         public virtual PracticeSet PracticeSet { get; set; }
 
         public virtual ICollection<UserPracticeAnswer> UserPracticeAnswers { get; set; }
-        public virtual ICollection<Analytics.PracticeAnalytic> PracticeAnalytics { get; set; }
+        public virtual ICollection<PracticeAnalytic> PracticeAnalytics { get; set; }
     }
 }

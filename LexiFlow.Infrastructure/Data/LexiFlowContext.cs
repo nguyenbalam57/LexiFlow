@@ -542,7 +542,10 @@ namespace LexiFlow.Infrastructure.Data
 
             // Analytics indexes
             modelBuilder.Entity<ExamAnalytic>().HasIndex(ea => ea.UserExamId).IsUnique();
-            modelBuilder.Entity<PracticeAnalytic>().HasIndex(pa => pa.UserPracticeId).IsUnique();
+            modelBuilder.Entity<PracticeAnalytic>()
+                        .HasOne(pa => pa.UserPracticeSet)
+                        .WithMany(ups => ups.PracticeAnalytics)
+                        .HasForeignKey(pa => pa.UserPracticeId);
             modelBuilder.Entity<StrengthWeakness>()
                 .HasIndex(sw => new { sw.UserId, sw.SkillType, sw.SpecificSkill })
                 .IsUnique()

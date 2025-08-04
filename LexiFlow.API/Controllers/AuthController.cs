@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using LexiFlow.API.DTOs.User;
+using LexiFlow.Models.User;
 
 namespace LexiFlow.API.Controllers
 {
@@ -26,7 +27,7 @@ namespace LexiFlow.API.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
-        private readonly LexiFlow.API.Data.ApplicationDbContext _dbContext;
+        private readonly Infrastructure.Data.LexiFlowContext _dbContext;
 
         /// <summary>
         /// Khởi tạo AuthController
@@ -34,7 +35,7 @@ namespace LexiFlow.API.Controllers
         public AuthController(
             IConfiguration configuration,
             ILogger<AuthController> logger,
-            LexiFlow.API.Data.ApplicationDbContext dbContext)
+            Infrastructure.Data.LexiFlowContext dbContext)
         {
             _configuration = configuration;
             _logger = logger;
@@ -87,7 +88,7 @@ namespace LexiFlow.API.Controllers
                 var token = GenerateJwtToken(user);
 
                 // Update last login timestamp
-                user.LastLogin = DateTime.UtcNow;
+                //user.LastLogin = DateTime.UtcNow;
                 _dbContext.SaveChanges();
 
                 _logger.LogInformation("User {Username} logged in successfully", request.Username);
@@ -98,10 +99,8 @@ namespace LexiFlow.API.Controllers
                     Token = token,
                     User = new UserProfileDto
                     {
-                        Id = user.UserID,
+                        Id = user.UserId,
                         Username = user.Username,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
                         Email = user.Email,
                         IsActive = user.IsActive
                     }
@@ -150,8 +149,6 @@ namespace LexiFlow.API.Controllers
                 {
                     Username = request.Username,
                     PasswordHash = HashPassword(request.Password),
-                    FirstName = request.FirstName ?? string.Empty,
-                    LastName = request.LastName ?? string.Empty,
                     Email = request.Email,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
@@ -247,10 +244,8 @@ namespace LexiFlow.API.Controllers
                 // Return user info
                 return Ok(new UserProfileDto
                 {
-                    Id = user.UserID,
+                    Id = user.UserId,
                     Username = user.Username,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
                     Email = user.Email,
                     IsActive = user.IsActive
                 });
@@ -326,7 +321,7 @@ namespace LexiFlow.API.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())

@@ -61,7 +61,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Người dùng liên quan
         /// </summary>
-        [ForeignKey("UserID")]
-        public virtual Models.User User { get; set; }
+        //[ForeignKey("UserID")]
+        //public virtual Models.User User { get; set; }
     }
 }

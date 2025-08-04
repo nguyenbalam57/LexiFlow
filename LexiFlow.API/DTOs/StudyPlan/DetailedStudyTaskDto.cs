@@ -1,231 +1,231 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LexiFlow.API.DTOs.StudyPlan
 {
     /// <summary>
-    /// DTO đầy đủ cho nhiệm vụ học tập
+    /// DTO ??y ?? chi ti?t cho nhi?m v? h?c t?p
     /// </summary>
-    public class StudyTaskDto
+    public class DetailedStudyTaskDto
     {
         /// <summary>
-        /// ID nhiệm vụ
+        /// ID nhi?m v?
         /// </summary>
         public int TaskId { get; set; }
 
         /// <summary>
-        /// ID mục tiêu
+        /// ID m?c ti�u
         /// </summary>
         public int GoalId { get; set; }
 
         /// <summary>
-        /// Tên nhiệm vụ
+        /// T�n nhi?m v?
         /// </summary>
         public string TaskName { get; set; }
 
         /// <summary>
-        /// Mô tả chi tiết
+        /// M� t? chi ti?t
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// Thời gian ước tính
+        /// Th?i gian ??c t�nh
         /// </summary>
         public int? EstimatedDuration { get; set; }
 
         /// <summary>
-        /// Đơn vị thời gian
+        /// ??n v? th?i gian
         /// </summary>
         public string DurationUnit { get; set; }
 
         /// <summary>
-        /// ID mục trong kế hoạch học tập
+        /// ID m?c trong k? ho?ch h?c t?p
         /// </summary>
         public int? ItemId { get; set; }
 
         /// <summary>
-        /// Độ ưu tiên (1-5)
+        /// ?? ?u ti�n (1-5)
         /// </summary>
         public int Priority { get; set; }
 
         /// <summary>
-        /// Loại nhiệm vụ
+        /// Lo?i nhi?m v?
         /// </summary>
         public string TaskType { get; set; }
 
         /// <summary>
-        /// Danh mục nhiệm vụ
+        /// Danh m?c nhi?m v?
         /// </summary>
         public string TaskCategory { get; set; }
 
         /// <summary>
-        /// Ngày dự kiến
+        /// Ng�y d? ki?n
         /// </summary>
         public DateTime? ScheduledDate { get; set; }
 
         /// <summary>
-        /// Ngày đến hạn
+        /// Ng�y ??n h?n
         /// </summary>
         public DateTime? DueDate { get; set; }
 
         /// <summary>
-        /// Có ràng buộc thời gian
+        /// C� r�ng bu?c th?i gian
         /// </summary>
         public bool HasTimeConstraint { get; set; }
 
         /// <summary>
-        /// Nguồn lực cần thiết
+        /// Ngu?n l?c c?n thi?t
         /// </summary>
         public string RequiredResources { get; set; }
 
         /// <summary>
-        /// URL tài liệu đính kèm
+        /// URL t�i li?u ?�nh k�m
         /// </summary>
         public string AttachmentUrls { get; set; }
 
         /// <summary>
-        /// Nhiệm vụ bắt buộc
+        /// Nhi?m v? b?t bu?c
         /// </summary>
         public bool IsRequired { get; set; }
 
         /// <summary>
-        /// Đã hoàn thành
+        /// ?� ho�n th�nh
         /// </summary>
         public bool IsCompleted { get; set; }
 
         /// <summary>
-        /// Thời điểm hoàn thành
+        /// Th?i ?i?m ho�n th�nh
         /// </summary>
         public DateTime? CompletedAt { get; set; }
 
         /// <summary>
-        /// Trạng thái
+        /// Tr?ng th�i
         /// </summary>
         public string Status { get; set; }
 
         /// <summary>
-        /// Phần trăm hoàn thành
+        /// Ph?n tr?m ho�n th�nh
         /// </summary>
         public float CompletionPercentage { get; set; }
 
         /// <summary>
-        /// Là nhiệm vụ lặp lại
+        /// L� nhi?m v? l?p l?i
         /// </summary>
         public bool IsRecurring { get; set; }
 
         /// <summary>
-        /// Mẫu lặp lại
+        /// M?u l?p l?i
         /// </summary>
         public string RecurrencePattern { get; set; }
 
         /// <summary>
-        /// Bật nhắc nhở
+        /// B?t nh?c nh?
         /// </summary>
         public bool EnableReminders { get; set; }
 
         /// <summary>
-        /// Cài đặt nhắc nhở
+        /// C�i ??t nh?c nh?
         /// </summary>
         public string ReminderSettings { get; set; }
 
         /// <summary>
-        /// Phụ thuộc vào các task khác
+        /// Ph? thu?c v�o c�c task kh�c
         /// </summary>
         public string Dependencies { get; set; }
 
         /// <summary>
-        /// Điều kiện hoàn thành
+        /// ?i?u ki?n ho�n th�nh
         /// </summary>
         public string CompletionConditions { get; set; }
 
         /// <summary>
-        /// Thời gian tạo
+        /// Th?i gian t?o
         /// </summary>
         public DateTime CreatedAt { get; set; }
 
         /// <summary>
-        /// Thời gian cập nhật
+        /// Th?i gian c?p nh?t
         /// </summary>
         public DateTime UpdatedAt { get; set; }
 
         /// <summary>
-        /// Trạng thái hoạt động
+        /// Tr?ng th�i ho?t ??ng
         /// </summary>
         public bool IsActive { get; set; }
 
         /// <summary>
-        /// Danh sách hoàn thành
+        /// Danh s�ch ho�n th�nh
         /// </summary>
         public List<TaskCompletionDto> TaskCompletions { get; set; } = new List<TaskCompletionDto>();
     }
 
     /// <summary>
-    /// DTO cho thông tin hoàn thành nhiệm vụ
+    /// DTO cho th�ng tin ho�n th�nh nhi?m v?
     /// </summary>
     public class TaskCompletionDto
     {
         /// <summary>
-        /// ID hoàn thành
+        /// ID ho�n th�nh
         /// </summary>
         public int CompletionId { get; set; }
 
         /// <summary>
-        /// ID nhiệm vụ
+        /// ID nhi?m v?
         /// </summary>
         public int TaskId { get; set; }
 
         /// <summary>
-        /// Ngày hoàn thành
+        /// Ng�y ho�n th�nh
         /// </summary>
         public DateTime CompletionDate { get; set; }
 
         /// <summary>
-        /// Trạng thái hoàn thành (0-100)
+        /// Tr?ng th�i ho�n th�nh (0-100)
         /// </summary>
         public int? CompletionStatus { get; set; }
 
         /// <summary>
-        /// Thời gian thực tế
+        /// Th?i gian th?c t?
         /// </summary>
         public int? ActualDuration { get; set; }
 
         /// <summary>
-        /// Đơn vị thời gian
+        /// ??n v? th?i gian
         /// </summary>
         public string DurationUnit { get; set; }
 
         /// <summary>
-        /// Độ khó (1-5)
+        /// ?? kh� (1-5)
         /// </summary>
         public int? Difficulty { get; set; }
 
         /// <summary>
-        /// Độ hài lòng (1-5)
+        /// ?? h�i l�ng (1-5)
         /// </summary>
         public int? Satisfaction { get; set; }
 
         /// <summary>
-        /// Hiệu quả (1-5)
+        /// Hi?u qu? (1-5)
         /// </summary>
         public int? Effectiveness { get; set; }
 
         /// <summary>
-        /// Ghi chú
+        /// Ghi ch�
         /// </summary>
         public string Notes { get; set; }
 
         /// <summary>
-        /// Điểm số
+        /// ?i?m s?
         /// </summary>
         public int? Score { get; set; }
 
         /// <summary>
-        /// Số câu đúng
+        /// S? c�u ?�ng
         /// </summary>
         public int? CorrectCount { get; set; }
 
         /// <summary>
-        /// Tổng số câu
+        /// T?ng s? c�u
         /// </summary>
         public int? TotalCount { get; set; }
     }

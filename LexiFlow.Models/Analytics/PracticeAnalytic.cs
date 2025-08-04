@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Practice;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -59,6 +60,6 @@ namespace LexiFlow.Models.Analytics
 
         // Navigation properties
         [ForeignKey("UserPracticeId")]
-        public virtual Practice.UserPracticeSet UserPracticeSet { get; set; }
+        public virtual UserPracticeSet UserPracticeSet { get; set; }
     }
 }

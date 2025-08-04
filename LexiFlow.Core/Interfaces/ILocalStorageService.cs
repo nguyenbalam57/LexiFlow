@@ -1,4 +1,5 @@
 ﻿using LexiFlow.Models;
+using LexiFlow.Models.Learning.Vocabulary;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
