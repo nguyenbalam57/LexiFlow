@@ -4,9 +4,201 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LexiFlow.AdminDashboard"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="LexiFlow Admin Dashboard" 
+        Height="900" Width="1400"
+        MinHeight="700" MinWidth="1200"
+        WindowStartupLocation="CenterScreen"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}">
 
+    <Window.Resources>
+        <Style x:Key="MenuButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Navigation Panel -->
+        <Border Grid.Column="0" Background="{DynamicResource MaterialDesignCardBackground}" 
+                BorderThickness="0,0,1,0" BorderBrush="{DynamicResource MaterialDesignDivider}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="20,20,20,30">
+                    <materialDesign:PackIcon Kind="ViewDashboard" Width="32" Height="32" 
+                                           HorizontalAlignment="Center" 
+                                           Foreground="{DynamicResource MaterialDesignBody}"/>
+                    <TextBlock Text="LexiFlow Admin" FontSize="18" FontWeight="Bold" 
+                             HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    <TextBlock Text="Dashboard" FontSize="14" 
+                             HorizontalAlignment="Center" 
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                </StackPanel>
+
+                <!-- Navigation Menu -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10,0">
+                        <Button x:Name="btnDashboard" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ViewDashboard" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Dashboard" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnUsers" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="AccountGroup" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="User Management" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnVocabulary" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="BookOpenVariant" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Vocabulary" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnKanji" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="IdeogramCjk" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Kanji" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnGrammar" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="BookEducation" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Grammar" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnMedia" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ImageMultiple" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Media Files" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnExams" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ClipboardText" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Exams" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnAnalytics" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ChartLine" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Analytics" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="btnSettings" Style="{StaticResource MenuButtonStyle}" Click="NavigateToView">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Settings" Margin="15,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer -->
+                <StackPanel Grid.Row="2" Margin="20" Orientation="Vertical">
+                    <Separator Margin="0,0,0,10"/>
+                    <TextBlock x:Name="txtConnectionStatus" Text="● Connected to API" 
+                             FontSize="12" 
+                             Foreground="Green"
+                             HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="txtVersion" Text="Version 1.0.0" 
+                             FontSize="11" 
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                             HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource MaterialDesignCardBackground}" 
+                    BorderThickness="0,0,0,1" BorderBrush="{DynamicResource MaterialDesignDivider}"
+                    Padding="20,15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock x:Name="txtCurrentView" Text="Dashboard" 
+                                 FontSize="20" FontWeight="Bold"/>
+                        <TextBlock x:Name="txtCurrentDateTime" 
+                                 FontSize="12" 
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignIconButton}" 
+                              ToolTip="Refresh Data" Click="RefreshData">
+                            <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20"/>
+                        </Button>
+                        
+                        <Button Style="{StaticResource MaterialDesignIconButton}" 
+                              ToolTip="Notifications" Click="ShowNotifications">
+                            <materialDesign:PackIcon Kind="Bell" Width="20" Height="20"/>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignIconButton}" 
+                              ToolTip="User Profile" Click="ShowUserProfile">
+                            <materialDesign:PackIcon Kind="Account" Width="20" Height="20"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Content Container -->
+            <Border Grid.Row="1" Background="{DynamicResource MaterialDesignBackground}">
+                <Frame x:Name="contentFrame" NavigationUIVisibility="Hidden"/>
+            </Border>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Grid x:Name="loadingOverlay" Grid.ColumnSpan="2" 
+              Background="#80000000" Visibility="Collapsed">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                           Value="0" IsIndeterminate="True" Width="50" Height="50"/>
+                <TextBlock Text="Loading..." Foreground="White" 
+                         HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

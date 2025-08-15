@@ -62,7 +62,6 @@ namespace LexiFlow.Models.Media
         public int? KanjiExampleId { get; set; }
         public int? TechnicalTermId { get; set; }
         public int? TermExampleId { get; set; }
-        public int? UserVocabularyDetaillId { get; set; }
 
         // Thứ tự hiển thị nếu có nhiều media
         public int DisplayOrder { get; set; } = 0;
@@ -85,9 +84,8 @@ namespace LexiFlow.Models.Media
         public DateTime? DeletedAt { get; set; }
         public int? DeletedBy { get; set; }
 
-        // Cải tiến: Nhóm/phân loại media
-        [StringLength(100)]
-        public string Category { get; set; }
+        // Cải tiến: Nhóm/phân loại media - CHANGED TO NULLABLE
+        public int? CategoryId { get; set; }
 
         // Cải tiến: Cấp phép sử dụng
         [StringLength(100)]
@@ -130,11 +128,11 @@ namespace LexiFlow.Models.Media
         [ForeignKey("TermExampleId")]
         public virtual Learning.TechnicalTerms.TermExample TermExample { get; set; }
 
-        [ForeignKey("UserVocabularyDetaillId")]
-        public virtual Submission.UserVocabularyDetail UserVocabularyDetail { get; set; }
-
         [ForeignKey("DeletedBy")]
         public virtual User.User DeletedByUser { get; set; }
+
+        [ForeignKey("CategoryId")]
+        public virtual MediaCategory Category { get; set; }
 
         // Properties không lưu DB
         [NotMapped]

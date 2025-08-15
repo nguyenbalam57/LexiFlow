@@ -31,6 +31,8 @@ namespace LexiFlow.Models.Exam
         [StringLength(10)]
         public string Level { get; set; }
 
+        public int? LevelId { get; set; }
+
         public int? Year { get; set; }
 
         [StringLength(20)]
@@ -72,6 +74,9 @@ namespace LexiFlow.Models.Exam
         // Navigation properties
         [ForeignKey("CreatedByUserId")]
         public virtual User.User CreatedByUser { get; set; }
+
+        [ForeignKey("LevelId")]
+        public virtual JLPTLevel JLPTLevel { get; set; }
 
         public virtual ICollection<JLPTSection> Sections { get; set; }
         public virtual ICollection<UserExam> UserExams { get; set; }

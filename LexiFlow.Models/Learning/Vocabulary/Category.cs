@@ -67,7 +67,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public virtual ICollection<Category> ChildCategories { get; set; }
         public virtual ICollection<Vocabulary> Vocabularies { get; set; }
         public virtual ICollection<VocabularyGroup> VocabularyGroups { get; set; }
-        public virtual ICollection<Practice.PracticeSet> PracticeSets { get; set; }
         public virtual ICollection<Practice.TestResult> TestResults { get; set; }
     }
 }

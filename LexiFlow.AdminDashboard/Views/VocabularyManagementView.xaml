@@ -1,12 +1,484 @@
-﻿<Window x:Class="LexiFlow.AdminDashboard.Views.VocabularyManagementView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LexiFlow.AdminDashboard.Views"
-        mc:Ignorable="d"
-        Title="VocabularyManagementView" Height="450" Width="800">
-    <Grid>
-        
+<UserControl x:Class="LexiFlow.AdminDashboard.Views.VocabularyManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:local="clr-namespace:LexiFlow.AdminDashboard.Views"
+             xmlns:converters="clr-namespace:LexiFlow.AdminDashboard.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1200">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
+        <converters:BoolToStatusBrushConverter x:Key="BoolToStatusBrushConverter"/>
+        <converters:BoolToStatusTextConverter x:Key="BoolToStatusTextConverter"/>
+        <converters:JLPTLevelConverter x:Key="JLPTLevelConverter"/>
+        <converters:DifficultyToStarsConverter x:Key="DifficultyToStarsConverter"/>
+        <converters:CountToStringConverter x:Key="CountToStringConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <!-- Loading Overlay -->
+        <Border Background="Black" Opacity="0.5" 
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+                Panel.ZIndex="1000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                           Value="0" IsIndeterminate="True" Width="50" Height="50"/>
+                <TextBlock Text="Loading..." Foreground="White" 
+                         FontSize="16" Margin="0,16,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Section -->
+            <Border Grid.Row="0" Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Vocabulary Management" 
+                             Style="{StaticResource SectionHeaderStyle}"
+                             FontSize="24" FontWeight="Bold"/>
+                    
+                    <TextBlock Text="Manage vocabulary entries, categories, and learning content"
+                             Margin="0,0,0,16"
+                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Background="{DynamicResource PrimaryHueMidBrush}"
+                                Command="{Binding CreateVocabularyCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Plus" Margin="0,0,4,0"/>
+                                <TextBlock Text="Add Vocabulary"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                Margin="8,0,0,0"
+                                Background="{DynamicResource SecondaryHueMidBrush}"
+                                Command="{Binding CreateCategoryCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FolderPlus" Margin="0,0,4,0"/>
+                                <TextBlock Text="Add Category"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0,0,0"
+                                Command="{Binding ImportVocabulariesCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Import" Margin="0,0,4,0"/>
+                                <TextBlock Text="Import"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                Margin="8,0,0,0"
+                                Command="{Binding ExportVocabulariesCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Export" Margin="0,0,4,0"/>
+                                <TextBlock Text="Export"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Search Section -->
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox Grid.Column="0" 
+                           Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                           materialDesign:HintAssist.Hint="Search vocabularies..."
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                           Margin="0,0,8,0">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    
+                    <Button Grid.Column="1" Style="{StaticResource MaterialDesignIconButton}"
+                          Command="{Binding SearchCommand}" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="Magnify"/>
+                    </Button>
+                    
+                    <Button Grid.Column="2" Style="{StaticResource MaterialDesignIconButton}"
+                          Command="{Binding ClearFiltersCommand}" ToolTip="Clear Filters">
+                        <materialDesign:PackIcon Kind="FilterOff"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Area -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Vocabulary List -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <!-- Header with bulk actions -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Vocabularies" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TotalVocabularies, StringFormat='({}{0} total)'}" 
+                                         FontSize="14" Margin="8,0,0,0" VerticalAlignment="Center"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </StackPanel>
+                            
+                            <!-- Bulk Actions -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                      Visibility="{Binding IsMultipleVocabulariesSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="{Binding SelectedVocabulariesCount, StringFormat='{}{0} selected'}" 
+                                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Command="{Binding BulkUpdateCategoryCommand}" Margin="0,0,4,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FolderEdit" Width="14" Height="14" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Update Category"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Command="{Binding BulkDeleteVocabulariesCommand}"
+                                      Background="{DynamicResource ValidationErrorBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="DeleteMultiple" Width="14" Height="14" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Delete Selected"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Vocabulary DataGrid -->
+                        <DataGrid ItemsSource="{Binding Vocabularies}"
+                                SelectedItem="{Binding SelectedVocabulary}"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                CanUserDeleteRows="False"
+                                SelectionMode="Extended"
+                                Height="400"
+                                materialDesign:DataGridAssist.CellPadding="13 8 8 8"
+                                materialDesign:DataGridAssist.ColumnHeaderPadding="8"
+                                Style="{StaticResource MaterialDesignDataGrid}">
+                            
+                            <DataGrid.Columns>
+                                <!-- Selection Column -->
+                                <DataGridCheckBoxColumn Header="" Width="30" IsReadOnly="False">
+                                    <DataGridCheckBoxColumn.Binding>
+                                        <Binding Path="IsSelected"/>
+                                    </DataGridCheckBoxColumn.Binding>
+                                </DataGridCheckBoxColumn>
+                                
+                                <!-- Word Column -->
+                                <DataGridTextColumn Header="Word" Binding="{Binding Term}" 
+                                                  Width="120" FontWeight="SemiBold"/>
+                                
+                                <!-- Reading Column -->
+                                <DataGridTextColumn Header="Reading" Binding="{Binding Reading}" 
+                                                  Width="120"/>
+                                
+                                <!-- Meaning Column -->
+                                <DataGridTemplateColumn Header="Meaning" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Meaning}" 
+                                                     TextWrapping="Wrap" MaxWidth="180"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- JLPT Level Column -->
+                                <DataGridTemplateColumn Header="JLPT" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource PrimaryHueLightBrush}" 
+                                                  CornerRadius="10" Padding="6,2" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding Level}" FontSize="10" 
+                                                         FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Category Column -->
+                                <DataGridTextColumn Header="Category" Binding="{Binding Category.CategoryName}" 
+                                                  Width="100"/>
+                                
+                                <!-- Difficulty Column -->
+                                <DataGridTemplateColumn Header="Difficulty" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DifficultyLevel}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                <materialDesign:PackIcon Kind="Star" Width="12" Height="12" 
+                                                                       Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Status Column -->
+                                <DataGridTemplateColumn Header="Status" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding Status, Converter={StaticResource StatusToBrushConverter}}" 
+                                                  CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding Status}" FontSize="10" 
+                                                         Foreground="White" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <!-- Actions Column -->
+                                <DataGridTemplateColumn Header="Actions" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                                        ToolTip="Edit Vocabulary"
+                                                        Command="{Binding DataContext.EditVocabularyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <materialDesign:PackIcon Kind="Edit" Width="16" Height="16"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                                        ToolTip="Upload Audio"
+                                                        Command="{Binding DataContext.UploadAudioCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <materialDesign:PackIcon Kind="VolumeHigh" Width="16" Height="16"/>
+                                                </Button>
+                                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                                        ToolTip="Delete Vocabulary"
+                                                        Command="{Binding DataContext.DeleteVocabularyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="16" Height="16" 
+                                                                           Foreground="{DynamicResource ValidationErrorBrush}"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        
+                        <!-- Pagination -->
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Page Size Selector -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Show:" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <ComboBox SelectedItem="{Binding PageSize}" Width="60" 
+                                        materialDesign:HintAssist.Hint="Size">
+                                    <ComboBoxItem Content="25"/>
+                                    <ComboBoxItem Content="50"/>
+                                    <ComboBoxItem Content="100"/>
+                                    <ComboBoxItem Content="200"/>
+                                </ComboBox>
+                            </StackPanel>
+                            
+                            <!-- Page Info -->
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Run Text="Page"/>
+                                <Run Text="{Binding CurrentPage}" FontWeight="Bold"/>
+                                <Run Text="of"/>
+                                <Run Text="{Binding TotalPages}" FontWeight="Bold"/>
+                                <Run Text="|"/>
+                                <Run Text="{Binding TotalVocabularies}"/>
+                                <Run Text="total items"/>
+                            </TextBlock>
+                            
+                            <!-- Pagination Controls -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                      Command="{Binding FirstPageCommand}"
+                                      ToolTip="First Page">
+                                    <materialDesign:PackIcon Kind="PageFirst"/>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                      Command="{Binding PreviousPageCommand}"
+                                      ToolTip="Previous Page">
+                                    <materialDesign:PackIcon Kind="ChevronLeft"/>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                      Command="{Binding NextPageCommand}"
+                                      ToolTip="Next Page">
+                                    <materialDesign:PackIcon Kind="ChevronRight"/>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                      Command="{Binding LastPageCommand}"
+                                      ToolTip="Last Page">
+                                    <materialDesign:PackIcon Kind="PageLast"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Side Panel -->
+                <StackPanel Grid.Column="1">
+                    <!-- Categories Panel -->
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <TextBlock Text="Categories" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <Button Style="{StaticResource MaterialDesignIconButton}"
+                                      Command="{Binding CreateCategoryCommand}" Margin="8,0,0,0">
+                                    <materialDesign:PackIcon Kind="Plus" Width="16" Height="16"/>
+                                </Button>
+                            </StackPanel>
+                            
+                            <ListBox ItemsSource="{Binding Categories}"
+                                   SelectedItem="{Binding SelectedCategory}"
+                                   Height="150"
+                                   ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource MaterialDesignCardBackground}"
+                                                CornerRadius="4" Padding="8" Margin="0,2" MinWidth="200">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="{Binding CategoryName}" FontWeight="Medium" FontSize="14"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="11" 
+                                                             Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                             TextWrapping="Wrap" MaxWidth="150"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                        <Border Background="{Binding IsActive, Converter={StaticResource BoolToStatusBrushConverter}}" 
+                                                              CornerRadius="6" Padding="4,2">
+                                                            <TextBlock Text="{Binding IsActive, Converter={StaticResource BoolToStatusTextConverter}}" 
+                                                                     FontSize="9" Foreground="White"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                                            ToolTip="Edit Category"
+                                                            Command="{Binding DataContext.EditCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Edit" Width="14" Height="14"/>
+                                                    </Button>
+                                                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                                            ToolTip="Delete Category"
+                                                            Command="{Binding DataContext.DeleteCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}">
+                                                        <materialDesign:PackIcon Kind="Delete" Width="14" Height="14"
+                                                                               Foreground="{DynamicResource ValidationErrorBrush}"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Statistics Panel -->
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="Statistics" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                            
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Total Vocabularies:" FontSize="12"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Statistics.TotalVocabularies}" 
+                                         FontSize="12" FontWeight="Bold"/>
+                                
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Active:" FontSize="12" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Statistics.ActiveVocabularies}" 
+                                         FontSize="12" FontWeight="Bold" Margin="0,4,0,0"/>
+                                
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="With Audio:" FontSize="12" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Statistics.VocabulariesWithAudio}" 
+                                         FontSize="12" FontWeight="Bold" Margin="0,4,0,0"/>
+                                
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="This Month:" FontSize="12" Margin="0,4,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Statistics.VocabulariesCreatedThisMonth}" 
+                                         FontSize="12" FontWeight="Bold" Margin="0,4,0,0"/>
+                            </Grid>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                                  Command="{Binding ViewStatisticsCommand}" Margin="0,12,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ChartLine" Margin="0,0,4,0"/>
+                                    <TextBlock Text="View Details"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <!-- Status Bar -->
+            <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Information" Width="16" Height="16" 
+                                               Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Total: " />
+                        <TextBlock Text="{Binding TotalVocabularies}" FontWeight="Bold"/>
+                        <TextBlock Text=" | Page " Margin="16,0,0,0"/>
+                        <TextBlock Text="{Binding CurrentPage}" FontWeight="Bold"/>
+                        <TextBlock Text=" of " />
+                        <TextBlock Text="{Binding TotalPages}" FontWeight="Bold"/>
+                        <TextBlock Text=" | Showing " Margin="16,0,0,0"/>
+                        <TextBlock Text="{Binding PageSize}" FontWeight="Bold"/>
+                        <TextBlock Text=" per page"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
-</Window>
+</UserControl>

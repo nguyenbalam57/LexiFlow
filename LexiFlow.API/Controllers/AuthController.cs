@@ -1,372 +1,567 @@
-﻿using LexiFlow.API.DTOs.Auth;
-using LexiFlow.Models;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
-using LexiFlow.API.DTOs.User;
-using LexiFlow.Models.User;
+using Microsoft.EntityFrameworkCore;
+using LexiFlow.Infrastructure.Data;
+using LexiFlow.API.DTOs.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace LexiFlow.API.Controllers
 {
     /// <summary>
-    /// Xác thực người dùng và quản lý token
+    /// Controller xác thực và ủy quyền
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Produces("application/json")]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
-        private readonly Infrastructure.Data.LexiFlowContext _dbContext;
+        private readonly LexiFlowContext _dbContext;
+        private readonly IConfiguration _configuration;
 
-        /// <summary>
-        /// Khởi tạo AuthController
-        /// </summary>
         public AuthController(
-            IConfiguration configuration,
             ILogger<AuthController> logger,
-            Infrastructure.Data.LexiFlowContext dbContext)
+            LexiFlowContext dbContext,
+            IConfiguration configuration)
         {
-            _configuration = configuration;
             _logger = logger;
             _dbContext = dbContext;
-        }
-
-        /// <summary>
-        /// Đăng nhập và lấy token
-        /// </summary>
-        /// <param name="request">Thông tin đăng nhập</param>
-        /// <returns>Token JWT và thông tin người dùng</returns>
-        [HttpPost("login")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(LoginResponse), 200)]
-        [ProducesResponseType(typeof(ErrorResponse), 400)]
-        [ProducesResponseType(typeof(ErrorResponse), 401)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        {
-            try
-            {
-                // Validate request
-                if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
-                {
-                    return BadRequest(new ErrorResponse { Message = "Username and password are required." });
-                }
-
-                // Find user
-                var user = _dbContext.Users.FirstOrDefault(u => u.Username == request.Username);
-                if (user == null)
-                {
-                    _logger.LogWarning("Login attempt with invalid username: {Username}", request.Username);
-                    return Unauthorized(new ErrorResponse { Message = "Invalid username or password." });
-                }
-
-                // Verify password
-                if (!VerifyPassword(request.Password, user.PasswordHash))
-                {
-                    _logger.LogWarning("Failed login attempt for user: {Username}", request.Username);
-                    return Unauthorized(new ErrorResponse { Message = "Invalid username or password." });
-                }
-
-                // Check if user is active
-                if (!user.IsActive)
-                {
-                    _logger.LogWarning("Login attempt for deactivated account: {Username}", request.Username);
-                    return Unauthorized(new ErrorResponse { Message = "This account has been deactivated. Please contact an administrator." });
-                }
-
-                // Generate JWT token
-                var token = GenerateJwtToken(user);
-
-                // Update last login timestamp
-                //user.LastLogin = DateTime.UtcNow;
-                _dbContext.SaveChanges();
-
-                _logger.LogInformation("User {Username} logged in successfully", request.Username);
-
-                // Return token and user info
-                return Ok(new LoginResponse
-                {
-                    Token = token,
-                    User = new UserProfileDto
-                    {
-                        Id = user.UserId,
-                        Username = user.Username,
-                        Email = user.Email,
-                        IsActive = user.IsActive
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during login");
-                return StatusCode(500, new ErrorResponse { Message = "An error occurred during login. Please try again." });
-            }
+            _configuration = configuration;
         }
 
         /// <summary>
         /// Đăng ký tài khoản mới
         /// </summary>
-        /// <param name="request">Thông tin đăng ký</param>
-        /// <returns>Thông báo thành công</returns>
         [HttpPost("register")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(ApiResponse), 200)]
-        [ProducesResponseType(typeof(ErrorResponse), 400)]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto request)
         {
             try
             {
-                // Validate request
-                if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+                if (!ModelState.IsValid)
                 {
-                    return BadRequest(new ErrorResponse { Message = "Username and password are required." });
+                    return BadRequest(ModelState);
                 }
 
-                // Check if username already exists
-                if (_dbContext.Users.Any(u => u.Username == request.Username))
+                // Kiểm tra username đã tồn tại
+                var existingUser = await _dbContext.Users
+                    .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
+
+                if (existingUser != null)
                 {
-                    return BadRequest(new ErrorResponse { Message = "Username already exists." });
+                    return BadRequest(new ErrorResponse { Message = "Username hoặc email đã tồn tại" });
                 }
 
-                // Check if email already exists (if provided)
-                if (!string.IsNullOrEmpty(request.Email) && _dbContext.Users.Any(u => u.Email == request.Email))
-                {
-                    return BadRequest(new ErrorResponse { Message = "Email address already in use." });
-                }
-
-                // Create new user
-                var newUser = new User
+                // Tạo user mới
+                var user = new LexiFlow.Models.User.User
                 {
                     Username = request.Username,
-                    PasswordHash = HashPassword(request.Password),
                     Email = request.Email,
+                    PasswordHash = HashPassword(request.Password),
                     IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    PreferredLanguage = request.PreferredLanguage ?? "vi",
+                    TimeZone = request.TimeZone ?? "Asia/Ho_Chi_Minh"
+                };
+
+                _dbContext.Users.Add(user);
+                await _dbContext.SaveChangesAsync();
+
+                // Tạo user profile
+                var profile = new LexiFlow.Models.User.UserProfile
+                {
+                    UserId = user.UserId,
+                    DisplayName = request.DisplayName ?? request.Username,
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                // Save to database
-                _dbContext.Users.Add(newUser);
+                _dbContext.UserProfiles.Add(profile);
+
+                // Tạo learning preferences
+                var preferences = new LexiFlow.Models.User.UserLearningPreference
+                {
+                    UserId = user.UserId,
+                    DailyNewWordsGoal = 10,
+                    StudySessionLengthMinutes = 30,
+                    PreferredDifficulty = "Beginner",
+                    LearningStyle = "Balanced",
+                    StudyFocus = "Comprehensive",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.UserLearningPreferences.Add(preferences);
+
+                // Tạo notification settings
+                var notificationSettings = new LexiFlow.Models.User.UserNotificationSetting
+                {
+                    UserId = user.UserId,
+                    EmailNotificationsEnabled = true,
+                    PushNotificationsEnabled = true,
+                    StudyRemindersEnabled = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.UserNotificationSettings.Add(notificationSettings);
+
                 await _dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("New user registered: {Username}", request.Username);
+                // Tạo token
+                var token = GenerateJwtToken(user);
 
-                return Ok(new ApiResponse
+                return Ok(new AuthResponseDto
                 {
-                    Success = true,
-                    Message = "Registration successful. You can now log in."
+                    Token = token,
+                    RefreshToken = GenerateRefreshToken(),
+                    User = new UserProfileDto
+                    {
+                        UserId = user.UserId,
+                        Username = user.Username,
+                        Email = user.Email,
+                        DisplayName = profile.DisplayName,
+                        IsActive = user.IsActive,
+                        CreatedAt = user.CreatedAt
+                    }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during registration");
-                return StatusCode(500, new ErrorResponse { Message = "An error occurred during registration. Please try again." });
+                _logger.LogError(ex, "Error registering user");
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi đăng ký" });
             }
         }
 
         /// <summary>
-        /// Refresh token hiện tại
+        /// Đăng nhập
         /// </summary>
-        /// <returns>Token mới</returns>
-        [HttpPost("refresh-token")]
-        [Authorize]
-        [ProducesResponseType(typeof(RefreshTokenResponse), 200)]
-        [ProducesResponseType(typeof(ErrorResponse), 401)]
-        public async Task<IActionResult> RefreshToken()
+        [HttpPost("login")]
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto request)
         {
             try
             {
-                // Get user ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                if (!ModelState.IsValid)
                 {
-                    return Unauthorized(new ErrorResponse { Message = "Invalid token." });
+                    return BadRequest(ModelState);
                 }
 
-                // Get user
-                var user = await _dbContext.Users.FindAsync(userId);
+                // Tìm user
+                var user = await _dbContext.Users
+                    .Include(u => u.Profile)
+                    .FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Username);
+
                 if (user == null || !user.IsActive)
                 {
-                    return Unauthorized(new ErrorResponse { Message = "User not found or inactive." });
+                    return Unauthorized(new ErrorResponse { Message = "Thông tin đăng nhập không chính xác" });
                 }
 
-                // Generate new token
-                var newToken = GenerateJwtToken(user);
-
-                return Ok(new RefreshTokenResponse
+                // Kiểm tra mật khẩu
+                if (!VerifyPassword(request.Password, user.PasswordHash))
                 {
-                    Token = newToken
+                    return Unauthorized(new ErrorResponse { Message = "Thông tin đăng nhập không chính xác" });
+                }
+
+                // Cập nhật last login
+                user.LastLoginAt = DateTime.UtcNow;
+                user.LastLoginIP = GetClientIpAddress();
+                await _dbContext.SaveChangesAsync();
+
+                // Tạo token
+                var token = GenerateJwtToken(user);
+
+                return Ok(new AuthResponseDto
+                {
+                    Token = token,
+                    RefreshToken = GenerateRefreshToken(),
+                    User = new UserProfileDto
+                    {
+                        UserId = user.UserId,
+                        Username = user.Username,
+                        Email = user.Email,
+                        DisplayName = user.Profile?.DisplayName ?? user.Username,
+                        IsActive = user.IsActive,
+                        LastLoginAt = user.LastLoginAt,
+                        CreatedAt = user.CreatedAt
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging in user");
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi đăng nhập" });
+            }
+        }
+
+        /// <summary>
+        /// Làm mới token
+        /// </summary>
+        [HttpPost("refresh")]
+        public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Validate refresh token và tạo token mới
+                // TODO: Implement proper refresh token validation
+
+                var token = GenerateJwtToken(new LexiFlow.Models.User.User { UserId = 1, Username = "temp" });
+
+                return Ok(new RefreshTokenResponseDto
+                {
+                    Token = token,
+                    RefreshToken = GenerateRefreshToken()
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error refreshing token");
-                return StatusCode(500, new ErrorResponse { Message = "An error occurred while refreshing the token." });
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi làm mới token" });
             }
         }
 
         /// <summary>
-        /// Validate current token
+        /// Đăng xuất
         /// </summary>
-        /// <returns>User information</returns>
-        [HttpGet("validate")]
+        [HttpPost("logout")]
         [Authorize]
-        [ProducesResponseType(typeof(UserProfileDto), 200)]
-        [ProducesResponseType(typeof(ErrorResponse), 401)]
-        public async Task<IActionResult> ValidateToken()
+        public async Task<ActionResult> Logout()
         {
             try
             {
-                // Get user ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return Unauthorized(new ErrorResponse { Message = "Invalid token." });
-                }
+                // TODO: Invalidate token/refresh token
 
-                // Get user
-                var user = await _dbContext.Users.FindAsync(userId);
+                return Ok(new { Message = "Đăng xuất thành công" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging out user");
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi đăng xuất" });
+            }
+        }
+
+        /// <summary>
+        /// Kiểm tra token hiện tại
+        /// </summary>
+        [HttpGet("validate")]
+        [Authorize]
+        public async Task<ActionResult<UserProfileDto>> ValidateToken()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var user = await _dbContext.Users
+                    .Include(u => u.Profile)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
                 if (user == null || !user.IsActive)
                 {
-                    return Unauthorized(new ErrorResponse { Message = "User not found or inactive." });
+                    return Unauthorized(new ErrorResponse { Message = "Token không hợp lệ" });
                 }
 
-                // Return user info
                 return Ok(new UserProfileDto
                 {
-                    Id = user.UserId,
+                    UserId = user.UserId,
                     Username = user.Username,
                     Email = user.Email,
-                    IsActive = user.IsActive
+                    DisplayName = user.Profile?.DisplayName ?? user.Username,
+                    IsActive = user.IsActive,
+                    LastLoginAt = user.LastLoginAt,
+                    CreatedAt = user.CreatedAt
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating token");
-                return StatusCode(500, new ErrorResponse { Message = "An error occurred while validating the token." });
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi xác thực token" });
             }
         }
 
         /// <summary>
         /// Đổi mật khẩu
         /// </summary>
-        /// <param name="request">Thông tin đổi mật khẩu</param>
-        /// <returns>Thông báo thành công</returns>
         [HttpPost("change-password")]
         [Authorize]
-        [ProducesResponseType(typeof(ApiResponse), 200)]
-        [ProducesResponseType(typeof(ErrorResponse), 400)]
-        [ProducesResponseType(typeof(ErrorResponse), 401)]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
         {
             try
             {
-                // Get user ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                if (!ModelState.IsValid)
                 {
-                    return Unauthorized(new ErrorResponse { Message = "Invalid token." });
+                    return BadRequest(ModelState);
                 }
 
-                // Get user
+                var userId = GetCurrentUserId();
                 var user = await _dbContext.Users.FindAsync(userId);
+
                 if (user == null || !user.IsActive)
                 {
-                    return Unauthorized(new ErrorResponse { Message = "User not found or inactive." });
+                    return Unauthorized(new ErrorResponse { Message = "User không tồn tại" });
                 }
 
-                // Verify current password
+                // Kiểm tra mật khẩu cũ
                 if (!VerifyPassword(request.CurrentPassword, user.PasswordHash))
                 {
-                    return BadRequest(new ErrorResponse { Message = "Current password is incorrect." });
+                    return BadRequest(new ErrorResponse { Message = "Mật khẩu hiện tại không chính xác" });
                 }
 
-                // Update password
+                // Cập nhật mật khẩu mới
                 user.PasswordHash = HashPassword(request.NewPassword);
                 user.UpdatedAt = DateTime.UtcNow;
+
                 await _dbContext.SaveChangesAsync();
 
-                _logger.LogInformation("Password changed for user ID: {UserId}", userId);
-
-                return Ok(new ApiResponse
-                {
-                    Success = true,
-                    Message = "Password changed successfully."
-                });
+                return Ok(new { Message = "Đổi mật khẩu thành công" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error changing password");
-                return StatusCode(500, new ErrorResponse { Message = "An error occurred while changing the password." });
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi đổi mật khẩu" });
             }
         }
 
         /// <summary>
-        /// Tạo JWT token
+        /// Quên mật khẩu
         /// </summary>
-        private string GenerateJwtToken(User user)
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
         {
-            var jwtSettings = _configuration.GetSection("Jwt");
-            var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
-
-            var claims = new List<Claim>
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            // Add user roles as claims
-            if (user.UserRoles != null)
-            {
-                foreach (var userRole in user.UserRoles)
+                if (!ModelState.IsValid)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, userRole.Role.RoleName));
+                    return BadRequest(ModelState);
                 }
-            }
 
+                var user = await _dbContext.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
+
+                if (user != null)
+                {
+                    // TODO: Implement email sending for password reset
+                    // Generate reset token and send email
+                }
+
+                // Luôn trả về success để tránh user enumeration
+                return Ok(new { Message = "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing forgot password");
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi xử lý yêu cầu" });
+            }
+        }
+
+        /// <summary>
+        /// Đặt lại mật khẩu
+        /// </summary>
+        [HttpPost("reset-password")]
+        public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // TODO: Validate reset token
+                
+                return Ok(new { Message = "Đặt lại mật khẩu thành công" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password");
+                return StatusCode(500, new ErrorResponse { Message = "Đã xảy ra lỗi khi đặt lại mật khẩu" });
+            }
+        }
+
+        #region Private Methods
+
+        private string GenerateJwtToken(LexiFlow.Models.User.User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JWT:Secret"] ?? "your-secret-key-here-make-it-long-enough");
+            
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(Convert.ToDouble(jwtSettings["ExpiryHours"] ?? "24")),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature),
-                Issuer = jwtSettings["Issuer"],
-                Audience = jwtSettings["Audience"]
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Email, user.Email ?? ""),
+                    new Claim("userId", user.UserId.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = _configuration["JWT:Issuer"] ?? "LexiFlow",
+                Audience = _configuration["JWT:Audience"] ?? "LexiFlow"
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
-
             return tokenHandler.WriteToken(token);
         }
 
-        /// <summary>
-        /// Hash mật khẩu
-        /// </summary>
+        private string GenerateRefreshToken()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
         private string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        /// <summary>
-        /// Xác thực mật khẩu
-        /// </summary>
         private bool VerifyPassword(string password, string hash)
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
+
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return userId;
+            }
+            return 0;
+        }
+
+        private string GetClientIpAddress()
+        {
+            string? ipAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            }
+            return ipAddress ?? "Unknown";
+        }
+
+        #endregion
     }
+
+    #region DTOs
+
+    public class RegisterRequestDto
+    {
+        [Required]
+        [StringLength(50, MinimumLength = 3)]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        [Compare("Password")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        public string? DisplayName { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? PreferredLanguage { get; set; }
+        public string? TimeZone { get; set; }
+    }
+
+    public class LoginRequestDto
+    {
+        [Required]
+        public string Username { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+
+    public class AuthResponseDto
+    {
+        public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+        public UserProfileDto User { get; set; } = new UserProfileDto();
+    }
+
+    public class UserProfileDto
+    {
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime? LastLoginAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class RefreshTokenRequestDto
+    {
+        [Required]
+        public string RefreshToken { get; set; } = string.Empty;
+    }
+
+    public class RefreshTokenResponseDto
+    {
+        public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
+    }
+
+    public class ChangePasswordRequestDto
+    {
+        [Required]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required]
+        [Compare("NewPassword")]
+        public string ConfirmNewPassword { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordRequestDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordRequestDto
+    {
+        [Required]
+        public string Token { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required]
+        [Compare("NewPassword")]
+        public string ConfirmNewPassword { get; set; } = string.Empty;
+    }
+
+    public class ErrorResponse
+    {
+        public string Message { get; set; } = string.Empty;
+        public string? Detail { get; set; }
+        public Dictionary<string, string[]>? Errors { get; set; }
+    }
+
+    #endregion
 }

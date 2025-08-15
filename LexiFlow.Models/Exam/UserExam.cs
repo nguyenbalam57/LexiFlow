@@ -12,10 +12,11 @@ using System.Xml.Linq;
 namespace LexiFlow.Models.Exam
 {
     /// <summary>
-    /// Kết quả làm bài thi của người dùng
+    /// Phiên làm bài của user
     /// </summary>
-    [Index(nameof(UserId), nameof(ExamId), Name = "IX_UserExam_User_Exam")]
-    public class UserExam : BaseEntity
+    [Index(nameof(UserId), nameof(StartTime), Name = "IX_UserExam_User_StartTime")]
+    [Index(nameof(Status), Name = "IX_UserExam_Status")]
+    public class UserExam : AuditableEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,41 +27,44 @@ namespace LexiFlow.Models.Exam
 
         public int? ExamId { get; set; }
 
-        public int? CustomExamId { get; set; }
-
-        public DateTime? StartTime { get; set; }
+        [Required]
+        public DateTime StartTime { get; set; } = DateTime.UtcNow;
 
         public DateTime? EndTime { get; set; }
 
-        public int? Score { get; set; }
+        public int? Duration { get; set; }
+
+        [StringLength(50)]
+        public string Status { get; set; } = "InProgress"; // InProgress, Completed, Abandoned
 
         public int? TotalQuestions { get; set; }
 
         public int? CorrectAnswers { get; set; }
 
-        // Cải tiến: Các số liệu thống kê chi tiết
         public int? IncorrectAnswers { get; set; }
-        public int? UnansweredQuestions { get; set; }
-        public int? VocabularyScore { get; set; }
-        public int? GrammarScore { get; set; }
-        public int? ReadingScore { get; set; }
-        public int? ListeningScore { get; set; }
 
-        // Cải tiến: Thời gian hoàn thành
-        public int? CompletionTimeMinutes { get; set; }
+        public int? SkippedAnswers { get; set; }
 
-        // Cải tiến: Kết quả đậu/rớt
+        public double? ScorePercentage { get; set; }
+
+        public int? ScorePoints { get; set; }
+
         public bool? IsPassed { get; set; }
 
-        // Cải tiến: Xếp hạng
+        [StringLength(50)]
         public string Grade { get; set; }
-        public int? Percentile { get; set; }
 
-        public bool IsCompleted { get; set; } = false;
+        public string Notes { get; set; }
 
-        public string ExamFeedback { get; set; }
+        // Cải tiến: Theo dõi tiến trình
+        public int? CurrentQuestionIndex { get; set; }
+        public string BookmarkedQuestions { get; set; }
+        public string FlaggedQuestions { get; set; }
 
-        public string UserNotes { get; set; }
+        // Cải tiến: Cài đặt làm bài
+        public bool IsTimeLimited { get; set; } = true;
+        public int? TimeLimit { get; set; }
+        public int? TimeRemaining { get; set; }
 
         // Navigation properties
         [ForeignKey("UserId")]
@@ -69,10 +73,6 @@ namespace LexiFlow.Models.Exam
         [ForeignKey("ExamId")]
         public virtual JLPTExam Exam { get; set; }
 
-        [ForeignKey("CustomExamId")]
-        public virtual Practice.CustomExam CustomExam { get; set; }
-
         public virtual ICollection<UserAnswer> UserAnswers { get; set; }
-        public virtual ICollection<Analytics.ExamAnalytic> ExamAnalytics { get; set; }
     }
 }

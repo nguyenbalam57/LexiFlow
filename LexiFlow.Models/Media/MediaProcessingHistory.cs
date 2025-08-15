@@ -37,7 +37,7 @@ namespace LexiFlow.Models.Media
 
         // Navigation properties
         [ForeignKey("MediaId")]
-        public virtual MediaFile Media { get; set; }
+        public virtual MediaFile MediaFile { get; set; }
 
         [ForeignKey("ProcessedBy")]
         public virtual User.User ProcessedByUser { get; set; }

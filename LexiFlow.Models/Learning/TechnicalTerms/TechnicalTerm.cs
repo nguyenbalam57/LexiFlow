@@ -93,7 +93,10 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
 
         public virtual ICollection<TermExample> Examples { get; set; }
         public virtual ICollection<TermTranslation> Translations { get; set; }
+        
+        [NotMapped]
         public virtual ICollection<TermRelation> Relations { get; set; }
+        
         public virtual ICollection<Media.MediaFile> MediaFiles { get; set; }
         public virtual ICollection<UserTechnicalTerm> UserTechnicalTerms { get; set; }
     }

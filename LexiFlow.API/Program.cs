@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using LexiFlow.API.Extensions;
 using LexiFlow.API.Middleware;
+using LexiFlow.API.Services;
+using LexiFlow.API.Hubs;
 using LexiFlow.Infrastructure.Data;
 using LexiFlow.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,6 +37,14 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
+// Add SignalR for real-time analytics
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+});
+
 // Add API versioning
 builder.Services.AddApiVersioning(options =>
 {
@@ -46,6 +56,10 @@ builder.Services.AddApiVersioning(options =>
 // Add FluentValidation
 builder.Services.AddValidationServices();
 
+// Register Analytics Services
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IAnalyticsHubService, AnalyticsHubService>();
+
 builder.Services.AddEndpointsApiExplorer();
 
 // 3. Configure Swagger with JWT Authentication
@@ -55,7 +69,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = builder.Configuration["API:Title"] ?? "LexiFlow API",
         Version = "v1",
-        Description = builder.Configuration["API:Description"] ?? "API for LexiFlow Japanese Vocabulary Learning Application",
+        Description = builder.Configuration["API:Description"] ?? "API for LexiFlow Japanese Vocabulary Learning Application with Real-time Analytics",
         Contact = new OpenApiContact
         {
             Name = builder.Configuration["API:Contact:Name"] ?? "LexiFlow Team",
@@ -114,12 +128,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
                 throw new InvalidOperationException("JWT Key is not configured")))
         };
+
+        // Configure SignalR authentication
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 // Add Authorization
 builder.Services.AddAuthorization();
 
-// 5. Configure CORS for client applications
+// 5. Configure CORS for client applications including SignalR
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -127,7 +157,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? new[] { "*" })
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials(); // Required for SignalR
     });
 
     // Add LANPolicy for local network access (mobile apps)
@@ -135,15 +165,21 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://192.168.*.*", "http://10.*.*.*")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
 // Add Health Checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "database")
+    .AddCheck("signalr", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("SignalR is running"));
 
 // Configure HTTP Client factory
 builder.Services.AddHttpClient();
+
+// Add Memory Cache for analytics caching
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
@@ -184,8 +220,11 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Seed database
-await app.Services.SeedDatabaseAsync();
+// Map SignalR Hub
+app.MapHub<AnalyticsHub>("/hubs/analytics");
+
+// Seed database - TEMPORARILY DISABLED
+// await app.Services.SeedDatabaseAsync();
 
 // Apply database migrations on startup in development
 if (app.Environment.IsDevelopment())
@@ -205,7 +244,7 @@ if (app.Environment.IsDevelopment())
 
 try
 {
-    Log.Information("Starting LexiFlow API");
+    Log.Information("Starting LexiFlow API with Real-time Analytics");
     app.Run();
     return 0;
 }

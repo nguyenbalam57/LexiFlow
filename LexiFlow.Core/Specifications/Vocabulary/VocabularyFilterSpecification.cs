@@ -142,9 +142,9 @@ namespace LexiFlow.Core.Specifications.Vocabulary
                     break;
                 case "frequency":
                     if (sortDescending)
-                        ApplyOrderByDescending(v => v.Frequency);
+                        ApplyOrderByDescending(v => v.FrequencyRank);
                     else
-                        ApplyOrderBy(v => v.Frequency);
+                        ApplyOrderBy(v => v.FrequencyRank);
                     break;
                 case "created":
                     if (sortDescending)

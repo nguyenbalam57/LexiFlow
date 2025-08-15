@@ -29,7 +29,7 @@ namespace LexiFlow.Models.Planning
         public string PlanName { get; set; }
 
         [StringLength(10)]
-        public string TargetLevel { get; set; }
+        public int TargetLevel { get; set; }
 
         public DateTime? StartDate { get; set; }
 

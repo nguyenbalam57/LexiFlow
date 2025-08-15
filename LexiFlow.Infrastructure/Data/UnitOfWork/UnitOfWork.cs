@@ -1,9 +1,6 @@
 ﻿using LexiFlow.Infrastructure.Data.Repositories.Base;
-using LexiFlow.Models;
-using LexiFlow.Models.Analytics;
 using LexiFlow.Models.Core;
 using LexiFlow.Models.Exam;
-using LexiFlow.Models.Gamification;
 using LexiFlow.Models.Learning.Grammar;
 using LexiFlow.Models.Learning.Kanji;
 using LexiFlow.Models.Learning.TechnicalTerms;
@@ -14,22 +11,19 @@ using LexiFlow.Models.Planning;
 using LexiFlow.Models.Practice;
 using LexiFlow.Models.Progress;
 using LexiFlow.Models.Scheduling;
-using LexiFlow.Models.Submission;
-using LexiFlow.Models.Sync;
 using LexiFlow.Models.System;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LexiFlow.Infrastructure.Data.UnitOfWork
 {
     /// <summary>
-    /// Unit of Work implementation with EF Core
+    /// Unit of Work implementation with EF Core - Optimized for .NET 9
+    /// Removed unused models (Analytics, Gamification, Sync, Submission, System Logs)
     /// </summary>
     public class UnitOfWork : IUnitOfWork
     {
@@ -107,17 +101,11 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         private IRepository<QuestionOption>? _questionOptions;
         #endregion
 
-        #region Test and Practice Repositories
+        #region Test and Practice Repositories - Simplified
         private IRepository<TestResult>? _testResults;
         private IRepository<TestDetail>? _testDetails;
-        private IRepository<CustomExam>? _customExams;
-        private IRepository<CustomExamQuestion>? _customExamQuestions;
         private IRepository<UserExam>? _userExams;
         private IRepository<UserAnswer>? _userAnswers;
-        private IRepository<PracticeSet>? _practiceSets;
-        private IRepository<PracticeSetItem>? _practiceSetItems;
-        private IRepository<UserPracticeSet>? _userPracticeSets;
-        private IRepository<UserPracticeAnswer>? _userPracticeAnswers;
         #endregion
 
         #region Study Planning Repositories
@@ -149,59 +137,8 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         private IRepository<ScheduleReminder>? _scheduleReminders;
         #endregion
 
-        #region Analytics Repositories
-        private IRepository<StudyReport>? _studyReports;
-        private IRepository<StudyReportItem>? _studyReportItems;
-        private IRepository<ReportType>? _reportTypes;
-        private IRepository<ExamAnalytic>? _examAnalytics;
-        private IRepository<PracticeAnalytic>? _practiceAnalytics;
-        private IRepository<StrengthWeakness>? _strengthWeaknesses;
-        #endregion
-
-        #region Gamification Repositories
-        private IRepository<Level>? _levels;
-        private IRepository<UserLevel>? _userLevels;
-        private IRepository<PointType>? _pointTypes;
-        private IRepository<UserPoint>? _userPoints;
-        private IRepository<Badge>? _badges;
-        private IRepository<UserBadge>? _userBadges;
-        private IRepository<Challenge>? _challenges;
-        private IRepository<ChallengeRequirement>? _challengeRequirements;
-        private IRepository<UserChallenge>? _userChallenges;
-        private IRepository<DailyTask>? _dailyTasks;
-        private IRepository<DailyTaskRequirement>? _dailyTaskRequirements;
-        private IRepository<UserDailyTask>? _userDailyTasks;
-        private IRepository<Achievement>? _achievements;
-        private IRepository<AchievementRequirement>? _achievementRequirements;
-        private IRepository<UserAchievement>? _userAchievements;
-        private IRepository<Leaderboard>? _leaderboards;
-        private IRepository<LeaderboardEntry>? _leaderboardEntries;
-        private IRepository<Event>? _events;
-        private IRepository<UserEvent>? _userEvents;
-        private IRepository<UserGift>? _userGifts;
-        private IRepository<UserStreak>? _userStreaks;
-        #endregion
-
-        #region Submission Repositories
-        private IRepository<UserVocabularySubmission>? _userVocabularySubmissions;
-        private IRepository<UserVocabularyDetail>? _userVocabularyDetails;
-        private IRepository<SubmissionStatus>? _submissionStatuses;
-        private IRepository<StatusTransition>? _statusTransitions;
-        private IRepository<ApprovalHistory>? _approvalHistories;
-        #endregion
-
-        #region Synchronization Repositories
-        private IRepository<SyncMetadata>? _syncMetadata;
-        private IRepository<SyncConflict>? _syncConflicts;
-        private IRepository<DeletedItem>? _deletedItems;
-        #endregion
-
-        #region System Repositories
+        #region System Repositories - Minimal
         private IRepository<Setting>? _settings;
-        private IRepository<ActivityLog>? _activityLogs;
-        private IRepository<SyncLog>? _syncLogs;
-        private IRepository<ErrorLog>? _errorLogs;
-        private IRepository<PerformanceLog>? _performanceLogs;
         #endregion
 
         public UnitOfWork(LexiFlowContext context)
@@ -276,21 +213,15 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         public IRepository<JLPTLevel> JLPTLevels => _jlptLevels ??= new BaseRepository<JLPTLevel>(_context);
         public IRepository<JLPTExam> JLPTExams => _jlptExams ??= new ActivatableRepository<JLPTExam>(_context);
         public IRepository<JLPTSection> JLPTSections => _jlptSections ??= new BaseRepository<JLPTSection>(_context);
-        public IRepository<Question> Questions => _questions ??= new BaseRepository<Question>(_context);
+        public IRepository<Question> Questions => _questions ??= new ActivatableRepository<Question>(_context);
         public IRepository<QuestionOption> QuestionOptions => _questionOptions ??= new BaseRepository<QuestionOption>(_context);
         #endregion
 
-        #region Test and Practice Properties
+        #region Test and Practice Properties - Simplified
         public IRepository<TestResult> TestResults => _testResults ??= new BaseRepository<TestResult>(_context);
         public IRepository<TestDetail> TestDetails => _testDetails ??= new BaseRepository<TestDetail>(_context);
-        public IRepository<CustomExam> CustomExams => _customExams ??= new ActivatableRepository<CustomExam>(_context);
-        public IRepository<CustomExamQuestion> CustomExamQuestions => _customExamQuestions ??= new BaseRepository<CustomExamQuestion>(_context);
         public IRepository<UserExam> UserExams => _userExams ??= new BaseRepository<UserExam>(_context);
         public IRepository<UserAnswer> UserAnswers => _userAnswers ??= new BaseRepository<UserAnswer>(_context);
-        public IRepository<PracticeSet> PracticeSets => _practiceSets ??= new ActivatableRepository<PracticeSet>(_context);
-        public IRepository<PracticeSetItem> PracticeSetItems => _practiceSetItems ??= new BaseRepository<PracticeSetItem>(_context);
-        public IRepository<UserPracticeSet> UserPracticeSets => _userPracticeSets ??= new BaseRepository<UserPracticeSet>(_context);
-        public IRepository<UserPracticeAnswer> UserPracticeAnswers => _userPracticeAnswers ??= new BaseRepository<UserPracticeAnswer>(_context);
         #endregion
 
         #region Study Planning Properties
@@ -322,59 +253,8 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         public IRepository<ScheduleReminder> ScheduleReminders => _scheduleReminders ??= new BaseRepository<ScheduleReminder>(_context);
         #endregion
 
-        #region Analytics Properties
-        public IRepository<StudyReport> StudyReports => _studyReports ??= new BaseRepository<StudyReport>(_context);
-        public IRepository<StudyReportItem> StudyReportItems => _studyReportItems ??= new BaseRepository<StudyReportItem>(_context);
-        public IRepository<ReportType> ReportTypes => _reportTypes ??= new BaseRepository<ReportType>(_context);
-        public IRepository<ExamAnalytic> ExamAnalytics => _examAnalytics ??= new BaseRepository<ExamAnalytic>(_context);
-        public IRepository<PracticeAnalytic> PracticeAnalytics => _practiceAnalytics ??= new BaseRepository<PracticeAnalytic>(_context);
-        public IRepository<StrengthWeakness> StrengthWeaknesses => _strengthWeaknesses ??= new BaseRepository<StrengthWeakness>(_context);
-        #endregion
-
-        #region Gamification Properties
-        public IRepository<Level> Levels => _levels ??= new ActivatableRepository<Level>(_context);
-        public IRepository<UserLevel> UserLevels => _userLevels ??= new BaseRepository<UserLevel>(_context);
-        public IRepository<PointType> PointTypes => _pointTypes ??= new ActivatableRepository<PointType>(_context);
-        public IRepository<UserPoint> UserPoints => _userPoints ??= new BaseRepository<UserPoint>(_context);
-        public IRepository<Badge> Badges => _badges ??= new ActivatableRepository<Badge>(_context);
-        public IRepository<UserBadge> UserBadges => _userBadges ??= new BaseRepository<UserBadge>(_context);
-        public IRepository<Challenge> Challenges => _challenges ??= new ActivatableRepository<Challenge>(_context);
-        public IRepository<ChallengeRequirement> ChallengeRequirements => _challengeRequirements ??= new BaseRepository<ChallengeRequirement>(_context);
-        public IRepository<UserChallenge> UserChallenges => _userChallenges ??= new BaseRepository<UserChallenge>(_context);
-        public IRepository<DailyTask> DailyTasks => _dailyTasks ??= new ActivatableRepository<DailyTask>(_context);
-        public IRepository<DailyTaskRequirement> DailyTaskRequirements => _dailyTaskRequirements ??= new BaseRepository<DailyTaskRequirement>(_context);
-        public IRepository<UserDailyTask> UserDailyTasks => _userDailyTasks ??= new BaseRepository<UserDailyTask>(_context);
-        public IRepository<Achievement> Achievements => _achievements ??= new ActivatableRepository<Achievement>(_context);
-        public IRepository<AchievementRequirement> AchievementRequirements => _achievementRequirements ??= new BaseRepository<AchievementRequirement>(_context);
-        public IRepository<UserAchievement> UserAchievements => _userAchievements ??= new BaseRepository<UserAchievement>(_context);
-        public IRepository<Leaderboard> Leaderboards => _leaderboards ??= new ActivatableRepository<Leaderboard>(_context);
-        public IRepository<LeaderboardEntry> LeaderboardEntries => _leaderboardEntries ??= new BaseRepository<LeaderboardEntry>(_context);
-        public IRepository<Event> Events => _events ??= new ActivatableRepository<Event>(_context);
-        public IRepository<UserEvent> UserEvents => _userEvents ??= new BaseRepository<UserEvent>(_context);
-        public IRepository<UserGift> UserGifts => _userGifts ??= new BaseRepository<UserGift>(_context);
-        public IRepository<UserStreak> UserStreaks => _userStreaks ??= new BaseRepository<UserStreak>(_context);
-        #endregion
-
-        #region Submission Properties
-        public IRepository<UserVocabularySubmission> UserVocabularySubmissions => _userVocabularySubmissions ??= new SoftDeleteRepository<UserVocabularySubmission>(_context);
-        public IRepository<UserVocabularyDetail> UserVocabularyDetails => _userVocabularyDetails ??= new BaseRepository<UserVocabularyDetail>(_context);
-        public IRepository<SubmissionStatus> SubmissionStatuses => _submissionStatuses ??= new BaseRepository<SubmissionStatus>(_context);
-        public IRepository<StatusTransition> StatusTransitions => _statusTransitions ??= new BaseRepository<StatusTransition>(_context);
-        public IRepository<ApprovalHistory> ApprovalHistories => _approvalHistories ??= new BaseRepository<ApprovalHistory>(_context);
-        #endregion
-
-        #region Synchronization Properties
-        public IRepository<SyncMetadata> SyncMetadata => _syncMetadata ??= new BaseRepository<SyncMetadata>(_context);
-        public IRepository<SyncConflict> SyncConflicts => _syncConflicts ??= new BaseRepository<SyncConflict>(_context);
-        public IRepository<DeletedItem> DeletedItems => _deletedItems ??= new BaseRepository<DeletedItem>(_context);
-        #endregion
-
-        #region System Properties
+        #region System Properties - Minimal
         public IRepository<Setting> Settings => _settings ??= new BaseRepository<Setting>(_context);
-        public IRepository<ActivityLog> ActivityLogs => _activityLogs ??= new BaseRepository<ActivityLog>(_context);
-        public IRepository<SyncLog> SyncLogs => _syncLogs ??= new BaseRepository<SyncLog>(_context);
-        public IRepository<ErrorLog> ErrorLogs => _errorLogs ??= new BaseRepository<ErrorLog>(_context);
-        public IRepository<PerformanceLog> PerformanceLogs => _performanceLogs ??= new BaseRepository<PerformanceLog>(_context);
         #endregion
 
         public async Task<int> SaveChangesAsync()

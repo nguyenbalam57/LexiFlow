@@ -1,0 +1,716 @@
+<UserControl x:Class="LexiFlow.AdminDashboard.Views.AnalyticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:oxy="http://oxyplot.org/wpf"
+             mc:Ignorable="d" d:DesignHeight="900" d:DesignWidth="1400">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        
+        <!-- Simple converter alternatives -->
+        <Style x:Key="ConnectedStatusStyle" TargetType="Border">
+            <Setter Property="Background" Value="Red"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                    <Setter Property="Background" Value="Green"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Card Style -->
+        <Style x:Key="AnalyticsCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="8" Direction="270" Color="Gray" Opacity="0.3" ShadowDepth="3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Chart Card Style -->
+        <Style x:Key="ChartCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="MinHeight" Value="350"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="8" Direction="270" Color="Gray" Opacity="0.3" ShadowDepth="3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Metric Card Style -->
+        <Style x:Key="MetricCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="MinHeight" Value="80"/>
+        </Style>
+
+        <!-- Data Template for Metric Cards -->
+        <DataTemplate x:Key="MetricCardTemplate">
+            <Border Style="{StaticResource MetricCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding Value}" 
+                                 FontSize="24" FontWeight="Bold"
+                                 Foreground="{Binding Color}"/>
+                        <TextBlock Text="{Binding Title}" FontSize="12" 
+                                 Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                    </StackPanel>
+                    
+                    <materialDesign:PackIcon Grid.Column="1" 
+                                           Kind="{Binding Icon}" 
+                                           Width="24" Height="24"
+                                           Foreground="{Binding Color}"
+                                           VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Data Template for Skill Progress -->
+        <DataTemplate x:Key="SkillProgressTemplate">
+            <Grid Margin="0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="{Binding SkillName}" VerticalAlignment="Center" 
+                         Width="80" FontSize="12"/>
+                <ProgressBar Grid.Column="1" Value="{Binding Progress}" Maximum="100" Height="8" 
+                           Margin="8,0" Background="{DynamicResource MaterialDesignDivider}"/>
+                <TextBlock Grid.Column="2" Text="{Binding Progress, StringFormat='{}{0:F0}%'}" VerticalAlignment="Center" 
+                         FontSize="12" FontWeight="Medium"/>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <!-- Loading Overlay -->
+        <Border Background="Black" Opacity="0.5" 
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+                Panel.ZIndex="1000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                           Value="0" IsIndeterminate="True" Width="50" Height="50"/>
+                <TextBlock Text="Loading Analytics..." Foreground="White" 
+                         FontSize="16" Margin="0,16,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <!-- Header Section v?i Real-time Controls -->
+                <Border Style="{StaticResource AnalyticsCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Title and Connection Status -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Learning Analytics Dashboard" 
+                                         FontSize="28" FontWeight="Bold"
+                                         Foreground="{DynamicResource MaterialDesignBody}"/>
+                                <TextBlock Text="Advanced analytics with real-time data integration and predictive insights" 
+                                         FontSize="14" Margin="0,4,0,0"
+                                         Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </StackPanel>
+                            
+                            <!-- Real-time Connection Status -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Border Style="{StaticResource ConnectedStatusStyle}" 
+                                        CornerRadius="10" Padding="8,4" Margin="0,0,8,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Circle" Width="8" Height="8" 
+                                                               Foreground="White" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding ConnectionStatus}" Foreground="White" 
+                                                 FontSize="12" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <ToggleButton IsChecked="{Binding IsRealTimeEnabled}" 
+                                            Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                            ToolTip="Enable/Disable Real-time Updates">
+                                    <materialDesign:ToggleButtonAssist.OnContent>
+                                        <materialDesign:PackIcon Kind="Wifi"/>
+                                    </materialDesign:ToggleButtonAssist.OnContent>
+                                </ToggleButton>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Advanced Feature Toggles -->
+                        <Grid Grid.Row="1" Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <ToggleButton IsChecked="{Binding ShowPredictiveAnalytics}" 
+                                            Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                            Margin="0,0,16,0"
+                                            ToolTip="Show/Hide Predictive Analytics">
+                                    <materialDesign:ToggleButtonAssist.OnContent>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="TrendingUp" Width="16" Height="16"/>
+                                            <TextBlock Text="Predictive" FontSize="12" Margin="4,0,0,0"/>
+                                        </StackPanel>
+                                    </materialDesign:ToggleButtonAssist.OnContent>
+                                </ToggleButton>
+
+                                <ToggleButton IsChecked="{Binding ShowAdvancedMetrics}" 
+                                            Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                            ToolTip="Show/Hide Advanced Metrics">
+                                    <materialDesign:ToggleButtonAssist.OnContent>
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="ChartBox" Width="16" Height="16"/>
+                                            <TextBlock Text="Advanced" FontSize="12" Margin="4,0,0,0"/>
+                                        </StackPanel>
+                                    </materialDesign:ToggleButtonAssist.OnContent>
+                                </ToggleButton>
+                            </StackPanel>
+                            
+                            <!-- Export Status -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" 
+                                      Visibility="{Binding IsExporting, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                                           Value="0" IsIndeterminate="True" Width="20" Height="20"/>
+                                <TextBlock Text="{Binding ExportStatus}" FontSize="12" Margin="8,0,0,0" 
+                                         VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Controls and Real-time Stats -->
+                        <Grid Grid.Row="2" Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Time Period and Controls -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <ComboBox Width="120" Margin="0,0,8,0"
+                                        SelectedValue="{Binding SelectedDays}"
+                                        materialDesign:HintAssist.Hint="Time Period">
+                                    <ComboBoxItem Content="7 Days" Tag="7"/>
+                                    <ComboBoxItem Content="30 Days" Tag="30" IsSelected="True"/>
+                                    <ComboBoxItem Content="90 Days" Tag="90"/>
+                                    <ComboBoxItem Content="1 Year" Tag="365"/>
+                                </ComboBox>
+                                
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                      Margin="0,0,8,0"
+                                      Command="{Binding RefreshCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Refresh" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Refresh"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                      Margin="0,0,8,0"
+                                      Command="{Binding RequestRealTimeUpdateCommand}"
+                                      IsEnabled="{Binding IsConnected}"
+                                      Background="{DynamicResource PrimaryHueLightBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Update" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Real-time Update"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                      Margin="0,0,8,0"
+                                      Command="{Binding ClearCacheCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="DeleteSweep" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Clear Cache"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            
+                            <!-- Enhanced Export Controls -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <!-- Export Dropdown Menu -->
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                      Margin="0,0,8,0"
+                                      Background="{DynamicResource PrimaryHueMidBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Export" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Export"/>
+                                        <materialDesign:PackIcon Kind="MenuDown" Margin="4,0,0,0"/>
+                                    </StackPanel>
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Export to PNG" Command="{Binding ExportToPngCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileImage"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Export to PDF" Command="{Binding ExportToPdfCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FilePdf"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Export to SVG" Command="{Binding ExportToSvgCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="FileDocument"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="Export Dashboard" Command="{Binding ExportDashboardCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="ViewDashboard"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Print Chart" Command="{Binding PrintChartCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="Printer"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </Button>
+
+                                <!-- Predictive Analytics Button -->
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                      Margin="0,0,8,0"
+                                      Command="{Binding GeneratePredictionCommand}"
+                                      Background="{DynamicResource SecondaryHueMidBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Crystal" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Predict"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <!-- Advanced Analytics Dropdown -->
+                                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                      Background="{DynamicResource PrimaryHueDarkBrush}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ChartLine" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Analytics"/>
+                                        <materialDesign:PackIcon Kind="MenuDown" Margin="4,0,0,0"/>
+                                    </StackPanel>
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="Efficiency Analysis" Command="{Binding AnalyzeEfficiencyCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="Speedometer"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Recommendations" Command="{Binding ShowRecommendationsCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="Lightbulb"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <Separator/>
+                                            <MenuItem Header="Create Snapshot" Command="{Binding CreateSnapshotCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="Camera"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Optimize Data" Command="{Binding OptimizeDataCommand}">
+                                                <MenuItem.Icon>
+                                                    <materialDesign:PackIcon Kind="DatabaseRefresh"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </Button>
+                                
+                                <!-- Real-time Statistics -->
+                                <Border Background="{DynamicResource MaterialDesignDivider}" 
+                                        CornerRadius="4" Padding="8,4" Margin="8,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Update" Width="16" Height="16" 
+                                                               VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Last Update:" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LastUpdateTime, StringFormat='{}{0:HH:mm:ss}'}" 
+                                                 FontSize="12" FontWeight="Bold" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Error Message -->
+                <Border Style="{StaticResource AnalyticsCardStyle}" 
+                        Background="Red"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="AlertCircle" Foreground="White" 
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="White" 
+                                 VerticalAlignment="Center" FontWeight="Medium"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Overview Metrics using ItemsControl -->
+                <Border Style="{StaticResource AnalyticsCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Overview Metrics" FontSize="20" FontWeight="SemiBold" 
+                                 Margin="0,0,0,16"/>
+                        
+                        <ItemsControl ItemsSource="{Binding OverviewMetrics}"
+                                    ItemTemplate="{StaticResource MetricCardTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="4"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Main Charts Section -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Study Time Trend Chart -->
+                    <Border Grid.Column="0" Style="{StaticResource ChartCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Study Time Trend" FontSize="18" FontWeight="SemiBold" 
+                                     Margin="0,0,0,16"/>
+                            
+                            <oxy:PlotView Model="{Binding StudyTimeTrendChart}" 
+                                        Height="300" 
+                                        Background="Transparent"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Skill Breakdown Chart -->
+                    <Border Grid.Column="1" Style="{StaticResource ChartCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Skill Accuracy Breakdown" FontSize="18" FontWeight="SemiBold" 
+                                     Margin="0,0,0,16"/>
+                            
+                            <oxy:PlotView Model="{Binding SkillBreakdownChart}" 
+                                        Height="300" 
+                                        Background="Transparent"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Performance and Pattern Charts -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Performance Comparison Chart -->
+                    <Border Grid.Column="0" Style="{StaticResource ChartCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Performance Trends by Skill" FontSize="18" FontWeight="SemiBold" 
+                                     Margin="0,0,0,16"/>
+                            
+                            <oxy:PlotView Model="{Binding PerformanceComparisonChart}" 
+                                        Height="300" 
+                                        Background="Transparent"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Study Pattern Chart -->
+                    <Border Grid.Column="1" Style="{StaticResource ChartCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Daily Study Pattern" FontSize="18" FontWeight="SemiBold" 
+                                     Margin="0,0,0,16"/>
+                            
+                            <oxy:PlotView Model="{Binding StudyPatternChart}" 
+                                        Height="300" 
+                                        Background="Transparent"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Progress Comparison Area Chart -->
+                <Border Style="{StaticResource ChartCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Learning Progress Comparison" FontSize="18" FontWeight="SemiBold" 
+                                 Margin="0,0,0,16"/>
+                        
+                        <oxy:PlotView Model="{Binding ProgressComparisonChart}" 
+                                    Height="350" 
+                                    Background="Transparent"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Advanced Analytics Section - Predictive Charts -->
+                <Border Style="{StaticResource ChartCardStyle}"
+                        Visibility="{Binding ShowPredictiveAnalytics, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Crystal" Width="24" Height="24" 
+                                                       VerticalAlignment="Center" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                <TextBlock Text="Predictive Learning Analytics" FontSize="20" FontWeight="SemiBold" 
+                                         VerticalAlignment="Center"/>
+                                <Border Background="{DynamicResource SecondaryHueLightBrush}" 
+                                        CornerRadius="10" Padding="6,2" Margin="8,0,0,0">
+                                    <TextBlock Text="AI-POWERED" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Border Background="{DynamicResource MaterialDesignDivider}" 
+                                        CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
+                                        Visibility="{Binding IsPredicting, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                                                   Value="0" IsIndeterminate="True" Width="16" Height="16" Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding PredictionStatus}" FontSize="12" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                      Command="{Binding TogglePredictiveViewCommand}"
+                                      ToolTip="Toggle Predictive View">
+                                    <materialDesign:PackIcon Kind="EyeOff"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Predictive Chart -->
+                            <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Learning Progress Prediction (30 Days)" FontSize="16" FontWeight="Medium" 
+                                             Margin="0,0,0,12"/>
+                                    
+                                    <oxy:PlotView Model="{Binding PredictiveChart}" 
+                                                Height="300" 
+                                                Background="Transparent"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Prediction Summary -->
+                            <Border Grid.Column="1" Style="{StaticResource MetricCardStyle}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Prediction Summary" FontSize="16" FontWeight="Medium" 
+                                             Margin="0,0,0,12"/>
+                                    
+                                    <!-- Predicted Progress Items -->
+                                    <ScrollViewer MaxHeight="280" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding PredictedProgress}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource MaterialDesignDivider}"
+                                                            CornerRadius="4" Padding="8" Margin="0,2">
+                                                        <Grid>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                            </Grid.RowDefinitions>
+                                                            
+                                                            <TextBlock Grid.Row="0" Text="{Binding Date, StringFormat='{}{0:MM/dd}'}" 
+                                                                     FontWeight="Medium" FontSize="12"/>
+                                                            <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                                                <TextBlock Text="Vocab:" FontSize="10" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding VocabularyCount, StringFormat='{}{0:F0}'}" 
+                                                                         FontSize="10" FontWeight="Bold" Margin="0,0,8,0"/>
+                                                                <TextBlock Text="Confidence:" FontSize="10" Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding ConfidenceLevel, StringFormat='{}{0:P0}'}" 
+                                                                         FontSize="10" FontWeight="Bold"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Advanced Metrics Section - Efficiency Analysis -->
+                <Border Style="{StaticResource ChartCardStyle}"
+                        Visibility="{Binding ShowAdvancedMetrics, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Speedometer" Width="24" Height="24" 
+                                                       VerticalAlignment="Center" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                <TextBlock Text="Advanced Efficiency Metrics" FontSize="20" FontWeight="SemiBold" 
+                                         VerticalAlignment="Center"/>
+                                <Border Background="{DynamicResource PrimaryHueLightBrush}" 
+                                        CornerRadius="10" Padding="6,2" Margin="8,0,0,0">
+                                    <TextBlock Text="ADVANCED" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                            </StackPanel>
+                            
+                            <Button Grid.Column="1" Style="{StaticResource MaterialDesignIconButton}" 
+                                  Command="{Binding ToggleAdvancedMetricsCommand}"
+                                  ToolTip="Toggle Advanced Metrics">
+                                <materialDesign:PackIcon Kind="EyeOff"/>
+                            </Button>
+                        </Grid>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Efficiency Chart -->
+                            <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Study Efficiency Analysis" FontSize="16" FontWeight="Medium" 
+                                             Margin="0,0,0,12"/>
+                                    
+                                    <oxy:PlotView Model="{Binding EfficiencyAnalysisChart}" 
+                                                Height="300" 
+                                                Background="Transparent"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <!-- Risk Alerts and Recommendations -->
+                            <Border Grid.Column="1" Style="{StaticResource MetricCardStyle}" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Risk Alerts" FontSize="16" FontWeight="Medium" 
+                                             Margin="0,0,0,12"/>
+                                    
+                                    <!-- Risk Alerts List -->
+                                    <ScrollViewer MaxHeight="140" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding RiskAlerts}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource ValidationErrorBrush}"
+                                                            CornerRadius="4" Padding="8" Margin="0,2">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            
+                                                            <materialDesign:PackIcon Grid.Column="0" Kind="Alert" 
+                                                                                   Foreground="White" Width="16" Height="16" 
+                                                                                   VerticalAlignment="Top" Margin="0,0,8,0"/>
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="{Binding Title}" 
+                                                                         FontWeight="Medium" FontSize="12" Foreground="White"/>
+                                                                <TextBlock Text="{Binding Description}" 
+                                                                         FontSize="10" Foreground="White" TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    
+                                    <Separator Margin="0,8"/>
+                                    
+                                    <!-- Quick Recommendations -->
+                                    <TextBlock Text="Quick Recommendations" FontSize="14" FontWeight="Medium" 
+                                             Margin="0,0,0,8"/>
+                                    
+                                    <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding Recommendations}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource PrimaryHueLightBrush}"
+                                                            CornerRadius="4" Padding="6" Margin="0,2">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Title}" 
+                                                                     FontWeight="Medium" FontSize="11" Foreground="White"/>
+                                                            <TextBlock Text="{Binding Action}" 
+                                                                     FontSize="10" Foreground="White" TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons Section -->
+                <Border Style="{StaticResource AnalyticsCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Actions and Export" FontSize="18" FontWeight="SemiBold" 
+                                 Margin="0,0,0,16"/>
+                        
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                    Margin="0,0,10,0"
+                                    Click="GenerateReport_Click"
+                                    Background="{DynamicResource PrimaryHueMidBrush}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileDocument" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Generate Report"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                    Margin="0,0,10,0"
+                                    Click="ExportData_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Export" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Export Data"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                    Command="{Binding ExportChartCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ChartLine" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Export Charts"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

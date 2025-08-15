@@ -1,0 +1,297 @@
+<UserControl x:Class="LexiFlow.AdminDashboard.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LexiFlow.AdminDashboard.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1000">
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+        <StackPanel>
+            <!-- Welcome Section -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Welcome to LexiFlow Admin Dashboard" 
+                                 FontSize="24" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Manage your Japanese learning platform efficiently" 
+                                 FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        <TextBlock x:Name="txtLastUpdate" Text="Last updated: Loading..." 
+                                 FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,8,0,0"/>
+                    </StackPanel>
+                    
+                    <materialDesign:PackIcon Grid.Column="1" Kind="ChartBox" Width="48" Height="48" 
+                                           Foreground="{DynamicResource MaterialDesignBody}" Opacity="0.6"/>
+                </Grid>
+            </Border>
+
+            <!-- Statistics Cards -->
+            <TextBlock Text="System Overview" Style="{StaticResource SectionHeaderStyle}"/>
+            
+            <UniformGrid Columns="4" Margin="0,0,0,20">
+                <!-- Total Users Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Total Users" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                <TextBlock x:Name="txtTotalUsers" Text="1,250" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                                <TextBlock x:Name="txtUsersChange" Text="+15 today" FontSize="12" Foreground="Green"/>
+                            </StackPanel>
+                            
+                            <materialDesign:PackIcon Grid.Column="1" Kind="AccountGroup" Width="24" Height="24" 
+                                                   Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Active Users Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Active Users" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                <TextBlock x:Name="txtActiveUsers" Text="890" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                <TextBlock x:Name="txtActiveChange" Text="71.2%" FontSize="12" Foreground="Green"/>
+                            </StackPanel>
+                            
+                            <materialDesign:PackIcon Grid.Column="1" Kind="AccountCheck" Width="24" Height="24" 
+                                                   Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Total Content Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Total Content" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                <TextBlock x:Name="txtTotalContent" Text="5,500" FontSize="28" FontWeight="Bold" Foreground="Orange"/>
+                                <TextBlock x:Name="txtContentChange" Text="+40 today" FontSize="12" Foreground="Green"/>
+                            </StackPanel>
+                            
+                            <materialDesign:PackIcon Grid.Column="1" Kind="BookOpenVariant" Width="24" Height="24" 
+                                                   Foreground="Orange"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- System Health Card -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="System Health" FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                <TextBlock x:Name="txtSystemHealth" Text="Healthy" FontSize="28" FontWeight="Bold" Foreground="Green"/>
+                                <TextBlock x:Name="txtUptime" Text="15d 6h" FontSize="12" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            </StackPanel>
+                            
+                            <materialDesign:PackIcon Grid.Column="1" Kind="Heart" Width="24" Height="24" 
+                                                   Foreground="Green"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Charts and Analytics -->
+            <Grid Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- User Activity Chart -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                    <StackPanel>
+                        <TextBlock Text="User Activity (Last 7 Days)" Style="{StaticResource SectionHeaderStyle}"/>
+                        <Grid Height="300">
+                            <!-- Placeholder for chart -->
+                            <Border Background="{DynamicResource MaterialDesignDivider}" CornerRadius="4">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ChartLine" Width="48" Height="48" 
+                                                           Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                    <TextBlock Text="User Activity Chart" 
+                                             Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                             HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Recent Activities -->
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="10,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Recent Activities" Style="{StaticResource SectionHeaderStyle}"/>
+                        <ScrollViewer Height="300" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="recentActivitiesList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource MaterialDesignDivider}" 
+                                              Padding="0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <materialDesign:PackIcon Grid.Column="0" Kind="Account" Width="16" Height="16" 
+                                                                       VerticalAlignment="Top" Margin="0,2,8,0"/>
+                                                
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Activity}" FontWeight="Medium" FontSize="13"/>
+                                                    <TextBlock Text="{Binding User}" FontSize="12" 
+                                                             Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                                </StackPanel>
+                                                
+                                                <TextBlock Grid.Column="2" Text="{Binding Time}" FontSize="11" 
+                                                         Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                                                         VerticalAlignment="Top"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Content Statistics -->
+            <TextBlock Text="Content Statistics" Style="{StaticResource SectionHeaderStyle}" Margin="0,30,0,0"/>
+            
+            <UniformGrid Columns="3" Margin="0,0,0,20">
+                <!-- Vocabulary Stats -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Vocabulary" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Total:" FontSize="14"/>
+                            <TextBlock x:Name="txtVocabTotal" Text="3,200" FontSize="14" FontWeight="Bold" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N5:" FontSize="12"/>
+                            <TextBlock x:Name="txtVocabN5" Text="1,200" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N4:" FontSize="12"/>
+                            <TextBlock x:Name="txtVocabN4" Text="1,100" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Others:" FontSize="12"/>
+                            <TextBlock x:Name="txtVocabOthers" Text="900" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Kanji Stats -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Kanji" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Total:" FontSize="14"/>
+                            <TextBlock x:Name="txtKanjiTotal" Text="1,500" FontSize="14" FontWeight="Bold" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N5:" FontSize="12"/>
+                            <TextBlock x:Name="txtKanjiN5" Text="103" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N4:" FontSize="12"/>
+                            <TextBlock x:Name="txtKanjiN4" Text="167" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Others:" FontSize="12"/>
+                            <TextBlock x:Name="txtKanjiOthers" Text="1,230" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Grammar Stats -->
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Grammar" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Total:" FontSize="14"/>
+                            <TextBlock x:Name="txtGrammarTotal" Text="800" FontSize="14" FontWeight="Bold" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N5:" FontSize="12"/>
+                            <TextBlock x:Name="txtGrammarN5" Text="140" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="N4:" FontSize="12"/>
+                            <TextBlock x:Name="txtGrammarN4" Text="180" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Others:" FontSize="12"/>
+                            <TextBlock x:Name="txtGrammarOthers" Text="480" FontSize="12" Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- Quick Actions -->
+            <TextBlock Text="Quick Actions" Style="{StaticResource SectionHeaderStyle}" Margin="0,20,0,0"/>
+            
+            <UniformGrid Columns="4" Margin="0,0,0,40">
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" Margin="4" Height="60" Click="AddNewVocabulary">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="BookPlus" Width="20" Height="20"/>
+                        <TextBlock Text="Add Vocabulary" FontSize="12" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" Margin="4" Height="60" Click="AddNewKanji">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="IdeogramCjk" Width="20" Height="20"/>
+                        <TextBlock Text="Add Kanji" FontSize="12" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" Margin="4" Height="60" Click="ViewAnalytics">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="ChartLine" Width="20" Height="20"/>
+                        <TextBlock Text="View Analytics" FontSize="12" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Button>
+                
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" Margin="4" Height="60" Click="ExportData">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Export" Width="20" Height="20"/>
+                        <TextBlock Text="Export Data" FontSize="12" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

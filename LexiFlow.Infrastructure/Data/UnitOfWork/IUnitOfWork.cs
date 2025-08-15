@@ -1,9 +1,6 @@
 ﻿using LexiFlow.Infrastructure.Data.Repositories.Base;
-using LexiFlow.Models;
-using LexiFlow.Models.Analytics;
 using LexiFlow.Models.Core;
 using LexiFlow.Models.Exam;
-using LexiFlow.Models.Gamification;
 using LexiFlow.Models.Learning.Grammar;
 using LexiFlow.Models.Learning.Kanji;
 using LexiFlow.Models.Learning.TechnicalTerms;
@@ -14,22 +11,19 @@ using LexiFlow.Models.Planning;
 using LexiFlow.Models.Practice;
 using LexiFlow.Models.Progress;
 using LexiFlow.Models.Scheduling;
-using LexiFlow.Models.Submission;
-using LexiFlow.Models.Sync;
 using LexiFlow.Models.System;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LexiFlow.Infrastructure.Data.UnitOfWork
 {
     /// <summary>
     /// Unit of Work interface defining all repositories and save changes method
+    /// Optimized for .NET 9 - Removed unused models (Analytics, Gamification, Sync, Submission, System Logs)
     /// </summary>
     public interface IUnitOfWork : IDisposable
     {
@@ -104,17 +98,11 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         IRepository<QuestionOption> QuestionOptions { get; }
         #endregion
 
-        #region Test and Practice
+        #region Test and Practice - Simplified
         IRepository<TestResult> TestResults { get; }
         IRepository<TestDetail> TestDetails { get; }
-        IRepository<CustomExam> CustomExams { get; }
-        IRepository<CustomExamQuestion> CustomExamQuestions { get; }
         IRepository<UserExam> UserExams { get; }
         IRepository<UserAnswer> UserAnswers { get; }
-        IRepository<PracticeSet> PracticeSets { get; }
-        IRepository<PracticeSetItem> PracticeSetItems { get; }
-        IRepository<UserPracticeSet> UserPracticeSets { get; }
-        IRepository<UserPracticeAnswer> UserPracticeAnswers { get; }
         #endregion
 
         #region Study Planning
@@ -146,59 +134,8 @@ namespace LexiFlow.Infrastructure.Data.UnitOfWork
         IRepository<ScheduleReminder> ScheduleReminders { get; }
         #endregion
 
-        #region Analytics
-        IRepository<StudyReport> StudyReports { get; }
-        IRepository<StudyReportItem> StudyReportItems { get; }
-        IRepository<ReportType> ReportTypes { get; }
-        IRepository<ExamAnalytic> ExamAnalytics { get; }
-        IRepository<PracticeAnalytic> PracticeAnalytics { get; }
-        IRepository<StrengthWeakness> StrengthWeaknesses { get; }
-        #endregion
-
-        #region Gamification
-        IRepository<Level> Levels { get; }
-        IRepository<UserLevel> UserLevels { get; }
-        IRepository<PointType> PointTypes { get; }
-        IRepository<UserPoint> UserPoints { get; }
-        IRepository<Badge> Badges { get; }
-        IRepository<UserBadge> UserBadges { get; }
-        IRepository<Challenge> Challenges { get; }
-        IRepository<ChallengeRequirement> ChallengeRequirements { get; }
-        IRepository<UserChallenge> UserChallenges { get; }
-        IRepository<DailyTask> DailyTasks { get; }
-        IRepository<DailyTaskRequirement> DailyTaskRequirements { get; }
-        IRepository<UserDailyTask> UserDailyTasks { get; }
-        IRepository<Achievement> Achievements { get; }
-        IRepository<AchievementRequirement> AchievementRequirements { get; }
-        IRepository<UserAchievement> UserAchievements { get; }
-        IRepository<Leaderboard> Leaderboards { get; }
-        IRepository<LeaderboardEntry> LeaderboardEntries { get; }
-        IRepository<Event> Events { get; }
-        IRepository<UserEvent> UserEvents { get; }
-        IRepository<UserGift> UserGifts { get; }
-        IRepository<UserStreak> UserStreaks { get; }
-        #endregion
-
-        #region Submission
-        IRepository<UserVocabularySubmission> UserVocabularySubmissions { get; }
-        IRepository<UserVocabularyDetail> UserVocabularyDetails { get; }
-        IRepository<SubmissionStatus> SubmissionStatuses { get; }
-        IRepository<StatusTransition> StatusTransitions { get; }
-        IRepository<ApprovalHistory> ApprovalHistories { get; }
-        #endregion
-
-        #region Synchronization
-        IRepository<SyncMetadata> SyncMetadata { get; }
-        IRepository<SyncConflict> SyncConflicts { get; }
-        IRepository<DeletedItem> DeletedItems { get; }
-        #endregion
-
-        #region System
+        #region System - Minimal
         IRepository<Setting> Settings { get; }
-        IRepository<ActivityLog> ActivityLogs { get; }
-        IRepository<SyncLog> SyncLogs { get; }
-        IRepository<ErrorLog> ErrorLogs { get; }
-        IRepository<PerformanceLog> PerformanceLogs { get; }
         #endregion
 
         /// <summary>

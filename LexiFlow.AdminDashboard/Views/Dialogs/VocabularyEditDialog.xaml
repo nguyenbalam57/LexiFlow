@@ -1,0 +1,173 @@
+<Window x:Class="LexiFlow.AdminDashboard.Views.Dialogs.VocabularyEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="{Binding IsEditMode, Converter={StaticResource EditModeTitleConverter}}"
+        Height="600" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="{Binding IsEditMode, ConverterParameter='Edit Vocabulary;Create New Vocabulary', Converter={StaticResource EditModeTitleConverter}}"
+                     FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Enter vocabulary details below"
+                     FontSize="14" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Form Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Word (Required) -->
+                <TextBox Text="{Binding FormWord, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Japanese Word *"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Margin="0,0,0,16"/>
+
+                <!-- Readings Row -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox Grid.Column="0" Text="{Binding FormHiragana, UpdateSourceTrigger=PropertyChanged}"
+                           materialDesign:HintAssist.Hint="Hiragana Reading"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    
+                    <TextBox Grid.Column="2" Text="{Binding FormKatakana, UpdateSourceTrigger=PropertyChanged}"
+                           materialDesign:HintAssist.Hint="Katakana Reading"
+                           Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                </Grid>
+
+                <!-- Romaji -->
+                <TextBox Text="{Binding FormRomaji, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Romaji"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Margin="0,0,0,16"/>
+
+                <!-- Meaning (Required) -->
+                <TextBox Text="{Binding FormMeaning, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="English Meaning *"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Margin="0,0,0,16"/>
+
+                <!-- Part of Speech and JLPT Level -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <ComboBox Grid.Column="0" Text="{Binding FormPartOfSpeech}"
+                            materialDesign:HintAssist.Hint="Part of Speech"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                            IsEditable="True">
+                        <ComboBoxItem Content="Noun"/>
+                        <ComboBoxItem Content="Verb"/>
+                        <ComboBoxItem Content="Adjective"/>
+                        <ComboBoxItem Content="Adverb"/>
+                        <ComboBoxItem Content="Particle"/>
+                        <ComboBoxItem Content="Conjunction"/>
+                        <ComboBoxItem Content="Interjection"/>
+                    </ComboBox>
+                    
+                    <ComboBox Grid.Column="2" SelectedValue="{Binding FormJLPTLevel}"
+                            materialDesign:HintAssist.Hint="JLPT Level"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="N5" Tag="N5"/>
+                        <ComboBoxItem Content="N4" Tag="N4"/>
+                        <ComboBoxItem Content="N3" Tag="N3"/>
+                        <ComboBoxItem Content="N2" Tag="N2"/>
+                        <ComboBoxItem Content="N1" Tag="N1"/>
+                    </ComboBox>
+                </Grid>
+
+                <!-- Category and Difficulty -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding Categories}"
+                            DisplayMemberPath="CategoryName"
+                            SelectedValuePath="CategoryId"
+                            SelectedValue="{Binding FormCategoryId}"
+                            materialDesign:HintAssist.Hint="Category"
+                            Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                    
+                    <Slider Grid.Column="2" Value="{Binding FormDifficultyLevel}"
+                          Minimum="1" Maximum="5" TickFrequency="1" IsSnapToTickEnabled="True"
+                          materialDesign:SliderAssist.OnlyShowFocusVisualWhileDragging="True"/>
+                </Grid>
+
+                <!-- Difficulty Level Display -->
+                <TextBlock Text="{Binding FormDifficultyLevel, StringFormat='Difficulty Level: {0}/5'}"
+                         FontSize="12" HorizontalAlignment="Center"
+                         Foreground="{DynamicResource MaterialDesignBodyLight}"
+                         Margin="0,0,0,16"/>
+
+                <!-- Example Sentence -->
+                <TextBox Text="{Binding FormExampleSentence, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Example Sentence (Japanese)"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       AcceptsReturn="True" MaxLines="3"
+                       Margin="0,0,0,16"/>
+
+                <!-- Example Meaning -->
+                <TextBox Text="{Binding FormExampleMeaning, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Example Sentence Meaning (English)"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       AcceptsReturn="True" MaxLines="3"
+                       Margin="0,0,0,16"/>
+
+                <!-- Notes -->
+                <TextBox Text="{Binding FormNotes, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Additional Notes"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       AcceptsReturn="True" MaxLines="4"
+                       Margin="0,0,0,16"/>
+
+                <!-- Tags -->
+                <TextBox Text="{Binding FormTags, UpdateSourceTrigger=PropertyChanged}"
+                       materialDesign:HintAssist.Hint="Tags (comma-separated)"
+                       materialDesign:HintAssist.HelperText="e.g. basic, food, daily-life"
+                       Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                       Margin="0,0,0,16"/>
+
+                <!-- Active Status -->
+                <CheckBox IsChecked="{Binding FormIsActive}" Content="Active" Margin="0,0,0,8"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+            <Button Style="{StaticResource MaterialDesignOutlinedButton}"
+                  Content="Cancel" Click="Cancel_Click" Margin="0,0,8,0" MinWidth="80"/>
+            
+            <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                  Content="{Binding IsEditMode, ConverterParameter='Update;Create', Converter={StaticResource EditModeTitleConverter}}"
+                  Command="{Binding SaveVocabularyCommand}"
+                  Background="{DynamicResource PrimaryHueMidBrush}"
+                  MinWidth="80"/>
+        </StackPanel>
+    </Grid>
+</Window>
