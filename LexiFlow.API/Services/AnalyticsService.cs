@@ -300,7 +300,7 @@ namespace LexiFlow.API.Services
                 ActivityType = s.SessionType ?? "Study",
                 Description = $"Study session: {s.SessionType}",
                 Score = null,
-                DurationMinutes = s.DurationMinutes ?? 0
+                DurationMinutes = s.DurationMinutes
             }));
 
             // Get recent test results
@@ -510,7 +510,7 @@ namespace LexiFlow.API.Services
             return testResults.Select(tr => new PerformanceTrendDto
             {
                 Date = tr.TestDate,
-                AccuracyRate = tr.Score,
+                AccuracyRate = (float)tr.Score,
                 StudyMinutes = tr.DurationMinutes ?? 0,
                 ItemsLearned = 0 // TODO: Calculate based on session data
             }).ToList();
@@ -534,7 +534,7 @@ namespace LexiFlow.API.Services
                 .Select(g => new DailyStudyDto
                 {
                     Date = g.Key,
-                    Minutes = g.Sum(s => s.DurationMinutes ?? 0),
+                    Minutes = g.Sum(s => s.DurationMinutes),
                     Sessions = g.Count(),
                     VocabularyItems = 0, // TODO: Get from session details
                     KanjiItems = 0,
@@ -581,7 +581,7 @@ namespace LexiFlow.API.Services
 
             var totalStudyTime = await _context.LearningSessions
                 .Where(ls => ls.UserId == userId && ls.StartTime >= startDate && ls.StartTime <= endDate)
-                .SumAsync(ls => ls.DurationMinutes ?? 0);
+                .SumAsync(ls => ls.DurationMinutes);
 
             var averageScore = await _context.TestResults
                 .Where(tr => tr.UserId == userId && tr.TestDate >= startDate && tr.TestDate <= endDate)
@@ -607,7 +607,7 @@ namespace LexiFlow.API.Services
             // Study efficiency (score improvement per hour studied)
             var totalStudyHours = await _context.LearningSessions
                 .Where(ls => ls.UserId == userId && ls.StartTime >= startDate && ls.StartTime <= endDate)
-                .SumAsync(ls => ls.DurationMinutes ?? 0) / 60.0;
+                .SumAsync(ls => ls.DurationMinutes) / 60.0;
 
             var scoreImprovement = await CalculateImprovementRateAsync(userId, startDate, endDate);
             

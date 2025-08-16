@@ -126,7 +126,7 @@ public partial class App : Application
         // ViewModels
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<VocabularyManagementViewModel>();
-        services.AddTransient<AdditionalViewModels>();
+        //services.AddTransient<AdditionalViewModels>();
 
         // Views
         services.AddTransient<MainWindow>();

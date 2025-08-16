@@ -25,6 +25,14 @@ namespace LexiFlow.AdminDashboard.Services
         public event Action<bool>? ConnectionStateChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        // Events for ViewModel
+        public event EventHandler<object>? DashboardDataUpdated;
+        public event EventHandler<object>? PerformanceDataUpdated;
+        public event EventHandler<string>? StudyActivityReported;
+        public event EventHandler<string>? TestCompleted;
+        public event EventHandler<object>? GoalProgressUpdated;
+        public event EventHandler<string>? ConnectionStatusChanged;
+
         public RealTimeAnalyticsService(IApiClient apiClient, ILogger<RealTimeAnalyticsService> logger)
         {
             _apiClient = apiClient;
@@ -64,6 +72,22 @@ namespace LexiFlow.AdminDashboard.Services
                     OnPropertyChanged();
                 }
             }
+        }
+
+        /// <summary>
+        /// Start real-time connection (ConnectAsync)
+        /// </summary>
+        public async Task ConnectAsync()
+        {
+            await StartAsync();
+        }
+
+        /// <summary>
+        /// Stop real-time connection (DisconnectAsync)
+        /// </summary>
+        public async Task DisconnectAsync()
+        {
+            await StopAsync();
         }
 
         /// <summary>
@@ -109,6 +133,49 @@ namespace LexiFlow.AdminDashboard.Services
                 _logger.LogError(ex, "Error stopping real-time analytics connection");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Subscribe to a real-time channel (SubscribeToChannelAsync)
+        /// </summary>
+        public async Task SubscribeToChannelAsync(string channel)
+        {
+            if (!IsConnected)
+                await ConnectAsync();
+
+            _logger.LogInformation("Subscribing to channel: {Channel}", channel);
+            await Task.Delay(100); // Simulate
+        }
+
+        /// <summary>
+        /// Request dashboard update (RequestDashboardUpdateAsync)
+        /// </summary>
+        public async Task RequestDashboardUpdateAsync(int days)
+        {
+            if (!IsConnected)
+                return;
+
+            _logger.LogInformation("Requesting dashboard update for {Days} days", days);
+            await Task.Delay(200);
+
+            // Simulate data and raise event
+            var dashboardData = new { Days = days, Timestamp = DateTime.UtcNow, Data = "Dashboard mock data" };
+            DashboardDataUpdated?.Invoke(this, dashboardData);
+        }
+
+        /// <summary>
+        /// Request performance update (RequestPerformanceUpdateAsync)
+        /// </summary>
+        public async Task RequestPerformanceUpdateAsync()
+        {
+            if (!IsConnected)
+                return;
+
+            _logger.LogInformation("Requesting performance update");
+            await Task.Delay(200);
+
+            var performanceData = new { Timestamp = DateTime.UtcNow, Data = "Performance mock data" };
+            PerformanceDataUpdated?.Invoke(this, performanceData);
         }
 
         /// <summary>

@@ -164,7 +164,7 @@
                                       Command="{Binding BulkDeleteVocabulariesCommand}"
                                       Background="{DynamicResource ValidationErrorBrush}">
                                     <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="DeleteMultiple" Width="14" Height="14" Margin="0,0,4,0"/>
+                                        <materialDesign:PackIcon Kind="DeleteSweep" Width="14" Height="14" Margin="0,0,4,0"/>
                                         <TextBlock Text="Delete Selected"/>
                                     </StackPanel>
                                 </Button>

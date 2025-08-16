@@ -14,6 +14,8 @@ namespace LexiFlow.Models.Practice
     /// </summary>
     public class TestDetail : BaseEntity
     {
+        public string? SkillType;
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TestDetailId { get; set; }

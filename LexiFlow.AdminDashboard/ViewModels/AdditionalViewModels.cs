@@ -378,7 +378,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                 }
 
                 TotalUsers = userCount;
-                OnPropertyChanged(nameof(TotalPages));
 
                 StatusMessage = $"Loaded {Users.Count} users (Page {CurrentPage} of {TotalPages})";
             }

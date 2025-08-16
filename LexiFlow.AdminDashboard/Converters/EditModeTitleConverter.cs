@@ -11,16 +11,21 @@ namespace LexiFlow.AdminDashboard.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool isEditMode && parameter is string parameterString)
+            if (value is bool isEditMode)
             {
-                var parts = parameterString.Split(';');
-                if (parts.Length == 2)
+                if (parameter is string parameterString)
                 {
-                    return isEditMode ? parts[0] : parts[1];
+                    var parts = parameterString.Split(';');
+                    if (parts.Length == 2)
+                    {
+                        return isEditMode ? parts[0] : parts[1];
+                    }
                 }
+                return isEditMode ? "Edit" : "Create";
             }
 
-            return isEditMode ? "Edit" : "Create";
+            // Fallback if value is not a bool
+            return "Create";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

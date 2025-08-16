@@ -13,6 +13,13 @@ namespace LexiFlow.AdminDashboard.Services
         
         event Action<object> DataReceived;
         event Action<bool> ConnectionStateChanged;
+        // Add these events
+        event EventHandler<object> DashboardDataUpdated;
+        event EventHandler<object> PerformanceDataUpdated;
+        event EventHandler<string> StudyActivityReported;
+        event EventHandler<string> TestCompleted;
+        event EventHandler<object> GoalProgressUpdated;
+        event EventHandler<string> ConnectionStatusChanged;
 
         Task StartAsync();
         Task StopAsync();
@@ -21,5 +28,12 @@ namespace LexiFlow.AdminDashboard.Services
         Task UnsubscribeFromDataAsync(params string[] dataTypes);
         Task<bool> CheckConnectionHealthAsync();
         ValueTask DisposeAsync();
+        // Add these methods
+        Task ConnectAsync();
+        Task DisconnectAsync();
+        Task SubscribeToChannelAsync(string channel);
+        Task RequestDashboardUpdateAsync(int days);
+        Task RequestPerformanceUpdateAsync();
+
     }
 }

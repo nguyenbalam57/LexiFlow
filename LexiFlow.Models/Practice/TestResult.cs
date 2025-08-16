@@ -17,6 +17,8 @@ namespace LexiFlow.Models.Practice
     [Index(nameof(UserId), nameof(TestDate), Name = "IX_TestResult_User_Date")]
     public class TestResult : BaseEntity
     {
+        public int? DurationMinutes;
+
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TestResultId { get; set; }

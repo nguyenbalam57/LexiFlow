@@ -172,7 +172,7 @@ builder.Services.AddCors(options =>
 
 // Add Health Checks
 builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "database")
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "database", tags: new[] { "database" })
     .AddCheck("signalr", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("SignalR is running"));
 
 // Configure HTTP Client factory

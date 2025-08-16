@@ -20,6 +20,9 @@ namespace LexiFlow.AdminDashboard.Services
         public int UserId { get; set; }
         public string Data { get; set; }
         public Dictionary<string, object> Properties { get; set; } = new();
+        public string Description { get; set; }
+        public string Icon { get; set; }
+        public string Color { get; set; }
     }
 
     /// <summary>

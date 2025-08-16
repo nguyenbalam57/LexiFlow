@@ -138,6 +138,7 @@ namespace LexiFlow.AdminDashboard.ViewModels
             {
                 if (SetProperty(ref _pageSize, value))
                 {
+                    TotalPages = (int)Math.Ceiling((double)TotalVocabularies / value);
                     CurrentPage = 1;
                     _ = LoadVocabulariesAsync();
                 }
@@ -147,10 +148,22 @@ namespace LexiFlow.AdminDashboard.ViewModels
         public int TotalVocabularies
         {
             get => _totalVocabularies;
-            set => SetProperty(ref _totalVocabularies, value);
+            set
+            {
+                if (SetProperty(ref _totalVocabularies, value))
+                {
+                    TotalPages = (int)Math.Ceiling((double)value / PageSize);
+                }
+            }
         }
 
-        public int TotalPages => (int)Math.Ceiling((double)TotalVocabularies / PageSize);
+        private int _totalPages = 1;
+        public int TotalPages
+        {
+            get => _totalPages;
+            set => SetProperty(ref _totalPages, value);
+        }
+
 
         public string StatusMessage
         {
@@ -493,7 +506,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                     }
                     
                     TotalVocabularies = totalCount;
-                    OnPropertyChanged(nameof(TotalPages));
                 });
 
                 StatusMessage = $"Loaded {vocabularies.Count} vocabularies (Page {CurrentPage} of {TotalPages})";
@@ -1361,6 +1373,45 @@ namespace LexiFlow.AdminDashboard.ViewModels
             {
                 // Dialog was saved via SaveCategoryCommand
             }
+        }
+
+        private void ClearCategoryForm()
+        {
+            FormCategoryName = "";
+            FormCategoryDescription = "";
+            FormCategoryIsActive = true;
+            IsCategoryEditMode = false;
+            SelectedCategory = null;
+        }
+
+        private void ClearVocabularyForm()
+        {
+            FormWord = "";
+            FormHiragana = "";
+            FormKatakana = "";
+            FormRomaji = "";
+            FormMeaning = "";
+            FormPartOfSpeech = "";
+            FormJLPTLevel = "N5";
+            FormCategoryId = null;
+            FormExampleSentence = "";
+            FormExampleMeaning = "";
+            FormNotes = "";
+            FormTags = "";
+            FormDifficultyLevel = 1;
+            FormIsActive = true;
+            IsEditMode = false;
+            SelectedVocabulary = null;
+        }
+
+        private void CancelEditCategory()
+        {
+            ClearCategoryForm();
+        }
+
+        private void CancelEditVocabulary()
+        {
+            ClearVocabularyForm();
         }
 
         #endregion

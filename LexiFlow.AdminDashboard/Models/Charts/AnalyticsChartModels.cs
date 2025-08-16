@@ -2,6 +2,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using OxyPlot.Legends;
+using OxyPlot.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
     {
         // Enhanced color palettes for professional look
         private static readonly string[] ModernColors = {
-            "#3F51B5", "#009688", "#4CAF50", "#FF9800", "#F44336", 
+            "#3F51B5", "#009688", "#4CAF50", "#FF9800", "#F44336",
             "#9C27B0", "#2196F3", "#FF5722", "#607D8B", "#795548"
         };
 
@@ -78,7 +79,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
         /// <summary>
         /// Create predictive chart combining historical and forecast data
         /// </summary>
-        public static PlotModel CreatePredictiveChart(List<ChartDataPoint> historicalData, 
+        public static PlotModel CreatePredictiveChart(List<ChartDataPoint> historicalData,
             List<PredictedDataPoint> predictedData, string title = "Learning Progress Prediction")
         {
             var plotModel = CreateBasePlotModel(title, "Date", "Progress Value");
@@ -118,7 +119,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
 
             plotModel.Series.Add(predictedSeries);
 
-            // Confidence interval
+            // Confidence interval using AreaSeries
             var confidenceArea = new AreaSeries
             {
                 Title = "Confidence Interval",
@@ -131,7 +132,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
             {
                 var baseValue = point.VocabularyCount;
                 var margin = baseValue * (1 - point.ConfidenceLevel) * 0.2; // 20% margin based on confidence
-                
+
                 confidenceArea.Points.Add(DateTimeAxis.CreateDataPoint(point.Date, baseValue + margin));
                 confidenceArea.Points2.Add(DateTimeAxis.CreateDataPoint(point.Date, baseValue - margin));
             }
@@ -144,54 +145,74 @@ namespace LexiFlow.AdminDashboard.Models.Charts
         }
 
         /// <summary>
-        /// Create efficiency analysis radar chart
+        /// Create efficiency analysis bar chart using BarSeries (RECOMMENDED)
         /// </summary>
         public static PlotModel CreateEfficiencyChart(StudyEfficiencyAnalysis analysis, string title = "Study Efficiency Analysis")
         {
-            var plotModel = CreateBasePlotModel(title, "Efficiency Metrics", "Score");
+            var plotModel = CreateBasePlotModel(title, "", "");
 
-            // Efficiency metrics bar chart
-            var series = new ColumnSeries
+            // Use BarSeries for horizontal bars (RECOMMENDED)
+            var barSeries = new BarSeries
             {
                 Title = "Efficiency Metrics",
-                FillColor = OxyColor.Parse(ModernColors[0]),
-                StrokeColor = OxyColor.Parse(GradientColors[0]),
+                LabelPlacement = LabelPlacement.Inside,
+                LabelFormatString = "{0:0.0}%",
+                StrokeColor = OxyColors.Black,
                 StrokeThickness = 1
             };
 
+            // Category axis on the LEFT for horizontal bars
             var categoryAxis = new CategoryAxis
             {
-                Position = AxisPosition.Bottom,
+                Position = AxisPosition.Left,
                 Title = "Metrics",
-                FontSize = AxisFontSize
+                FontSize = AxisFontSize,
+                ItemsSource = new[] { "Time Efficiency", "Learning Velocity", "Retention Rate", "Overall Score" }
             };
 
-            // Add efficiency metrics
-            categoryAxis.Labels.Add("Time Efficiency");
-            series.Items.Add(new ColumnItem(analysis.TimeEfficiency * 100));
-
-            categoryAxis.Labels.Add("Learning Velocity");
-            series.Items.Add(new ColumnItem(analysis.LearningVelocity * 10)); // Scale for visualization
-
-            categoryAxis.Labels.Add("Retention Rate");
-            series.Items.Add(new ColumnItem(analysis.RetentionRate * 100));
-
-            categoryAxis.Labels.Add("Overall Score");
-            series.Items.Add(new ColumnItem(analysis.EfficiencyScore * 10));
-
-            plotModel.Axes.Clear();
-            plotModel.Axes.Add(categoryAxis);
-            plotModel.Axes.Add(new LinearAxis 
-            { 
-                Position = AxisPosition.Left, 
+            // Value axis on the BOTTOM for horizontal bars
+            var valueAxis = new LinearAxis
+            {
+                Position = AxisPosition.Bottom,
                 Title = "Score (%)",
                 FontSize = AxisFontSize,
                 MinimumPadding = 0.1,
-                MaximumPadding = 0.1
-            });
+                MaximumPadding = 0.1,
+                AbsoluteMinimum = 0
+            };
 
-            plotModel.Series.Add(series);
+            plotModel.Axes.Clear();
+            plotModel.Axes.Add(categoryAxis);
+            plotModel.Axes.Add(valueAxis);
 
+            // Add data with different colors for each bar
+            var colors = new[]
+            {
+                OxyColor.Parse(ModernColors[0]), // Time Efficiency - Blue
+                OxyColor.Parse(ModernColors[1]), // Learning Velocity - Teal
+                OxyColor.Parse(ModernColors[2]), // Retention Rate - Green
+                OxyColor.Parse(ModernColors[3])  // Overall Score - Orange
+            };
+
+            var values = new[]
+            {
+                analysis.TimeEfficiency * 100,
+                analysis.LearningVelocity * 10, // Scale for visualization
+                analysis.RetentionRate * 100,
+                analysis.EfficiencyScore * 10
+            };
+
+            // Add BarItems with individual colors
+            for (int i = 0; i < values.Length; i++)
+            {
+                barSeries.Items.Add(new BarItem
+                {
+                    Value = values[i],
+                    Color = colors[i]
+                });
+            }
+
+            plotModel.Series.Add(barSeries);
             AddInteractiveFeatures(plotModel);
             return plotModel;
         }
@@ -205,7 +226,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
             var plotModel = CreateBasePlotModel(title, "Date", "Accuracy (%)");
 
             var skillGroups = data.GroupBy(d => d.Category).ToList();
-            
+
             for (int i = 0; i < skillGroups.Count && i < ModernColors.Length; i++)
             {
                 var group = skillGroups[i];
@@ -271,8 +292,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
                 AngleSpan = 360,
                 StartAngle = 0,
                 InnerDiameter = 0.2, // Create donut chart
-                FontSize = 12,
-                FontWeight = FontWeights.Bold
+                FontSize = 12
             };
 
             for (int i = 0; i < data.Count && i < ModernColors.Length; i++)
@@ -289,15 +309,14 @@ namespace LexiFlow.AdminDashboard.Models.Charts
 
             plotModel.Series.Add(pieSeries);
 
-            // Add center text for donut chart
-            plotModel.Annotations.Add(new OxyPlot.Annotations.TextAnnotation
+            // Add center text for donut chart with correct TextAnnotation syntax
+            plotModel.Annotations.Add(new TextAnnotation
             {
                 Text = $"Avg\n{data.Average(s => s.AccuracyRate):F1}%",
-                Position = new DataPoint(0.5, 0.5),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Middle,
-                FontSize = 14,
-                FontWeight = FontWeights.Bold
+                TextPosition = new DataPoint(0.5, 0.5),
+                TextHorizontalAlignment = HorizontalAlignment.Center,
+                TextVerticalAlignment = VerticalAlignment.Middle,
+                FontSize = 14
             });
 
             return plotModel;
@@ -309,57 +328,77 @@ namespace LexiFlow.AdminDashboard.Models.Charts
 
         public static PlotModel CreateStudyPatternColumnChart(List<StudyPatternData> data, string title = "Daily Study Pattern")
         {
-            var plotModel = CreateBasePlotModel(title, "Hour of Day", "Study Minutes");
+            var plotModel = CreateBasePlotModel(title, "", "");
 
-            var columnSeries = new ColumnSeries
+            // Use BarSeries for horizontal bars
+            var barSeries = new BarSeries
             {
                 Title = "Study Time",
-                FillColor = OxyColor.Parse(ModernColors[0]),
-                StrokeColor = OxyColor.Parse(GradientColors[0]),
+                LabelPlacement = LabelPlacement.Inside,
+                LabelFormatString = "{0:0}m",
+                StrokeColor = OxyColors.Black,
                 StrokeThickness = 1
             };
 
+            // Category axis on the LEFT for horizontal bars
             var categoryAxis = new CategoryAxis
             {
-                Position = AxisPosition.Bottom,
+                Position = AxisPosition.Left,
                 Title = "Hour of Day",
-                FontSize = AxisFontSize
+                FontSize = AxisFontSize,
+                ItemsSource = data.OrderBy(d => d.Hour).Select(d => $"{d.Hour:00}:00").ToArray()
             };
 
-            foreach (var hourData in data.OrderBy(d => d.Hour))
+            // Value axis on the BOTTOM for horizontal bars
+            var valueAxis = new LinearAxis
             {
-                categoryAxis.Labels.Add($"{hourData.Hour:00}:00");
-                
-                var color = hourData.StudyMinutes > 30 ? 
-                    OxyColor.Parse(ModernColors[2]) : // Green for peak hours
-                    OxyColor.Parse(ModernColors[0]);  // Blue for normal hours
-                
-                columnSeries.Items.Add(new ColumnItem(hourData.StudyMinutes) { Color = color });
-            }
+                Position = AxisPosition.Bottom,
+                Title = "Minutes",
+                FontSize = AxisFontSize,
+                MinimumPadding = 0.1,
+                AbsoluteMinimum = 0
+            };
 
             plotModel.Axes.Clear();
             plotModel.Axes.Add(categoryAxis);
-            plotModel.Axes.Add(new LinearAxis 
-            { 
-                Position = AxisPosition.Left, 
-                Title = "Minutes",
-                FontSize = AxisFontSize,
-                MinimumPadding = 0.1
-            });
+            plotModel.Axes.Add(valueAxis);
 
-            plotModel.Series.Add(columnSeries);
+            // Add data with color coding based on study intensity
+            foreach (var hourData in data.OrderBy(d => d.Hour))
+            {
+                var color = hourData.StudyMinutes > 30 ?
+                    OxyColor.Parse(ModernColors[2]) : // Green for peak hours
+                    OxyColor.Parse(ModernColors[0]);  // Blue for normal hours
+
+                barSeries.Items.Add(new BarItem
+                {
+                    Value = hourData.StudyMinutes,
+                    Color = color
+                });
+            }
+
+            plotModel.Series.Add(barSeries);
 
             // Add peak hour annotations
-            var peakHours = data.Where(d => d.StudyMinutes == data.Max(x => x.StudyMinutes)).ToList();
+            var peakMinutes = data.Max(x => x.StudyMinutes);
+            var peakHours = data.Where(d => d.StudyMinutes == peakMinutes).ToList();
+
+            var orderedData = data.OrderBy(d => d.Hour).ToList();
             foreach (var peak in peakHours)
             {
-                plotModel.Annotations.Add(new OxyPlot.Annotations.TextAnnotation
+                var index = orderedData.FindIndex(d => d.Hour == peak.Hour);
+                if (index >= 0)
                 {
-                    Text = "Peak",
-                    Position = new DataPoint(peak.Hour, peak.StudyMinutes + 5),
-                    FontSize = 10,
-                    TextColor = OxyColors.Red
-                });
+                    plotModel.Annotations.Add(new TextAnnotation
+                    {
+                        Text = "Peak",
+                        TextPosition = new DataPoint(peak.StudyMinutes + 5, index),
+                        FontSize = 10,
+                        TextColor = OxyColors.Red,
+                        TextHorizontalAlignment = HorizontalAlignment.Left,
+                        TextVerticalAlignment = VerticalAlignment.Middle
+                    });
+                }
             }
 
             AddInteractiveFeatures(plotModel);
@@ -499,7 +538,6 @@ namespace LexiFlow.AdminDashboard.Models.Charts
             {
                 Title = title,
                 TitleFontSize = TitleFontSize,
-                TitleFontWeight = FontWeights.Bold,
                 Background = OxyColors.White,
                 PlotAreaBorderColor = OxyColor.Parse("#E0E0E0"),
                 PlotAreaBorderThickness = new OxyThickness(1),
@@ -587,7 +625,7 @@ namespace LexiFlow.AdminDashboard.Models.Charts
             };
 
             var orderedData = data.OrderBy(d => d.Date).ToList();
-            
+
             for (int i = windowSize - 1; i < orderedData.Count; i++)
             {
                 var window = orderedData.Skip(i - windowSize + 1).Take(windowSize);
@@ -621,7 +659,6 @@ namespace LexiFlow.AdminDashboard.Models.Charts
                 var legend = plotModel.Legends.First();
                 legend.LegendTitle = "Data Types";
                 legend.LegendTitleFontSize = 12;
-                legend.LegendTitleFontWeight = FontWeights.Bold;
             }
         }
 
@@ -641,45 +678,69 @@ namespace LexiFlow.AdminDashboard.Models.Charts
         #region Chart Export Enhancement Methods
 
         /// <summary>
-        /// Prepare chart for high-quality export
+        /// Prepare chart for high-quality export - FIXED CopyTo issue
         /// </summary>
         public static PlotModel PrepareForExport(PlotModel originalModel, ExportSettings settings = null)
         {
             settings = settings ?? new ExportSettings();
 
-            var exportModel = new PlotModel();
-            originalModel.CopyTo(exportModel);
+            // Create new PlotModel and copy properties manually (PlotModel doesn't have CopyTo method)
+            var exportModel = new PlotModel
+            {
+                Title = originalModel.Title,
+                TitleFontSize = settings.TitleFontSize,
+                Background = OxyColors.White,
+                TextColor = OxyColors.Black,
+                DefaultFontSize = settings.FontSize,
+                PlotAreaBorderColor = originalModel.PlotAreaBorderColor,
+                PlotAreaBorderThickness = originalModel.PlotAreaBorderThickness
+            };
 
-            // Enhance for export
-            exportModel.Background = OxyColors.White;
-            exportModel.TextColor = OxyColors.Black;
-            exportModel.DefaultFontSize = settings.FontSize;
-            exportModel.TitleFontSize = settings.TitleFontSize;
+            // Copy axes
+            foreach (var axis in originalModel.Axes)
+            {
+                exportModel.Axes.Add(axis);
+            }
 
-            // Add export watermark if specified
+            // Copy series
+            foreach (var series in originalModel.Series)
+            {
+                exportModel.Series.Add(series);
+            }
+
+            // Copy legends
+            foreach (var legend in originalModel.Legends)
+            {
+                exportModel.Legends.Add(legend);
+            }
+
+            // Add export watermark if specified with correct TextAnnotation properties
             if (!string.IsNullOrEmpty(settings.Watermark))
             {
-                exportModel.Annotations.Add(new OxyPlot.Annotations.TextAnnotation
+                exportModel.Annotations.Add(new TextAnnotation
                 {
                     Text = settings.Watermark,
-                    Position = new DataPoint(0.98, 0.02),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Bottom,
+                    TextPosition = new DataPoint(0.98, 0.02),
+                    TextHorizontalAlignment = HorizontalAlignment.Right,
+                    TextVerticalAlignment = VerticalAlignment.Bottom,
                     FontSize = 8,
                     TextColor = OxyColors.LightGray
                 });
             }
 
             // Add timestamp
-            exportModel.Annotations.Add(new OxyPlot.Annotations.TextAnnotation
+            if (settings.IncludeTimestamp)
             {
-                Text = $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
-                Position = new DataPoint(0.02, 0.02),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Bottom,
-                FontSize = 8,
-                TextColor = OxyColors.Gray
-            });
+                exportModel.Annotations.Add(new TextAnnotation
+                {
+                    Text = $"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+                    TextPosition = new DataPoint(0.02, 0.02),
+                    TextHorizontalAlignment = HorizontalAlignment.Left,
+                    TextVerticalAlignment = VerticalAlignment.Bottom,
+                    FontSize = 8,
+                    TextColor = OxyColors.Gray
+                });
+            }
 
             return exportModel;
         }

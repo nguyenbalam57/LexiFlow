@@ -9,7 +9,7 @@ namespace LexiFlow.AdminDashboard.Services
     /// <summary>
     /// Service for generating demo chart data
     /// </summary>
-    public static class AnalyticsChartDemoService
+    public class AnalyticsChartDemoService
     {
         /// <summary>
         /// Generate comprehensive demo data for testing charts
