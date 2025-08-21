@@ -555,7 +555,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                     }
                     
                     TotalVocabularies = totalCount;
-                    OnPropertyChanged(nameof(TotalPages));
                 });
 
                 StatusMessage = $"Found {vocabularies.Count} vocabularies matching search criteria";
@@ -736,7 +735,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                     {
                         Vocabularies.Insert(0, newVocabulary);
                         TotalVocabularies++;
-                        OnPropertyChanged(nameof(TotalPages));
                     });
 
                     StatusMessage = "Vocabulary created successfully";
@@ -783,7 +781,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                     {
                         Vocabularies.Remove(SelectedVocabulary);
                         TotalVocabularies--;
-                        OnPropertyChanged(nameof(TotalPages));
                         SelectedVocabulary = null;
                     });
 
@@ -987,7 +984,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                         }
                         SelectedVocabularies.Clear();
                         TotalVocabularies -= count;
-                        OnPropertyChanged(nameof(TotalPages));
                         OnPropertyChanged(nameof(IsMultipleVocabulariesSelected));
                         OnPropertyChanged(nameof(SelectedVocabulariesCount));
                     });
@@ -1175,7 +1171,6 @@ namespace LexiFlow.AdminDashboard.ViewModels
                             Vocabularies.Insert(0, vocab);
                         }
                         TotalVocabularies += importedVocabularies.Count;
-                        OnPropertyChanged(nameof(TotalPages));
                     });
 
                     StatusMessage = $"Imported {importedVocabularies.Count} vocabularies successfully";

@@ -102,22 +102,22 @@ namespace LexiFlow.UI.Views.Login
             switch (cultureName)
             {
                 case "vi-VN":
-                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Vietnamese.xaml", UriKind.Absolute);
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Languages_VN.xaml", UriKind.Absolute);
                     break;
                 case "ja-JP":
-                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Japanese.xaml", UriKind.Absolute);
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Languages_JP.xaml", UriKind.Absolute);
                     break;
                 default:
-                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/English.xaml", UriKind.Absolute);
+                    dict.Source = new Uri("pack://application:,,,/Resources/Languages/Languages_EN.xaml", UriKind.Absolute);
                     break;
             }
 
             // Replace the current language dictionary
             var oldDict = Application.Current.Resources.MergedDictionaries.FirstOrDefault(
                 d => d.Source != null && (
-                    d.Source.OriginalString.Contains("English.xaml") ||
-                    d.Source.OriginalString.Contains("Vietnamese.xaml") ||
-                    d.Source.OriginalString.Contains("Japanese.xaml")
+                    d.Source.OriginalString.Contains("Languages_EN.xaml") ||
+                    d.Source.OriginalString.Contains("Languages_VN.xaml") ||
+                    d.Source.OriginalString.Contains("Languages_JP.xaml")
                 ));
 
             if (oldDict != null)
