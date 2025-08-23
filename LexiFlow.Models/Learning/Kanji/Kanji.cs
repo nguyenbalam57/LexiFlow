@@ -142,7 +142,7 @@ namespace LexiFlow.Models.Learning.Kanji
         public int? FrequencyRank { get; set; }
 
         /// <summary>
-        /// Mức độ khó (1-5, 5 là khó nhất)
+        /// Mức độ khó (1-5, 1 là khó nhất)
         /// </summary>
         [Range(1, 5)]
         public int? DifficultyLevel { get; set; }

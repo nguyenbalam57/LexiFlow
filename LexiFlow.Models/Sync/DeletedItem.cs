@@ -1,7 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace LexiFlow.API.DTOs.Sync
+namespace LexiFlow.Models.Sync
 {
     /// <summary>
     /// Thông tin về các mục đã xóa
@@ -51,7 +56,7 @@ namespace LexiFlow.API.DTOs.Sync
         /// <summary>
         /// Người dùng liên quan
         /// </summary>
-        //[ForeignKey("UserID")]
-        //public virtual User User { get; set; }
+        [ForeignKey("UserID")]
+        public virtual Models.User.User User { get; set; }
     }
 }

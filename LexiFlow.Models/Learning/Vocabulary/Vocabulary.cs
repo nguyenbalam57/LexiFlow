@@ -67,7 +67,7 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public int? CategoryId { get; set; }
 
         /// <summary>
-        /// Mức độ khó của từ (1-5, 5 là khó nhất)
+        /// Mức độ khó của từ (1-5, 1 là khó nhất)
         /// </summary>
         [Range(1, 5)]
         public int DifficultyLevel { get; set; } = 3;

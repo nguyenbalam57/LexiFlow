@@ -5,6 +5,10 @@ using LexiFlow.API.DTOs.Sync;
 using LexiFlow.API.DTOs.Auth;
 using Microsoft.EntityFrameworkCore;
 using LexiFlow.Models.Learning.Vocabulary;
+using LexiFlow.Models.Learning.Kanji;
+using LexiFlow.Models.Learning.Grammar;
+using LexiFlow.Models.Progress;
+using LexiFlow.Models.Sync;
 
 namespace LexiFlow.API.Services.Sync
 {
@@ -50,7 +54,7 @@ namespace LexiFlow.API.Services.Sync
                 // Lấy tất cả từ vựng từ DB đã được cập nhật sau lần đồng bộ cuối cùng
                 // hoặc thuộc về các ID mà client đã gửi
                 var serverItems = await _dbContext.Vocabularies
-                    .Where(v => v.ModifiedAt > lastSyncTime || clientItemIds.Contains(v.Id))
+                    .Where(v => v.UpdatedAt > lastSyncTime || clientItemIds.Contains(v.Id))
                     .ToListAsync();
 
                 // Tạo từ điển cho các mục từ server để dễ tìm kiếm
@@ -77,7 +81,7 @@ namespace LexiFlow.API.Services.Sync
                     if (serverItemsDict.TryGetValue(clientItem.Id, out var serverItem))
                     {
                         // Mục tồn tại trên cả client và server, kiểm tra xung đột
-                        if (clientItem.ModifiedAt > lastSyncTime && serverItem.ModifiedAt > lastSyncTime)
+                        if (clientItem.UpdatedAt > lastSyncTime && serverItem.UpdatedAt > lastSyncTime)
                         {
                             // Cả client và server đều đã cập nhật mục này, phát hiện xung đột
                             result.Conflicts.Add(new SyncConflict<Vocabulary>
@@ -85,23 +89,23 @@ namespace LexiFlow.API.Services.Sync
                                 ItemId = clientItem.Id,
                                 ClientVersion = clientItem,
                                 ServerVersion = serverItem,
-                                ClientUpdateTime = clientItem.ModifiedAt,
-                                ServerUpdateTime = serverItem.ModifiedAt,
+                                ClientUpdateTime = clientItem.UpdatedAt,
+                                ServerUpdateTime = serverItem.UpdatedAt,
                                 ConflictType = ConflictType.BothModified
                             });
                         }
-                        else if (clientItem.ModifiedAt > serverItem.ModifiedAt)
+                        else if (clientItem.UpdatedAt > serverItem.UpdatedAt)
                         {
                             // Client có phiên bản mới hơn, cập nhật server
                             serverItem.Term = clientItem.Term;
                             serverItem.Reading = clientItem.Reading;
                             serverItem.DifficultyLevel = clientItem.DifficultyLevel;
-                            serverItem.Notes = clientItem.Notes;
+                            serverItem.UsageNotes = clientItem.UsageNotes;
                             serverItem.Tags = clientItem.Tags;
-                            serverItem.AudioFile = clientItem.AudioFile;
+                            serverItem.MediaFiles = clientItem.MediaFiles;
                             serverItem.Status = clientItem.Status;
                             serverItem.ModifiedBy = userId;
-                            serverItem.ModifiedAt = DateTime.UtcNow;
+                            serverItem.UpdatedAt = DateTime.UtcNow;
 
                             _dbContext.Vocabularies.Update(serverItem);
                             result.UpdatedCount++;
@@ -125,7 +129,7 @@ namespace LexiFlow.API.Services.Sync
                         clientItem.CreatedBy = userId;
                         clientItem.ModifiedBy = userId;
                         clientItem.CreatedAt = DateTime.UtcNow;
-                        clientItem.ModifiedAt = DateTime.UtcNow;
+                        clientItem.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Vocabularies.Add(clientItem);
                         result.AddedCount++;
@@ -135,7 +139,7 @@ namespace LexiFlow.API.Services.Sync
                 // Tìm các mục trên server đã được cập nhật sau lần đồng bộ cuối
                 // nhưng không có trong danh sách từ client
                 var newServerItems = serverItems
-                    .Where(s => s.ModifiedAt > lastSyncTime && !clientItemIds.Contains(s.Id))
+                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.Id))
                     .ToList();
 
                 // Thêm các mục mới/cập nhật vào kết quả để gửi về client
@@ -192,7 +196,7 @@ namespace LexiFlow.API.Services.Sync
                 var result = new SyncResult<Kanji>();
 
                 // Tạo từ điển cho các mục từ client để dễ tìm kiếm
-                var clientItems = request.Items.ToDictionary(item => item.KanjiID);
+                var clientItems = request.Items.ToDictionary(item => item.KanjiId);
 
                 // Lấy tất cả ID kanji từ client
                 var clientItemIds = clientItems.Keys.ToList();
@@ -203,11 +207,11 @@ namespace LexiFlow.API.Services.Sync
                 // Lấy tất cả kanji từ DB đã được cập nhật sau lần đồng bộ cuối cùng
                 // hoặc thuộc về các ID mà client đã gửi
                 var serverItems = await _dbContext.Kanjis
-                    .Where(k => k.UpdatedAt > lastSyncTime || clientItemIds.Contains(k.KanjiID))
+                    .Where(k => k.UpdatedAt > lastSyncTime || clientItemIds.Contains(k.KanjiId))
                     .ToListAsync();
 
                 // Tạo từ điển cho các mục từ server để dễ tìm kiếm
-                var serverItemsDict = serverItems.ToDictionary(item => item.KanjiID);
+                var serverItemsDict = serverItems.ToDictionary(item => item.KanjiId);
 
                 // Tìm danh sách ID kanji đã bị xóa trên server sau lần đồng bộ cuối
                 var deletedIds = await _dbContext.DeletedItems
@@ -219,15 +223,15 @@ namespace LexiFlow.API.Services.Sync
                 foreach (var clientItem in request.Items)
                 {
                     // Nếu mục đã bị xóa trên server, bỏ qua và thêm vào danh sách xóa
-                    if (deletedIds.Contains(clientItem.KanjiID))
+                    if (deletedIds.Contains(clientItem.KanjiId))
                     {
-                        result.DeletedItemIds.Add(clientItem.KanjiID);
+                        result.DeletedItemIds.Add(clientItem.KanjiId);
                         result.DeletedCount++;
                         continue;
                     }
 
                     // Kiểm tra xem mục có tồn tại trên server không
-                    if (serverItemsDict.TryGetValue(clientItem.KanjiID, out var serverItem))
+                    if (serverItemsDict.TryGetValue(clientItem.KanjiId, out var serverItem))
                     {
                         // Mục tồn tại trên cả client và server, kiểm tra xung đột
                         if (clientItem.UpdatedAt > lastSyncTime && serverItem.UpdatedAt > lastSyncTime)
@@ -235,7 +239,7 @@ namespace LexiFlow.API.Services.Sync
                             // Cả client và server đều đã cập nhật mục này, phát hiện xung đột
                             result.Conflicts.Add(new SyncConflict<Kanji>
                             {
-                                ItemId = clientItem.KanjiID,
+                                ItemId = clientItem.KanjiId,
                                 ClientVersion = clientItem,
                                 ServerVersion = serverItem,
                                 ClientUpdateTime = clientItem.UpdatedAt,
@@ -255,7 +259,7 @@ namespace LexiFlow.API.Services.Sync
                             serverItem.RadicalName = clientItem.RadicalName;
                             serverItem.StrokeOrder = clientItem.StrokeOrder;
                             serverItem.Status = clientItem.Status;
-                            serverItem.LastModifiedBy = userId;
+                            serverItem.VerifiedBy = userId;
                             serverItem.UpdatedAt = DateTime.UtcNow;
 
                             _dbContext.Kanjis.Update(serverItem);
@@ -272,13 +276,12 @@ namespace LexiFlow.API.Services.Sync
                     {
                         // Mục không tồn tại trên server, thêm mới
                         // Reset ID nếu là ID tạm thời từ client (ID âm)
-                        if (clientItem.KanjiID < 0)
+                        if (clientItem.KanjiId < 0)
                         {
-                            clientItem.KanjiID = 0; // ID sẽ được DB tự động tạo
+                            clientItem.KanjiId = 0; // ID sẽ được DB tự động tạo
                         }
 
-                        clientItem.CreatedByUserID = userId;
-                        clientItem.LastModifiedBy = userId;
+                        clientItem.VerifiedBy = userId;
                         clientItem.CreatedAt = DateTime.UtcNow;
                         clientItem.UpdatedAt = DateTime.UtcNow;
 
@@ -290,7 +293,7 @@ namespace LexiFlow.API.Services.Sync
                 // Tìm các mục trên server đã được cập nhật sau lần đồng bộ cuối
                 // nhưng không có trong danh sách từ client
                 var newServerItems = serverItems
-                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.KanjiID))
+                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.KanjiId))
                     .ToList();
 
                 // Thêm các mục mới/cập nhật vào kết quả để gửi về client
@@ -358,7 +361,7 @@ namespace LexiFlow.API.Services.Sync
                 // Lấy tất cả ngữ pháp từ DB đã được cập nhật sau lần đồng bộ cuối cùng
                 // hoặc thuộc về các ID mà client đã gửi
                 var serverItems = await _dbContext.Grammars
-                    .Where(g => g.ModifiedAt > lastSyncTime || clientItemIds.Contains(g.Id))
+                    .Where(g => g.UpdatedAt > lastSyncTime || clientItemIds.Contains(g.Id))
                     .ToListAsync();
 
                 // Tạo từ điển cho các mục từ server để dễ tìm kiếm
@@ -385,7 +388,7 @@ namespace LexiFlow.API.Services.Sync
                     if (serverItemsDict.TryGetValue(clientItem.Id, out var serverItem))
                     {
                         // Mục tồn tại trên cả client và server, kiểm tra xung đột
-                        if (clientItem.ModifiedAt > lastSyncTime && serverItem.ModifiedAt > lastSyncTime)
+                        if (clientItem.UpdatedAt > lastSyncTime && serverItem.UpdatedAt > lastSyncTime)
                         {
                             // Cả client và server đều đã cập nhật mục này, phát hiện xung đột
                             result.Conflicts.Add(new SyncConflict<Grammar>
@@ -393,12 +396,12 @@ namespace LexiFlow.API.Services.Sync
                                 ItemId = clientItem.Id,
                                 ClientVersion = clientItem,
                                 ServerVersion = serverItem,
-                                ClientUpdateTime = clientItem.ModifiedAt,
-                                ServerUpdateTime = serverItem.ModifiedAt,
+                                ClientUpdateTime = clientItem.UpdatedAt,
+                                ServerUpdateTime = serverItem.UpdatedAt,
                                 ConflictType = ConflictType.BothModified
                             });
                         }
-                        else if (clientItem.ModifiedAt > serverItem.ModifiedAt)
+                        else if (clientItem.UpdatedAt > serverItem.UpdatedAt)
                         {
                             // Client có phiên bản mới hơn, cập nhật server
                             serverItem.Pattern = clientItem.Pattern;
@@ -410,7 +413,7 @@ namespace LexiFlow.API.Services.Sync
                             serverItem.Tags = clientItem.Tags;
                             serverItem.Status = clientItem.Status;
                             serverItem.ModifiedBy = userId;
-                            serverItem.ModifiedAt = DateTime.UtcNow;
+                            serverItem.UpdatedAt = DateTime.UtcNow;
 
                             _dbContext.Grammars.Update(serverItem);
                             result.UpdatedCount++;
@@ -434,7 +437,7 @@ namespace LexiFlow.API.Services.Sync
                         clientItem.CreatedBy = userId;
                         clientItem.ModifiedBy = userId;
                         clientItem.CreatedAt = DateTime.UtcNow;
-                        clientItem.ModifiedAt = DateTime.UtcNow;
+                        clientItem.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Grammars.Add(clientItem);
                         result.AddedCount++;
@@ -444,7 +447,7 @@ namespace LexiFlow.API.Services.Sync
                 // Tìm các mục trên server đã được cập nhật sau lần đồng bộ cuối
                 // nhưng không có trong danh sách từ client
                 var newServerItems = serverItems
-                    .Where(s => s.ModifiedAt > lastSyncTime && !clientItemIds.Contains(s.Id))
+                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.Id))
                     .ToList();
 
                 // Thêm các mục mới/cập nhật vào kết quả để gửi về client
@@ -501,7 +504,7 @@ namespace LexiFlow.API.Services.Sync
                 var result = new SyncResult<LearningProgress>();
 
                 // Tạo từ điển cho các mục từ client để dễ tìm kiếm
-                var clientItems = request.Items.ToDictionary(item => item.ProgressID);
+                var clientItems = request.Items.ToDictionary(item => item.ProgressId);
 
                 // Lấy tất cả ID tiến trình học tập từ client
                 var clientItemIds = clientItems.Keys.ToList();
@@ -512,11 +515,11 @@ namespace LexiFlow.API.Services.Sync
                 // Lấy tất cả tiến trình học tập từ DB đã được cập nhật sau lần đồng bộ cuối cùng
                 // hoặc thuộc về các ID mà client đã gửi
                 var serverItems = await _dbContext.LearningProgresses
-                    .Where(lp => lp.UpdatedAt > lastSyncTime || clientItemIds.Contains(lp.ProgressID))
+                    .Where(lp => lp.UpdatedAt > lastSyncTime || clientItemIds.Contains(lp.ProgressId))
                     .ToListAsync();
 
                 // Tạo từ điển cho các mục từ server để dễ tìm kiếm
-                var serverItemsDict = serverItems.ToDictionary(item => item.ProgressID);
+                var serverItemsDict = serverItems.ToDictionary(item => item.ProgressId);
 
                 // Tìm danh sách ID tiến trình học tập đã bị xóa trên server sau lần đồng bộ cuối
                 var deletedIds = await _dbContext.DeletedItems
@@ -528,15 +531,15 @@ namespace LexiFlow.API.Services.Sync
                 foreach (var clientItem in request.Items)
                 {
                     // Nếu mục đã bị xóa trên server, bỏ qua và thêm vào danh sách xóa
-                    if (deletedIds.Contains(clientItem.ProgressID))
+                    if (deletedIds.Contains(clientItem.ProgressId))
                     {
-                        result.DeletedItemIds.Add(clientItem.ProgressID);
+                        result.DeletedItemIds.Add(clientItem.ProgressId);
                         result.DeletedCount++;
                         continue;
                     }
 
                     // Kiểm tra xem mục có tồn tại trên server không
-                    if (serverItemsDict.TryGetValue(clientItem.ProgressID, out var serverItem))
+                    if (serverItemsDict.TryGetValue(clientItem.ProgressId, out var serverItem))
                     {
                         // Mục tồn tại trên cả client và server, kiểm tra xung đột
                         if (clientItem.UpdatedAt > lastSyncTime && serverItem.UpdatedAt > lastSyncTime)
@@ -544,7 +547,7 @@ namespace LexiFlow.API.Services.Sync
                             // Cả client và server đều đã cập nhật mục này, phát hiện xung đột
                             result.Conflicts.Add(new SyncConflict<LearningProgress>
                             {
-                                ItemId = clientItem.ProgressID,
+                                ItemId = clientItem.ProgressId,
                                 ClientVersion = clientItem,
                                 ServerVersion = serverItem,
                                 ClientUpdateTime = clientItem.UpdatedAt,
@@ -577,12 +580,12 @@ namespace LexiFlow.API.Services.Sync
                     {
                         // Mục không tồn tại trên server, thêm mới
                         // Reset ID nếu là ID tạm thời từ client (ID âm)
-                        if (clientItem.ProgressID < 0)
+                        if (clientItem.ProgressId < 0)
                         {
-                            clientItem.ProgressID = 0; // ID sẽ được DB tự động tạo
+                            clientItem.ProgressId = 0; // ID sẽ được DB tự động tạo
                         }
 
-                        clientItem.UserID = userId; // Đảm bảo UserId được thiết lập đúng
+                        clientItem.UserId = userId; // Đảm bảo UserId được thiết lập đúng
                         clientItem.CreatedAt = DateTime.UtcNow;
                         clientItem.UpdatedAt = DateTime.UtcNow;
 
@@ -594,7 +597,7 @@ namespace LexiFlow.API.Services.Sync
                 // Tìm các mục trên server đã được cập nhật sau lần đồng bộ cuối
                 // nhưng không có trong danh sách từ client
                 var newServerItems = serverItems
-                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.ProgressID))
+                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.ProgressId))
                     .ToList();
 
                 // Thêm các mục mới/cập nhật vào kết quả để gửi về client
@@ -651,7 +654,7 @@ namespace LexiFlow.API.Services.Sync
                 var result = new SyncResult<PersonalWordList>();
 
                 // Tạo từ điển cho các mục từ client để dễ tìm kiếm
-                var clientItems = request.Items.ToDictionary(item => item.ListID);
+                var clientItems = request.Items.ToDictionary(item => item.ListId);
 
                 // Lấy tất cả ID danh sách từ vựng cá nhân từ client
                 var clientItemIds = clientItems.Keys.ToList();
@@ -662,11 +665,11 @@ namespace LexiFlow.API.Services.Sync
                 // Lấy tất cả danh sách từ vựng cá nhân từ DB đã được cập nhật sau lần đồng bộ cuối cùng
                 // hoặc thuộc về các ID mà client đã gửi
                 var serverItems = await _dbContext.PersonalWordLists
-                    .Where(pwl => pwl.UpdatedAt > lastSyncTime || clientItemIds.Contains(pwl.ListID))
+                    .Where(pwl => pwl.UpdatedAt > lastSyncTime || clientItemIds.Contains(pwl.ListId))
                     .ToListAsync();
 
                 // Tạo từ điển cho các mục từ server để dễ tìm kiếm
-                var serverItemsDict = serverItems.ToDictionary(item => item.ListID);
+                var serverItemsDict = serverItems.ToDictionary(item => item.ListId);
 
                 // Tìm danh sách ID danh sách từ vựng cá nhân đã bị xóa trên server sau lần đồng bộ cuối
                 var deletedIds = await _dbContext.DeletedItems
@@ -678,15 +681,15 @@ namespace LexiFlow.API.Services.Sync
                 foreach (var clientItem in request.Items)
                 {
                     // Nếu mục đã bị xóa trên server, bỏ qua và thêm vào danh sách xóa
-                    if (deletedIds.Contains(clientItem.ListID))
+                    if (deletedIds.Contains(clientItem.ListId))
                     {
-                        result.DeletedItemIds.Add(clientItem.ListID);
+                        result.DeletedItemIds.Add(clientItem.ListId);
                         result.DeletedCount++;
                         continue;
                     }
 
                     // Kiểm tra xem mục có tồn tại trên server không
-                    if (serverItemsDict.TryGetValue(clientItem.ListID, out var serverItem))
+                    if (serverItemsDict.TryGetValue(clientItem.ListId, out var serverItem))
                     {
                         // Mục tồn tại trên cả client và server, kiểm tra xung đột
                         if (clientItem.UpdatedAt > lastSyncTime && serverItem.UpdatedAt > lastSyncTime)
@@ -694,7 +697,7 @@ namespace LexiFlow.API.Services.Sync
                             // Cả client và server đều đã cập nhật mục này, phát hiện xung đột
                             result.Conflicts.Add(new SyncConflict<PersonalWordList>
                             {
-                                ItemId = clientItem.ListID,
+                                ItemId = clientItem.ListId,
                                 ClientVersion = clientItem,
                                 ServerVersion = serverItem,
                                 ClientUpdateTime = clientItem.UpdatedAt,
@@ -723,12 +726,12 @@ namespace LexiFlow.API.Services.Sync
                     {
                         // Mục không tồn tại trên server, thêm mới
                         // Reset ID nếu là ID tạm thời từ client (ID âm)
-                        if (clientItem.ListID < 0)
+                        if (clientItem.ListId < 0)
                         {
-                            clientItem.ListID = 0; // ID sẽ được DB tự động tạo
+                            clientItem.ListId = 0; // ID sẽ được DB tự động tạo
                         }
 
-                        clientItem.UserID = userId; // Đảm bảo UserId được thiết lập đúng
+                        clientItem.UserId = userId; // Đảm bảo UserId được thiết lập đúng
                         clientItem.CreatedAt = DateTime.UtcNow;
                         clientItem.UpdatedAt = DateTime.UtcNow;
 
@@ -740,7 +743,7 @@ namespace LexiFlow.API.Services.Sync
                 // Tìm các mục trên server đã được cập nhật sau lần đồng bộ cuối
                 // nhưng không có trong danh sách từ client
                 var newServerItems = serverItems
-                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.ListID))
+                    .Where(s => s.UpdatedAt > lastSyncTime && !clientItemIds.Contains(s.ListId))
                     .ToList();
 
                 // Thêm các mục mới/cập nhật vào kết quả để gửi về client
@@ -1156,12 +1159,12 @@ namespace LexiFlow.API.Services.Sync
                         entity.Term = clientData.Term;
                         entity.Reading = clientData.Reading;
                         entity.DifficultyLevel = clientData.DifficultyLevel;
-                        entity.Notes = clientData.Notes;
+                        entity.UsageNotes = clientData.UsageNotes;
                         entity.Tags = clientData.Tags;
-                        entity.AudioFile = clientData.AudioFile;
+                        entity.MediaFiles = clientData.MediaFiles;
                         entity.Status = clientData.Status;
                         entity.ModifiedBy = conflict.UserID;
-                        entity.ModifiedAt = DateTime.UtcNow;
+                        entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Vocabularies.Update(entity);
                     }
@@ -1184,7 +1187,7 @@ namespace LexiFlow.API.Services.Sync
                         entity.RadicalName = clientData.RadicalName;
                         entity.StrokeOrder = clientData.StrokeOrder;
                         entity.Status = clientData.Status;
-                        entity.LastModifiedBy = conflict.UserID;
+                        entity.VerifiedBy = conflict.UserID;
                         entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Kanjis.Update(entity);
@@ -1208,7 +1211,7 @@ namespace LexiFlow.API.Services.Sync
                         entity.Tags = clientData.Tags;
                         entity.Status = clientData.Status;
                         entity.ModifiedBy = conflict.UserID;
-                        entity.ModifiedAt = DateTime.UtcNow;
+                        entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Grammars.Update(entity);
                     }
@@ -1281,12 +1284,12 @@ namespace LexiFlow.API.Services.Sync
                         entity.Term = customEntity.Term;
                         entity.Reading = customEntity.Reading;
                         entity.DifficultyLevel = customEntity.DifficultyLevel;
-                        entity.Notes = customEntity.Notes;
+                        entity.UsageNotes = customEntity.UsageNotes;
                         entity.Tags = customEntity.Tags;
-                        entity.AudioFile = customEntity.AudioFile;
+                        entity.MediaFiles = customEntity.MediaFiles;
                         entity.Status = customEntity.Status;
                         entity.ModifiedBy = conflict.UserID;
-                        entity.ModifiedAt = DateTime.UtcNow;
+                        entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Vocabularies.Update(entity);
                     }
@@ -1309,7 +1312,7 @@ namespace LexiFlow.API.Services.Sync
                         entity.RadicalName = customEntity.RadicalName;
                         entity.StrokeOrder = customEntity.StrokeOrder;
                         entity.Status = customEntity.Status;
-                        entity.LastModifiedBy = conflict.UserID;
+                        entity.VerifiedBy = conflict.UserID;
                         entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Kanjis.Update(entity);
@@ -1333,7 +1336,7 @@ namespace LexiFlow.API.Services.Sync
                         entity.Tags = customEntity.Tags;
                         entity.Status = customEntity.Status;
                         entity.ModifiedBy = conflict.UserID;
-                        entity.ModifiedAt = DateTime.UtcNow;
+                        entity.UpdatedAt = DateTime.UtcNow;
 
                         _dbContext.Grammars.Update(entity);
                     }

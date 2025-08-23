@@ -1,6 +1,10 @@
 ﻿using LexiFlow.API.DTOs.Auth;
 using LexiFlow.Models;
 using LexiFlow.API.DTOs.Sync;
+using LexiFlow.Models.Learning.Vocabulary;
+using LexiFlow.Models.Learning.Kanji;
+using LexiFlow.Models.Learning.Grammar;
+using LexiFlow.Models.Progress;
 
 namespace LexiFlow.API.Interfaces.Sync
 {
@@ -15,7 +19,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ từ vựng</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ từ vựng</returns>
-        //Task<SyncResult<Vocabulary>> SyncVocabularyAsync(VocabularySyncRequest request, int userId);
+        Task<SyncResult<Vocabulary>> SyncVocabularyAsync(VocabularySyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ dữ liệu kanji
@@ -23,7 +27,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ kanji</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ kanji</returns>
-        //Task<SyncResult<Kanji>> SyncKanjiAsync(KanjiSyncRequest request, int userId);
+        Task<SyncResult<Kanji>> SyncKanjiAsync(KanjiSyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ dữ liệu ngữ pháp
@@ -31,7 +35,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ ngữ pháp</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ ngữ pháp</returns>
-        //Task<SyncResult<Grammar>> SyncGrammarAsync(GrammarSyncRequest request, int userId);
+        Task<SyncResult<Grammar>> SyncGrammarAsync(GrammarSyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ tiến trình học tập của người dùng
@@ -39,7 +43,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ tiến trình</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ tiến trình</returns>
-        //Task<SyncResult<LearningProgress>> SyncLearningProgressAsync(LearningProgressSyncRequest request, int userId);
+        Task<SyncResult<LearningProgress>> SyncLearningProgressAsync(LearningProgressSyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ danh sách từ vựng cá nhân
@@ -47,7 +51,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ danh sách từ vựng cá nhân</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ danh sách từ vựng cá nhân</returns>
-        //Task<SyncResult<PersonalWordList>> SyncPersonalWordListsAsync(PersonalWordListSyncRequest request, int userId);
+        Task<SyncResult<PersonalWordList>> SyncPersonalWordListsAsync(PersonalWordListSyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ tất cả dữ liệu cho người dùng
@@ -140,27 +144,27 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <summary>
         /// Kết quả đồng bộ từ vựng
         /// </summary>
-        //public SyncResult<Vocabulary> VocabularyResult { get; set; }
+        public SyncResult<Vocabulary> VocabularyResult { get; set; }
 
         /// <summary>
         /// Kết quả đồng bộ kanji
         /// </summary>
-        //public SyncResult<Kanji> KanjiResult { get; set; }
+        public SyncResult<Kanji> KanjiResult { get; set; }
 
         /// <summary>
         /// Kết quả đồng bộ ngữ pháp
         /// </summary>
-        //public SyncResult<Grammar> GrammarResult { get; set; }
+        public SyncResult<Grammar> GrammarResult { get; set; }
 
         /// <summary>
         /// Kết quả đồng bộ tiến trình học tập
         /// </summary>
-        //public SyncResult<LearningProgress> LearningProgressResult { get; set; }
+        public SyncResult<LearningProgress> LearningProgressResult { get; set; }
 
         /// <summary>
         /// Kết quả đồng bộ danh sách từ vựng cá nhân
         /// </summary>
-        //public SyncResult<PersonalWordList> PersonalWordListResult { get; set; }
+        public SyncResult<PersonalWordList> PersonalWordListResult { get; set; }
 
         /// <summary>
         /// Thời gian đồng bộ hiện tại

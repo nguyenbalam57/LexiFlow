@@ -10,6 +10,7 @@ using LexiFlow.Models.Planning;
 using LexiFlow.Models.Practice;
 using LexiFlow.Models.Progress;
 using LexiFlow.Models.Scheduling;
+using LexiFlow.Models.Sync;
 using LexiFlow.Models.System;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
@@ -145,6 +146,11 @@ namespace LexiFlow.Infrastructure.Data
 
         // System
         public DbSet<Setting> Settings { get; set; }
+
+        public DbSet<DeletedItem> DeletedItems { get; set; }
+        public DbSet<SyncMetadata> SyncMetadata { get; set; }
+        public DbSet<SyncConflict> SyncConflicts { get; set; }
+
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
