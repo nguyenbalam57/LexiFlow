@@ -69,6 +69,10 @@ namespace LexiFlow.Models.Exam
         public bool IsOfficial { get; set; } = false;
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         public int? CreatedByUserId { get; set; }
 
         // Navigation properties
