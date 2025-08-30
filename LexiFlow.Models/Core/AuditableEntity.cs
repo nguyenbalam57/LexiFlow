@@ -10,76 +10,59 @@ using LexiFlow.Models.User;
 namespace LexiFlow.Models.Core
 {
     /// <summary>
-    /// Lớp cơ sở với thông tin người tạo/cập nhật
-    /// Kế thừa từ BaseEntity và bổ sung thông tin audit
-    /// Sử dụng cho các entity cần theo dõi ai tạo và ai chỉnh sửa
+    /// Lớp cơ sở với thông tin audit trail
     /// </summary>
     public abstract class AuditableEntity : BaseEntity
     {
         /// <summary>
         /// ID của người tạo entity
-        /// Bắt buộc phải có khi tạo mới
         /// </summary>
+        [Required]
         public int CreatedBy { get; set; }
 
         /// <summary>
         /// ID của người chỉnh sửa cuối cùng
-        /// Có thể null nếu chưa ai chỉnh sửa sau khi tạo
         /// </summary>
         public int? ModifiedBy { get; set; }
 
         /// <summary>
-        /// Thông tin người tạo entity
-        /// Navigation property tới bảng User
+        /// ID của người xóa (soft delete)
         /// </summary>
-        [ForeignKey("CreatedBy")]
-        public virtual User.User CreatedByUser { get; set; }
+        public int? DeletedBy { get; set; }
 
         /// <summary>
-        /// Thông tin người chỉnh sửa cuối cùng
-        /// Navigation property tới bảng User
-        /// </summary>
-        [ForeignKey("ModifiedBy")]
-        public virtual User.User ModifiedByUser { get; set; }
-
-        /// <summary>
-        /// Ghi chú về thay đổi
-        /// Lưu trữ thông tin về lý do thay đổi hoặc mô tả thay đổi
+        /// Lý do thay đổi
         /// </summary>
         [StringLength(500)]
         public virtual string ChangeReason { get; set; }
 
         /// <summary>
         /// Phiên bản của entity
-        /// Tự động tăng mỗi khi có thay đổi
         /// </summary>
         public virtual int Version { get; set; } = 1;
 
         /// <summary>
-        /// Kiểm tra xem entity có được tạo bởi user hiện tại không
+        /// Navigation properties
         /// </summary>
-        /// <param name="userId">ID của user cần kiểm tra</param>
-        /// <returns>True nếu user là người tạo</returns>
-        public virtual bool IsCreatedBy(int userId)
-        {
-            return CreatedBy == userId;
-        }
+        [ForeignKey("CreatedBy")]
+        public virtual User.User CreatedByUser { get; set; }
+
+        [ForeignKey("ModifiedBy")]
+        public virtual User.User ModifiedByUser { get; set; }
+
+        [ForeignKey("DeletedBy")]
+        public virtual User.User DeletedByUser { get; set; }
 
         /// <summary>
-        /// Kiểm tra xem entity có được chỉnh sửa bởi user hiện tại không
+        /// Kiểm tra quyền ownership
         /// </summary>
-        /// <param name="userId">ID của user cần kiểm tra</param>
-        /// <returns>True nếu user là người chỉnh sửa cuối</returns>
-        public virtual bool IsLastModifiedBy(int userId)
-        {
-            return ModifiedBy == userId;
-        }
+        public virtual bool IsCreatedBy(int userId) => CreatedBy == userId;
+        public virtual bool IsLastModifiedBy(int userId) => ModifiedBy == userId;
+        public virtual bool IsDeletedBy(int userId) => DeletedBy == userId;
 
         /// <summary>
         /// Cập nhật thông tin modification
         /// </summary>
-        /// <param name="modifiedBy">ID của người chỉnh sửa</param>
-        /// <param name="reason">Lý do thay đổi</param>
         public virtual void UpdateModification(int modifiedBy, string reason = null)
         {
             ModifiedBy = modifiedBy;
@@ -89,21 +72,20 @@ namespace LexiFlow.Models.Core
         }
 
         /// <summary>
-        /// Lấy tên người tạo (nếu có)
+        /// Soft delete với audit
         /// </summary>
-        /// <returns>Tên người tạo hoặc "Unknown"</returns>
-        public virtual string GetCreatedByName()
+        public virtual void SoftDelete(int deletedBy, string reason = null)
         {
-            return CreatedByUser?.Username ?? "Unknown";
+            DeletedBy = deletedBy;
+            ChangeReason = reason;
+            base.SoftDelete();
         }
 
         /// <summary>
-        /// Lấy tên người chỉnh sửa cuối (nếu có)
+        /// Lấy tên người thực hiện các action
         /// </summary>
-        /// <returns>Tên người chỉnh sửa cuối hoặc "Unknown"</returns>
-        public virtual string GetModifiedByName()
-        {
-            return ModifiedByUser?.Username ?? GetCreatedByName();
-        }
+        public virtual string GetCreatedByName() => CreatedByUser?.Username ?? "Unknown";
+        public virtual string GetModifiedByName() => ModifiedByUser?.Username ?? GetCreatedByName();
+        public virtual string GetDeletedByName() => DeletedByUser?.Username ?? "Unknown";
     }
 }

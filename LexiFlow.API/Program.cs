@@ -191,8 +191,9 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
         c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+        c.ConfigObject.AdditionalItems["disableCompression"] = true;
     });
-    app.UseDeveloperExceptionPage();
+    //app.UseDeveloperExceptionPage();
 }
 else
 {
@@ -224,7 +225,7 @@ app.MapHealthChecks("/health");
 app.MapHub<AnalyticsHub>("/hubs/analytics");
 
 // Seed database - TEMPORARILY DISABLED
-// await app.Services.SeedDatabaseAsync();
+await app.Services.SeedDatabaseAsync();
 
 // Apply database migrations on startup in development
 if (app.Environment.IsDevelopment())
