@@ -65,6 +65,8 @@ namespace LexiFlow.Models.Notification
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
 
+        public int? DeletedBy { get; set; }
+
         // Navigation properties
         [ForeignKey("SenderUserId")]
         public virtual User.User SenderUser { get; set; }
@@ -75,6 +77,10 @@ namespace LexiFlow.Models.Notification
         [ForeignKey("PriorityId")]
         public virtual NotificationPriority Priority { get; set; }
 
+        [ForeignKey("DeletedBy")]
+        public virtual User.User DeletedByUser { get; set; }
+
         public virtual ICollection<NotificationRecipient> NotificationRecipients { get; set; }
+
     }
 }

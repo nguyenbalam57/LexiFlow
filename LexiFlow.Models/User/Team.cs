@@ -49,6 +49,10 @@ namespace LexiFlow.Models.User
 
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         // Cải tiến: Trạng thái team
         [StringLength(50)]
         public string Status { get; set; } = "Active"; // Active, Dormant, Disbanded

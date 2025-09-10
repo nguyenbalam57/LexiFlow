@@ -40,6 +40,10 @@ namespace LexiFlow.Models.User
 
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         // Navigation properties
         [ForeignKey("ParentRoleId")]
         public virtual Role ParentRole { get; set; }

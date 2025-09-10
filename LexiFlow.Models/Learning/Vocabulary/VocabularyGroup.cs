@@ -57,6 +57,10 @@ namespace LexiFlow.Models.Learning.Vocabulary
 
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         // Navigation properties
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }

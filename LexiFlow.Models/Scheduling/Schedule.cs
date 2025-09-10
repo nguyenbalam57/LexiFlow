@@ -53,6 +53,10 @@ namespace LexiFlow.Models.Scheduling
         public bool IsPublic { get; set; } = false;
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         // Cải tiến: Thời gian áp dụng
         public DateTime? ValidFrom { get; set; }
         public DateTime? ValidTo { get; set; }

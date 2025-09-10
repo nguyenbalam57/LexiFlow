@@ -40,6 +40,7 @@
   <ItemGroup>
     <Folder Include="Data\Context\" />
     <Folder Include="Data\UnitOfWork\" />
+    <Folder Include="logs\" />
     <Folder Include="Models\" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-Ôªøusing LexiFlow.Models.Core;
+using LexiFlow.Models.Core;
 using LexiFlow.Models.Exam;
 using LexiFlow.Models.Learning.Grammar;
 using LexiFlow.Models.Learning.Kanji;
@@ -25,9 +25,9 @@ using System.Threading.Tasks;
 namespace LexiFlow.Infrastructure.Data
 {
     /// <summary>
-    /// Context c? s? d? li?u ch√≠nh ho√†n ch?nh cho ?ng d?ng LexiFlow - .NET 9
-    /// Qu?n l√Ω t?t c? entities v√† relationships ???c t?i ?u h√≥a cho Entity Framework Core
-    /// H? tr? audit trail, soft delete, v√† c√°c t√≠nh n?ng n√¢ng cao kh√°c
+    /// Context c? s? d? li?u chÌnh ho‡n ch?nh cho ?ng d?ng LexiFlow - .NET 9
+    /// Qu?n l˝ t?t c? entities v‡ relationships ???c t?i ?u hÛa cho Entity Framework Core
+    /// H? tr? audit trail, soft delete, v‡ c·c tÌnh n?ng n‚ng cao kh·c
     /// </summary>
     public class LexiFlowContext : DbContext
     {
@@ -41,23 +41,23 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// Thi?t l?p ID ng??i d√πng hi?n t?i cho audit tracking
-        /// ???c s? d?ng ?? t? ??ng ghi nh?n th√¥ng tin ng??i t?o/ch?nh s? entity
+        /// Thi?t l?p ID ng??i d˘ng hi?n t?i cho audit tracking
+        /// ???c s? d?ng ?? t? ??ng ghi nh?n thÙng tin ng??i t?o/ch?nh s?a entity
         /// </summary>
         public void SetCurrentUserId(int userId)
         {
             _currentUserId = userId;
         }
 
-        #region DbSets - Qu?n l√Ω ng??i d√πng v√† ph√¢n quy?n
+        #region DbSets - Qu?n l˝ ng??i d˘ng v‡ ph‚n quy?n
 
-        // Qu?n l√Ω ng??i d√πng c? b?n
+        // Qu?n l˝ ng??i d˘ng c? b?n
         public DbSet<User> Users { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<UserLearningPreference> UserLearningPreferences { get; set; }
         public DbSet<UserNotificationSetting> UserNotificationSettings { get; set; }
 
-        // Qu?n l√Ω vai tr√≤ v√† quy?n h?n
+        // Qu?n l˝ vai trÚ v‡ quy?n h?n
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<PermissionGroup> PermissionGroups { get; set; }
@@ -66,7 +66,7 @@ namespace LexiFlow.Infrastructure.Data
         public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<PermissionGroupMapping> PermissionGroupMappings { get; set; }
 
-        // Qu?n l√Ω t? ch?c
+        // Qu?n l˝ t? ch?c
         public DbSet<Department> Departments { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Group> Groups { get; set; }
@@ -78,7 +78,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #region DbSets - N?i dung h?c t?p
 
-        // T? v?ng v√† danh m?c
+        // T? v?ng v‡ danh m?c
         public DbSet<Category> Categories { get; set; }
         public DbSet<VocabularyGroup> VocabularyGroups { get; set; }
         public DbSet<Vocabulary> Vocabularies { get; set; }
@@ -87,7 +87,7 @@ namespace LexiFlow.Infrastructure.Data
         public DbSet<Translation> Translations { get; set; }
         public DbSet<GroupVocabularyRelation> VocabularyRelations { get; set; }
 
-        // Kanji v√† c√°c th√†nh ph?n li√™n quan
+        // Kanji v‡ c·c th‡nh ph?n liÍn quan
         public DbSet<Kanji> Kanjis { get; set; }
         public DbSet<KanjiVocabulary> KanjiVocabularies { get; set; }
         public DbSet<KanjiMeaning> KanjiMeanings { get; set; }
@@ -96,7 +96,7 @@ namespace LexiFlow.Infrastructure.Data
         public DbSet<KanjiComponent> KanjiComponents { get; set; }
         public DbSet<KanjiComponentMapping> KanjiComponentMappings { get; set; }
 
-        // Ng? ph√°p
+        // Ng? ph·p
         public DbSet<Grammar> Grammars { get; set; }
         public DbSet<GrammarDefinition> GrammarDefinitions { get; set; }
         public DbSet<GrammarExample> GrammarExamples { get; set; }
@@ -111,7 +111,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #endregion
 
-        #region DbSets - Qu?n l√Ω Media
+        #region DbSets - Qu?n l˝ Media
 
         public DbSet<MediaFile> MediaFiles { get; set; }
         public DbSet<MediaCategory> MediaCategories { get; set; }
@@ -119,7 +119,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #endregion
 
-        #region DbSets - Ti?n ?? v√† phi√™n h?c
+        #region DbSets - Ti?n ?? v‡ phiÍn h?c
 
         public DbSet<LearningProgress> LearningProgresses { get; set; }
         public DbSet<LearningSession> LearningSessions { get; set; }
@@ -145,7 +145,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #endregion
 
-        #region DbSets - Thi c? v√† luy?n t?p
+        #region DbSets - Thi c? v‡ luy?n t?p
 
         public DbSet<TestResult> TestResults { get; set; }
         public DbSet<TestDetail> TestDetails { get; set; }
@@ -159,7 +159,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #endregion
 
-        #region DbSets - Th√¥ng b√°o
+        #region DbSets - ThÙng b·o
 
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationType> NotificationTypes { get; set; }
@@ -181,7 +181,7 @@ namespace LexiFlow.Infrastructure.Data
 
         #endregion
 
-        #region DbSets - H? th?ng v√† ??ng b?
+        #region DbSets - H? th?ng v‡ ??ng b?
 
         public DbSet<Setting> Settings { get; set; }
         public DbSet<DeletedItem> DeletedItems { get; set; }
@@ -191,8 +191,8 @@ namespace LexiFlow.Infrastructure.Data
         #endregion
 
         /// <summary>
-        /// Ghi ?√® ph??ng th?c SaveChanges ?? t? ??ng c?p nh?t audit fields
-        /// T? ??ng set th?i gian t?o/c?p nh?t v√† th√¥ng tin ng??i d√πng th?c hi?n thao t√°c
+        /// Ghi ?Ë ph??ng th?c SaveChanges ?? t? ??ng c?p nh?t audit fields
+        /// T? ??ng set th?i gian t?o/c?p nh?t v‡ thÙng tin ng??i d˘ng th?c hi?n thao t·c
         /// </summary>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -201,7 +201,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// Ghi ?√® ph??ng th?c SaveChanges ??ng b?
+        /// Ghi ?Ë ph??ng th?c SaveChanges ??ng b?
         /// </summary>
         public override int SaveChanges()
         {
@@ -210,8 +210,8 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?p nh?t th√¥ng tin audit cho c√°c entities tr??c khi l?u
-        /// X? l√Ω t? ??ng c?p nh?t CreatedAt, UpdatedAt, CreatedBy, ModifiedBy
+        /// C?p nh?t thÙng tin audit cho c·c entities tr??c khi l?u
+        /// X? l˝ t? ??ng c?p nh?t CreatedAt, UpdatedAt, CreatedBy, ModifiedBy
         /// </summary>
         private void UpdateAuditableEntities()
         {
@@ -230,7 +230,7 @@ namespace LexiFlow.Infrastructure.Data
                     entity.CreatedAt = now;
                     entity.UpdatedAt = now;
 
-                    // C?p nh?t th√¥ng tin audit cho AuditableEntity
+                    // C?p nh?t thÙng tin audit cho AuditableEntity
                     if (entity is AuditableEntity auditableEntity && _currentUserId.HasValue)
                     {
                         auditableEntity.CreatedBy = _currentUserId.Value;
@@ -240,7 +240,7 @@ namespace LexiFlow.Infrastructure.Data
                 {
                     entity.UpdatedAt = now;
 
-                    // C?p nh?t th√¥ng tin ng??i ch?nh s?a cho AuditableEntity
+                    // C?p nh?t thÙng tin ng??i ch?nh s?a cho AuditableEntity
                     if (entity is AuditableEntity auditableEntity && _currentUserId.HasValue)
                     {
                         auditableEntity.ModifiedBy = _currentUserId.Value;
@@ -253,7 +253,7 @@ namespace LexiFlow.Infrastructure.Data
         {
             base.OnConfiguring(optionsBuilder);
 
-            // C?u h√¨nh ?? gi?m c√°c warning log kh√¥ng c?n thi?t
+            // C?u hÏnh ?? gi?m c·c warning log khÙng c?n thi?t
             optionsBuilder.ConfigureWarnings(warnings =>
             {
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.ForeignKeyPropertiesMappedToUnrelatedTables);
@@ -262,7 +262,7 @@ namespace LexiFlow.Infrastructure.Data
                 warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning);
             });
 
-            // B?t sensitive data logging v√† logging trong m√¥i tr??ng development
+            // B?t sensitive data logging v‡ logging trong mÙi tr??ng development
 #if DEBUG
             optionsBuilder.EnableSensitiveDataLogging();
             optionsBuilder.LogTo(message => _logger?.LogInformation(message));
@@ -273,28 +273,16 @@ namespace LexiFlow.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            _logger?.LogInformation("B·∫Øt ƒë·∫ßu c·∫•u h√¨nh model cho LexiFlow Database Context...");
+            _logger?.LogInformation("B?t ??u c?u hÏnh model cho LexiFlow Database Context...");
 
-            // T·∫Øt cascade delete to√†n c·ª•c ƒë·ªÉ tr√°nh xung ƒë·ªôt trong relationships ph·ª©c t·∫°p
+            // T?t cascade delete to‡n c?c ?? tr·nh xung ??t trong relationships ph?c t?p
             foreach (var relationship in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys()))
             {
                 relationship.DeleteBehavior = DeleteBehavior.NoAction;
             }
 
-            // Ignore navigation properties c·ªßa AuditableEntity ƒë·ªÉ tr√°nh xung ƒë·ªôt
-            // Ch√∫ng ta s·∫Ω ch·ªâ s·ª≠ d·ª•ng IDs, kh√¥ng c·∫ßn navigation properties
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                if (typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    modelBuilder.Entity(entityType.ClrType).Ignore("CreatedByUser");
-                    modelBuilder.Entity(entityType.ClrType).Ignore("ModifiedByUser");  
-                    modelBuilder.Entity(entityType.ClrType).Ignore("DeletedByUser");
-                }
-            }
-
-            // √Åp d·ª•ng c·∫•u h√¨nh cho t·ª´ng nh√≥m entities
+            // ¡p d?ng c?u hÏnh cho t?ng nhÛm entities
             ConfigureUserManagement(modelBuilder);
             ConfigureLearningContent(modelBuilder);
             ConfigureMediaManagement(modelBuilder);
@@ -305,116 +293,69 @@ namespace LexiFlow.Infrastructure.Data
             ConfigureScheduling(modelBuilder);
             ConfigureSystemAndSync(modelBuilder);
 
-            _logger?.LogInformation("Ho√†n th√†nh c·∫•u h√¨nh model cho LexiFlow Database Context");
+            _logger?.LogInformation("Ho‡n th‡nh c?u hÏnh model cho LexiFlow Database Context");
         }
 
-        /// <summary>
-        /// C·∫•u h√¨nh audit relationships cho c√°c entities k·∫ø th·ª´a AuditableEntity
-        /// </summary>
-        private void ConfigureAuditableEntities(ModelBuilder modelBuilder)
-        {
-            // L·∫•y t·∫•t c·∫£ entity types k·∫ø th·ª´a t·ª´ AuditableEntity
-            var auditableEntityTypes = modelBuilder.Model.GetEntityTypes()
-                .Where(e => typeof(AuditableEntity).IsAssignableFrom(e.ClrType))
-                .ToList();
-
-            foreach (var entityType in auditableEntityTypes)
-            {
-                // Skip n·∫øu ƒë√£ configure trong c√°c methods kh√°c
-                var entityBuilder = modelBuilder.Entity(entityType.ClrType);
-
-                // Configure CreatedByUser relationship n·∫øu ch∆∞a c√≥
-                if (!entityType.GetNavigations().Any(n => n.Name == "CreatedByUser" && n.ForeignKey != null))
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .HasOne(typeof(User), "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.NoAction);
-                }
-
-                // Configure ModifiedByUser relationship n·∫øu ch∆∞a c√≥
-                if (!entityType.GetNavigations().Any(n => n.Name == "ModifiedByUser" && n.ForeignKey != null))
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .HasOne(typeof(User), "ModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("ModifiedBy")
-                        .OnDelete(DeleteBehavior.NoAction);
-                }
-
-                // Configure DeletedByUser relationship n·∫øu ch∆∞a c√≥
-                if (!entityType.GetNavigations().Any(n => n.Name == "DeletedByUser" && n.ForeignKey != null))
-                {
-                    modelBuilder.Entity(entityType.ClrType)
-                        .HasOne(typeof(User), "DeletedByUser")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy")
-                        .OnDelete(DeleteBehavior.NoAction);
-                }
-            }
-        }
-
-        #region C√°c ph??ng th?c c?u h√¨nh Model
+        #region C·c ph??ng th?c c?u hÏnh Model
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n qu?n l√Ω ng??i d√πng v√† ph√¢n quy?n
+        /// C?u hÏnh c·c entities liÍn quan ??n qu?n l˝ ng??i d˘ng v‡ ph‚n quy?n
         /// </summary>
         private void ConfigureUserManagement(ModelBuilder modelBuilder)
         {
-            // C·∫•u h√¨nh User entity - b·∫£ng ng∆∞·ªùi d√πng ch√≠nh
+            // C?u hÏnh User entity - b?ng ng??i d˘ng chÌnh
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(u => u.UserId);
                 entity.HasIndex(u => u.Username).IsUnique();
                 entity.HasIndex(u => u.Email);
                 
-                // Relationship 1-1 v·ªõi UserProfile
+                // Relationship 1-1 v?i UserProfile
                 entity.HasOne(u => u.Profile)
                     .WithOne(p => p.User)
                     .HasForeignKey<UserProfile>(p => p.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                // Relationship 1-1 v·ªõi UserLearningPreference
+                // Relationship 1-1 v?i UserLearningPreference
                 entity.HasOne(u => u.LearningPreference)
                     .WithOne(lp => lp.User)
                     .HasForeignKey<UserLearningPreference>(lp => lp.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                // Relationship 1-1 v·ªõi UserNotificationSetting
+                // Relationship 1-1 v?i UserNotificationSetting
                 entity.HasOne(u => u.NotificationSetting)
                     .WithOne(ns => ns.User)
                     .HasForeignKey<UserNotificationSetting>(ns => ns.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                // Relationship v·ªõi Department (nhi·ªÅu user thu·ªôc 1 department)
+                // Relationship v?i Department (nhi?u user thu?c 1 department)
                 entity.HasOne(u => u.Department)
                     .WithMany(d => d.Users)
                     .HasForeignKey(u => u.DepartmentId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // C·∫•u h√¨nh Department entity - ph√≤ng ban
+            // C?u hÏnh Department entity - phÚng ban
             modelBuilder.Entity<Department>(entity =>
             {
                 entity.HasKey(d => d.DepartmentId);
                 entity.HasIndex(d => d.DepartmentName);
                 entity.HasIndex(d => d.DepartmentCode).IsUnique();
 
-                // Self-reference relationship cho ph√≤ng ban cha-con
+                // Self-reference relationship cho phÚng ban cha-con
                 entity.HasOne(d => d.ParentDepartment)
                     .WithMany(d => d.ChildDepartments)
                     .HasForeignKey(d => d.ParentDepartmentId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Manager c·ªßa department
+                // Manager c?a department
                 entity.HasOne(d => d.Manager)
                     .WithMany()
                     .HasForeignKey(d => d.ManagerUserId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
-            // C·∫•u h√¨nh UserRole - b·∫£ng many-to-many gi·ªØa User v√† Role
+            // C?u hÏnh UserRole - b?ng many-to-many gi?a User v‡ Role
             modelBuilder.Entity<UserRole>(entity =>
             {
                 entity.HasKey(ur => new { ur.UserId, ur.RoleId });
@@ -422,102 +363,49 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasOne(ur => ur.User)
                     .WithMany(u => u.UserRoles)
                     .HasForeignKey(ur => ur.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(ur => ur.Role)
                     .WithMany()
                     .HasForeignKey(ur => ur.RoleId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                // Configuration cho AssignedByUser
-                entity.HasOne(ur => ur.AssignedByUser)
-                    .WithMany()
-                    .HasForeignKey(ur => ur.AssignedBy)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-
-            // C·∫•u h√¨nh Permission system
-            modelBuilder.Entity<Permission>(entity =>
-            {
-                entity.HasKey(p => p.PermissionId);
-                entity.HasIndex(p => p.PermissionName).IsUnique();
-
-                entity.HasMany(p => p.PermissionGroupMappings)
-                    .WithOne(pgm => pgm.Permission)
-                    .HasForeignKey(pgm => pgm.PermissionId)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-
-            // C·∫•u h√¨nh PermissionGroup
-            modelBuilder.Entity<PermissionGroup>(entity =>
-            {
-                entity.HasKey(pg => pg.PermissionGroupId);
-                entity.HasIndex(pg => pg.GroupName).IsUnique();
-
-                // Self-reference relationship
-                entity.HasOne(pg => pg.ParentGroup)
-                    .WithMany(pg => pg.ChildGroups)
-                    .HasForeignKey(pg => pg.ParentGroupId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasMany(pg => pg.PermissionMappings)
-                    .WithOne(pgm => pgm.PermissionGroup)
-                    .HasForeignKey(pgm => pgm.PermissionGroupId)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-
-            // C·∫•u h√¨nh PermissionGroupMapping
-            modelBuilder.Entity<PermissionGroupMapping>(entity =>
-            {
-                entity.HasKey(pgm => pgm.MappingId);
-                entity.HasIndex(pgm => new { pgm.PermissionGroupId, pgm.PermissionId }).IsUnique();
-
-                entity.HasOne(pgm => pgm.CreatedByUser)
-                    .WithMany()
-                    .HasForeignKey(pgm => pgm.CreatedByUserId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(pgm => pgm.DependsOnPermission)
-                    .WithMany()
-                    .HasForeignKey(pgm => pgm.DependsOnPermissionId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n n?i dung h?c t?p
+        /// C?u hÏnh c·c entities liÍn quan ??n n?i dung h?c t?p
         /// </summary>
         private void ConfigureLearningContent(ModelBuilder modelBuilder)
         {
-            // C·∫•u h√¨nh Category - danh m·ª•c t·ª´ v·ª±ng
+            // C?u hÏnh Category - danh m?c t? v?ng
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasKey(c => c.CategoryId);
                 entity.HasIndex(c => c.CategoryName);
 
-                // Self-reference cho danh m·ª•c cha-con
+                // Self-reference cho danh m?c cha-con
                 entity.HasOne(c => c.ParentCategory)
                     .WithMany(c => c.ChildCategories)
                     .HasForeignKey(c => c.ParentCategoryId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
-            // C·∫•u h√¨nh Vocabulary - t·ª´ v·ª±ng
+            // C?u hÏnh Vocabulary - t? v?ng
             modelBuilder.Entity<Vocabulary>(entity =>
             {
-                // S·ª≠ d·ª•ng key ƒë∆∞·ª£c k·∫ø th·ª´a t·ª´ AuditableEntity
+                // S? d?ng key ???c k? th?a t? AuditableEntity
                 entity.HasIndex(v => new { v.Term, v.LanguageCode });
                 entity.HasIndex(v => v.CategoryId);
                 entity.HasIndex(v => v.Level);
 
-                // Relationship v·ªõi Category
+                // Relationship v?i Category
                 entity.HasOne(v => v.Category)
                     .WithMany(c => c.Vocabularies)
                     .HasForeignKey(v => v.CategoryId)
                     .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // C·∫•u h√¨nh Definition - ƒë·ªãnh nghƒ©a t·ª´ v·ª±ng
+            // C?u hÏnh Definition - ??nh ngh?a t? v?ng
             modelBuilder.Entity<Definition>(entity =>
             {
                 entity.HasKey(d => d.Id);
@@ -526,10 +414,15 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasOne(d => d.Vocabulary)
                     .WithMany(v => v.Definitions)
                     .HasForeignKey(d => d.VocabularyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(d => d.CreatedBy)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
-            // C·∫•u h√¨nh Example - v√≠ d·ª• t·ª´ v·ª±ng
+            // C?u hÏnh Example - vÌ d? t? v?ng
             modelBuilder.Entity<Example>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -538,10 +431,15 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasOne(e => e.Vocabulary)
                     .WithMany(v => v.Examples)
                     .HasForeignKey(e => e.VocabularyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreatedBy)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
-            // C·∫•u h√¨nh Kanji
+            // C?u hÏnh Kanji
             modelBuilder.Entity<Kanji>(entity =>
             {
                 entity.HasIndex(k => k.Character).IsUnique();
@@ -549,14 +447,14 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasIndex(k => k.StrokeCount);
             });
 
-            // C·∫•u h√¨nh Grammar - ng·ªØ ph√°p
+            // C?u hÏnh Grammar - ng? ph·p
             modelBuilder.Entity<Grammar>(entity =>
             {
                 entity.HasIndex(g => g.Pattern);
                 entity.HasIndex(g => g.Level);
             });
 
-            // C·∫•u h√¨nh TechnicalTerm - thu·∫≠t ng·ªØ k·ªπ thu·∫≠t
+            // C?u hÏnh TechnicalTerm - thu?t ng? k? thu?t
             modelBuilder.Entity<TechnicalTerm>(entity =>
             {
                 entity.HasKey(tt => tt.TechnicalTermId);
@@ -566,7 +464,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n qu?n l√Ω media
+        /// C?u hÏnh c·c entities liÍn quan ??n qu?n l˝ media
         /// </summary>
         private void ConfigureMediaManagement(ModelBuilder modelBuilder)
         {
@@ -576,22 +474,10 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasIndex(m => new { m.MediaType, m.IsPrimary });
                 entity.HasIndex(m => m.UserId);
 
-                // Relationship v·ªõi User (owner c·ªßa file)
+                // Relationship v?i User
                 entity.HasOne(m => m.User)
                     .WithMany(u => u.MediaFiles)
                     .HasForeignKey(m => m.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                // Relationship v·ªõi User (ng∆∞·ªùi x√≥a file)
-                entity.HasOne(m => m.DeletedByUser)
-                    .WithMany()
-                    .HasForeignKey(m => m.DeletedBy)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                // Relationship v·ªõi MediaCategory
-                entity.HasOne(m => m.Category)
-                    .WithMany()
-                    .HasForeignKey(m => m.CategoryId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
@@ -603,7 +489,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n theo d√µi ti?n ?? h?c t?p
+        /// C?u hÏnh c·c entities liÍn quan ??n theo dıi ti?n ?? h?c t?p
         /// </summary>
         private void ConfigureProgressTracking(ModelBuilder modelBuilder)
         {
@@ -647,7 +533,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n k? ho?ch h?c t?p
+        /// C?u hÏnh c·c entities liÍn quan ??n k? ho?ch h?c t?p
         /// </summary>
         private void ConfigureStudyPlanning(ModelBuilder modelBuilder)
         {
@@ -675,7 +561,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n thi c? v√† luy?n t?p
+        /// C?u hÏnh c·c entities liÍn quan ??n thi c? v‡ luy?n t?p
         /// </summary>
         private void ConfigureExamsAndPractice(ModelBuilder modelBuilder)
         {
@@ -687,12 +573,12 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasMany(q => q.Options)
                     .WithOne(qo => qo.Question)
                     .HasForeignKey(qo => qo.QuestionId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasMany(q => q.UserAnswers)
                     .WithOne(ua => ua.Question)
                     .HasForeignKey(ua => ua.QuestionId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<TestResult>(entity =>
@@ -710,7 +596,7 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasMany(tr => tr.TestDetails)
                     .WithOne(td => td.TestResult)
                     .HasForeignKey(td => td.TestResultId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<JLPTExam>(entity =>
@@ -725,7 +611,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n h? th?ng th√¥ng b√°o
+        /// C?u hÏnh c·c entities liÍn quan ??n h? th?ng thÙng b·o
         /// </summary>
         private void ConfigureNotifications(ModelBuilder modelBuilder)
         {
@@ -737,7 +623,7 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasMany(n => n.NotificationRecipients)
                     .WithOne(nr => nr.Notification)
                     .HasForeignKey(nr => nr.NotificationId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<NotificationRecipient>(entity =>
@@ -753,7 +639,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n l?p l?ch
+        /// C?u hÏnh c·c entities liÍn quan ??n l?p l?ch
         /// </summary>
         private void ConfigureScheduling(ModelBuilder modelBuilder)
         {
@@ -770,7 +656,7 @@ namespace LexiFlow.Infrastructure.Data
                 entity.HasMany(s => s.ScheduleItems)
                     .WithOne(si => si.Schedule)
                     .HasForeignKey(si => si.ScheduleId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<ScheduleItem>(entity =>
@@ -787,7 +673,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// C?u h√¨nh c√°c entities li√™n quan ??n h? th?ng v√† ??ng b?
+        /// C?u hÏnh c·c entities liÍn quan ??n h? th?ng v‡ ??ng b?
         /// </summary>
         private void ConfigureSystemAndSync(ModelBuilder modelBuilder)
         {
@@ -833,58 +719,58 @@ namespace LexiFlow.Infrastructure.Data
 
         /// <summary>
         /// Kh?i t?o d? li?u m?u cho h? th?ng
-        /// T?o c√°c role, category, v√† setting c? b?n c?n thi?t
+        /// T?o c·c role, category, v‡ setting c? b?n c?n thi?t
         /// </summary>
         public async Task SeedDataAsync()
         {
             _logger?.LogInformation("B?t ??u kh?i t?o d? li?u m?u cho h? th?ng...");
 
-            // Kh?i t?o c√°c role c? b?n
+            // Kh?i t?o c·c role c? b?n
             if (!await Roles.AnyAsync())
             {
-                var adminRole = new Role { RoleName = "Administrator", Description = "Qu?n tr? vi√™n h? th?ng" };
-                var teacherRole = new Role { RoleName = "Teacher", Description = "Vai tr√≤ gi√°o vi√™n" };
-                var studentRole = new Role { RoleName = "Student", Description = "Vai tr√≤ h?c sinh" };
+                var adminRole = new Role { RoleName = "Administrator", Description = "Qu?n tr? viÍn h? th?ng" };
+                var teacherRole = new Role { RoleName = "Teacher", Description = "Vai trÚ gi·o viÍn" };
+                var studentRole = new Role { RoleName = "Student", Description = "Vai trÚ h?c sinh" };
 
                 await Roles.AddRangeAsync(adminRole, teacherRole, studentRole);
                 await base.SaveChangesAsync();
             }
 
-            // Kh?i t?o c√°c category m?c ??nh
+            // Kh?i t?o c·c category m?c ??nh
             if (!await Categories.AnyAsync())
             {
                 var categories = new[]
                 {
                     new Category { CategoryName = "JLPT N5", Description = "T? v?ng c? b?n cho k? thi JLPT N5", Level = "N5" },
                     new Category { CategoryName = "JLPT N4", Description = "T? v?ng trung c?p cho k? thi JLPT N4", Level = "N4" },
-                    new Category { CategoryName = "H?i tho?i h√†ng ng√†y", Description = "C√°c c?m t? th√¥ng d?ng trong giao ti?p h√†ng ng√†y", Level = "C? b?n" },
-                    new Category { CategoryName = "Ti?ng Nh?t th??ng m?i", Description = "T? v?ng v√† c?m t? li√™n quan ??n business", Level = "N√¢ng cao" }
+                    new Category { CategoryName = "H?i tho?i h‡ng ng‡y", Description = "C·c c?m t? thÙng d?ng trong giao ti?p h‡ng ng‡y", Level = "C? b?n" },
+                    new Category { CategoryName = "Ti?ng Nh?t th??ng m?i", Description = "T? v?ng v‡ c?m t? liÍn quan ??n business", Level = "N‚ng cao" }
                 };
 
                 await Categories.AddRangeAsync(categories);
                 await base.SaveChangesAsync();
             }
 
-            // Kh?i t?o c√°c setting m?c ??nh cho h? th?ng
+            // Kh?i t?o c·c setting m?c ??nh cho h? th?ng
             if (!await Settings.AnyAsync())
             {
                 var settings = new[]
                 {
-                    new Setting { SettingKey = "DefaultLanguage", SettingValue = "vi", Description = "Ng√¥n ng? m?c ??nh c?a h? th?ng" },
-                    new Setting { SettingKey = "SessionTimeout", SettingValue = "30", Description = "Th?i gian timeout phi√™n l√†m vi?c (ph√∫t)" },
-                    new Setting { SettingKey = "MaxFileSize", SettingValue = "10485760", Description = "K√≠ch th??c file t?i ?a cho ph√©p (bytes)" }, // 10MB
-                    new Setting { SettingKey = "EnableRegistration", SettingValue = "true", Description = "Cho ph√©p ??ng k√Ω t√†i kho?n m?i" }
+                    new Setting { SettingKey = "DefaultLanguage", SettingValue = "vi", Description = "NgÙn ng? m?c ??nh c?a h? th?ng" },
+                    new Setting { SettingKey = "SessionTimeout", SettingValue = "30", Description = "Th?i gian timeout phiÍn l‡m vi?c (ph˙t)" },
+                    new Setting { SettingKey = "MaxFileSize", SettingValue = "10485760", Description = "KÌch th??c file t?i ?a cho phÈp (bytes)" }, // 10MB
+                    new Setting { SettingKey = "EnableRegistration", SettingValue = "true", Description = "Cho phÈp ??ng k˝ t‡i kho?n m?i" }
                 };
 
                 await Settings.AddRangeAsync(settings);
                 await base.SaveChangesAsync();
             }
 
-            _logger?.LogInformation("Ho√†n th√†nh kh?i t?o d? li?u m?u cho h? th?ng");
+            _logger?.LogInformation("Ho‡n th‡nh kh?i t?o d? li?u m?u cho h? th?ng");
         }
 
         /// <summary>
-        /// Ph??ng th?c helper ?? l?y danh s√°ch entities ?ang ho?t ??ng (kh√¥ng b? x√≥a m?m)
+        /// Ph??ng th?c helper ?? l?y danh s·ch entities ?ang ho?t ??ng (khÙng b? xÛa m?m)
         /// </summary>
         public IQueryable<T> GetActiveEntities<T>() where T : BaseEntity
         {
@@ -892,7 +778,7 @@ namespace LexiFlow.Infrastructure.Data
         }
 
         /// <summary>
-        /// Ph??ng th?c x√≥a m?m h√†ng lo?t theo ?i?u ki?n
+        /// Ph??ng th?c xÛa m?m h‡ng lo?t theo ?i?u ki?n
         /// </summary>
         public async Task<int> BulkSoftDeleteAsync<T>(Expression<Func<T, bool>> predicate) where T : BaseEntity
         {

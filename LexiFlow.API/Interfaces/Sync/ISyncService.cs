@@ -19,7 +19,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <param name="request">Yêu cầu đồng bộ từ vựng</param>
         /// <param name="userId">ID người dùng</param>
         /// <returns>Kết quả đồng bộ từ vựng</returns>
-        Task<SyncResult<Vocabulary>> SyncVocabularyAsync(VocabularySyncRequest request, int userId);
+        Task<SyncResult<Models.Learning.Vocabulary.Vocabulary>> SyncVocabularyAsync(VocabularySyncRequest request, int userId);
 
         /// <summary>
         /// Đồng bộ dữ liệu kanji
@@ -144,7 +144,7 @@ namespace LexiFlow.API.Interfaces.Sync
         /// <summary>
         /// Kết quả đồng bộ từ vựng
         /// </summary>
-        public SyncResult<Vocabulary> VocabularyResult { get; set; }
+        public SyncResult<Models.Learning.Vocabulary.Vocabulary> VocabularyResult { get; set; }
 
         /// <summary>
         /// Kết quả đồng bộ kanji

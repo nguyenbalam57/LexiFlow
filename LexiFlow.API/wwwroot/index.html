@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiFlow API - Landing Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .link-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .link-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .link-card h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .link-card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .api-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .api-info h3 {
+            color: #4ade80;
+            margin-bottom: 1rem;
+        }
+
+        .api-info ul {
+            list-style: none;
+        }
+
+        .api-info li {
+            padding: 0.3rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .api-info li::before {
+            content: "?";
+            position: absolute;
+            left: 0;
+        }
+
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? LexiFlow API</h1>
+        <p class="subtitle">Japanese Learning API - Powered by .NET 9</p>
+        
+        <div class="status">
+            <div class="status-indicator"></div>
+            <span>API Server Online</span>
+        </div>
+
+        <div class="links">
+            <a href="/swagger" class="link-card">
+                <h3>?? API Documentation</h3>
+                <p>Interactive Swagger UI for testing endpoints</p>
+            </a>
+            
+            <a href="/api/vocabulary" class="link-card">
+                <h3>?? Vocabulary API</h3>
+                <p>Manage Japanese vocabulary with CRUD operations</p>
+            </a>
+            
+            <a href="/api/vocabulary/statistics" class="link-card">
+                <h3>?? Statistics</h3>
+                <p>Get vocabulary analytics and insights</p>
+            </a>
+            
+            <a href="/health" class="link-card">
+                <h3>?? Health Check</h3>
+                <p>Check API and database health status</p>
+            </a>
+        </div>
+
+        <div class="api-info">
+            <h3>?? Available Features</h3>
+            <ul>
+                <li>Complete Vocabulary CRUD Operations</li>
+                <li>Advanced Search with Multiple Filters</li>
+                <li>Pagination Support</li>
+                <li>Statistics & Analytics</li>
+                <li>JWT Authentication</li>
+                <li>Real-time SignalR Support</li>
+                <li>Database Integration with EF Core</li>
+                <li>Health Monitoring</li>
+                <li>Comprehensive Error Handling</li>
+                <li>Audit Trail & Soft Delete</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>LexiFlow API v1.0 | Running on .NET 9 | Database: SQL Server LocalDB</p>
+            <p>Generated on <span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+        
+        // Test API connectivity
+        fetch('/health')
+            .then(response => {
+                if (response.ok) {
+                    console.log('? API Health Check: Passed');
+                } else {
+                    console.log('? API Health Check: Failed');
+                }
+            })
+            .catch(error => {
+                console.log('? API Connection Error:', error);
+            });
+    </script>
+</body>
+</html>

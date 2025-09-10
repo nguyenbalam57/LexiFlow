@@ -1,6 +1,16 @@
-﻿using LexiFlow.Models.Learning.Vocabulary;
+﻿using LexiFlow.Infrastructure.Data;
+using LexiFlow.Models.Learning.Vocabulary;
+using LexiFlow.Models.Learning.Kanji;
+using LexiFlow.Models.Learning.Grammar;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
+using LexiFlow.Models.Progress;
+using LexiFlow.Models.Planning;
+using LexiFlow.Models.Exam;
+using LexiFlow.Models.Practice;
+using LexiFlow.Models.Notification;
+using LexiFlow.Models.Media;
+using LexiFlow.Models.System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -38,8 +48,12 @@ namespace LexiFlow.Infrastructure.Data.Seed
 
                 await SeedRolesAndPermissionsAsync();
                 await SeedAdminUserAsync();
+                
+                // Basic Categories - Cải tiến: thêm nhiều categories hơn để test
                 await SeedCategoriesAsync();
-                // Thêm các phương thức seed khác theo nhu cầu
+                
+                // Basic Vocabularies - Tạm thời comment out để tránh FK constraints
+                // await VocabularySeedData.SeedVocabularyAsync(_context, _logger);
 
                 _logger.LogInformation("Database seeding completed successfully.");
             }

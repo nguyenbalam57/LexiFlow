@@ -66,6 +66,10 @@ namespace LexiFlow.Models.Media
 
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         // Cải tiến: Thống kê
         public int? FileCount { get; set; } = 0; // Số lượng file
 

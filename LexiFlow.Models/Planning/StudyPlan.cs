@@ -51,6 +51,10 @@ namespace LexiFlow.Models.Planning
         // Cải tiến: Trạng thái và theo dõi
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         [StringLength(50)]
         public string CurrentStatus { get; set; } // NotStarted, InProgress, OnHold, Completed
 

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexiFlow API Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        .response { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-top: 10px;
+            border-left: 4px solid #007bff;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        h1 { color: #343a40; }
+        h2 { color: #495057; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>?? LexiFlow API Test Page</h1>
+        <div id="apiStatus" class="status info">Testing API Connection...</div>
+        
+        <h2>?? API Tests</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <button onclick="testVocabulary()">Test Vocabulary API</button>
+        <button onclick="testVocabularyStats()">Test Vocabulary Stats</button>
+        <button onclick="testSwagger()">Test Swagger</button>
+        
+        <div id="results"></div>
+        
+        <h2>?? Test Results</h2>
+        <div id="testLog"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `<div class="status ${type}">[${timestamp}] ${message}</div>`;
+            logDiv.innerHTML = entry + logDiv.innerHTML;
+        }
+
+        function showResponse(title, data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<h3>${title}</h3><div class="response">${JSON.stringify(data, null, 2)}</div>`;
+        }
+
+        async function testHealth() {
+            try {
+                log('Testing Health endpoint...', 'info');
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.text();
+                
+                if (response.ok) {
+                    log('? Health Check: PASSED', 'success');
+                    showResponse('Health Check Response', data);
+                } else {
+                    log(`? Health Check: FAILED (${response.status})`, 'error');
+                    showResponse('Health Check Error', data);
+                }
+            } catch (error) {
+                log(`? Health Check: ERROR - ${error.message}`, 'error');
+                showResponse('Health Check Exception', error.toString());
+            }
+        }
+
+        async function testVocabulary() {
+            try {
+                log('Testing Vocabulary API (without auth)...', 'info');
+                const response = await fetch(`${API_BASE}/api/vocabulary`);
+                
+                if (response.status === 401) {
+                    log('?? Vocabulary API: Requires Authentication (Expected)', 'info');
+                    showResponse('Vocabulary API Response', 'Authentication required - API is properly secured');
+                } else if (response.ok) {
+                    const data = await response.json();
+                    log('? Vocabulary API: ACCESSIBLE', 'success');
+                    showResponse('Vocabulary API Response', data);
+                } else {
+                    const data = await response.text();
+                    log(`? Vocabulary API: FAILED (${response.status})`, 'error');
+                    showResponse('Vocabulary API Error', data);
+                }
+            } catch (error) {
+                log(`? Vocabulary API: ERROR - ${error.message}`, 'error');
+                showResponse('Vocabulary API Exception', error.toString());
+            }
+        }
+
+        async function testVocabularyStats() {
+            try {
+                log('Testing Vocabulary Statistics...', 'info');
+                const response = await fetch(`${API_BASE}/api/vocabulary/statistics`);
+                
+                if (response.status === 401) {
+                    log('?? Vocabulary Stats: Requires Authentication (Expected)', 'info');
+                    showResponse('Vocabulary Stats Response', 'Authentication required - API is properly secured');
+                } else if (response.ok) {
+                    const data = await response.json();
+                    log('? Vocabulary Stats: ACCESSIBLE', 'success');
+                    showResponse('Vocabulary Statistics Response', data);
+                } else {
+                    const data = await response.text();
+                    log(`? Vocabulary Stats: FAILED (${response.status})`, 'error');
+                    showResponse('Vocabulary Stats Error', data);
+                }
+            } catch (error) {
+                log(`? Vocabulary Stats: ERROR - ${error.message}`, 'error');
+                showResponse('Vocabulary Stats Exception', error.toString());
+            }
+        }
+
+        async function testSwagger() {
+            try {
+                log('Testing Swagger UI...', 'info');
+                const response = await fetch(`${API_BASE}/swagger`);
+                
+                if (response.ok) {
+                    log('? Swagger UI: ACCESSIBLE', 'success');
+                    showResponse('Swagger Response', 'Swagger UI is available');
+                } else {
+                    log(`? Swagger UI: FAILED (${response.status})`, 'error');
+                    const data = await response.text();
+                    showResponse('Swagger Error', data);
+                }
+            } catch (error) {
+                log(`? Swagger UI: ERROR - ${error.message}`, 'error');
+                showResponse('Swagger Exception', error.toString());
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = async function() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.textContent = 'Checking API Status...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    statusDiv.textContent = '? API Server: ONLINE';
+                    statusDiv.className = 'status success';
+                    log('?? API Server is running and healthy', 'success');
+                } else {
+                    statusDiv.textContent = `?? API Server: Response ${response.status}`;
+                    statusDiv.className = 'status error';
+                    log(`?? API Server returned status ${response.status}`, 'error');
+                }
+            } catch (error) {
+                statusDiv.textContent = '? API Server: OFFLINE';
+                statusDiv.className = 'status error';
+                log(`? Cannot connect to API Server: ${error.message}`, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

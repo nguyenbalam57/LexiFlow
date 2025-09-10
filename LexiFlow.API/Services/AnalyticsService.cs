@@ -316,7 +316,7 @@ namespace LexiFlow.API.Services
                 ActivityType = "Test",
                 Description = $"{tr.TestType} Test",
                 Score = (int)tr.Score,
-                DurationMinutes = tr.DurationMinutes ?? 0
+                DurationMinutes = (tr.DurationSeconds ?? 0) / 60
             }));
 
             return activities.OrderByDescending(a => a.Timestamp).Take(count).ToList();
@@ -511,7 +511,7 @@ namespace LexiFlow.API.Services
             {
                 Date = tr.TestDate,
                 AccuracyRate = (float)tr.Score,
-                StudyMinutes = tr.DurationMinutes ?? 0,
+                StudyMinutes = (tr.DurationSeconds ?? 0) / 60,
                 ItemsLearned = 0 // TODO: Calculate based on session data
             }).ToList();
         }

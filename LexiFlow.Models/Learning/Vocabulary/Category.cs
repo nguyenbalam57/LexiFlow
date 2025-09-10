@@ -67,6 +67,22 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public bool IsActive { get; set; } = true;
 
         /// <summary>
+        /// Kích hoạt danh mục - Implementation of IActivatable interface
+        /// </summary>
+        public void Activate()
+        {
+            IsActive = true;
+        }
+
+        /// <summary>
+        /// Vô hiệu hóa danh mục - Implementation of IActivatable interface
+        /// </summary>
+        public void Deactivate()
+        {
+            IsActive = false;
+        }
+
+        /// <summary>
         /// ID của danh mục cha (tùy chọn)
         /// Null = danh mục gốc, có giá trị = danh mục con
         /// Tạo cấu trúc cây phân cấp: Thực phẩm > Đồ ăn > Món Nhật

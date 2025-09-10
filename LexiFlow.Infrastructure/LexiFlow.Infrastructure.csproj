@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\CompleteContext\" />
     <Folder Include="Data\Configurations\" />
     <Folder Include="Migrations\" />
     <Folder Include="Services\" />

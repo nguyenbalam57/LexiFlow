@@ -146,6 +146,10 @@ namespace LexiFlow.Models.Scheduling
         /// </summary>
         public bool IsActive { get; set; } = true;
 
+        // IActivatable implementation
+        public void Activate() => IsActive = true;
+        public void Deactivate() => IsActive = false;
+
         /// <summary>
         /// Trạng thái chi tiết của mục lịch trình
         /// </summary>
