@@ -1,10 +1,7 @@
 using Asp.Versioning;
 using LexiFlow.API.Extensions;
 using LexiFlow.API.Middleware;
-using LexiFlow.API.Services;
 using LexiFlow.API.Services.Vocabulary;
-using LexiFlow.API.Hubs;
-using LexiFlow.API.Configurations;
 using LexiFlow.Infrastructure.Data;
 using LexiFlow.Infrastructure.Data.Seed;
 using LexiFlow.Infrastructure.Data.Repositories.Vocabulary;
@@ -13,26 +10,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using System.Reflection;
 using System.Text;
-using System.IO.Compression;
-using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Database Configuration - Use LexiFlowContext instead of ApplicationDbContext
+// ===== CẤU HÌNH CƠ SỞ DỮ LIỆU =====
+// Sử dụng LexiFlowContext với SQL Server
 builder.Services.AddDbContext<LexiFlowContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    
-    // S?A L?I: Gi?m thi?u EF Core warnings - ??n gi?n h�a
+
+    // Cấu hình cho môi trường development
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging(false);
         options.EnableDetailedErrors(true);
     }
-    
-    // C?u h�nh ?? gi?m warnings - b? c�c event ID kh�ng t?n t?i
+
+    // Giảm thiểu EF Core warnings
     options.ConfigureWarnings(warnings =>
     {
         warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.NavigationBaseIncludeIgnored);
@@ -40,7 +35,8 @@ builder.Services.AddDbContext<LexiFlowContext>(options =>
     });
 });
 
-// 2. Configure Serilog for logging
+// ===== CẤU HÌNH LOGGING =====
+// Thiết lập Serilog cho việc ghi log
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -50,32 +46,8 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// S?A L?I CRITICAL: Always register ResponseCompression services, nh?ng ch? USE trong production
-builder.Services.AddResponseCompression(options =>
-{
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.Providers.Add<GzipCompressionProvider>();
-    
-    // Ch? compress JSON responses t? API
-    options.MimeTypes = new[]
-    {
-        "application/json",
-        "text/json"
-    };
-});
-
-// Configure compression levels ?? tr�nh Content-Length issues
-builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Fastest;
-});
-
-builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = CompressionLevel.Fastest;
-});
-
-// Add services to the container
+// ===== CẤU HÌNH CONTROLLERS =====
+// Thêm controllers với cấu hình JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -83,15 +55,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Add SignalR for real-time analytics
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
-    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-});
-
-// Add API versioning
+// ===== CẤU HÌNH API VERSIONING =====
+// Hỗ trợ phiên bản hóa API
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -99,24 +64,78 @@ builder.Services.AddApiVersioning(options =>
     options.ReportApiVersions = true;
 });
 
-// Add FluentValidation
+// ===== CẤU HÌNH VALIDATION =====
+// Đăng ký FluentValidation services
 builder.Services.AddValidationServices();
 
-// Register Vocabulary Services v� Repositories
+// ===== ĐĂNG KÝ SERVICES & REPOSITORIES =====
+// Repository và Service cho Vocabulary
 builder.Services.AddScoped<IVocabularyRepository, VocabularyRepository>();
 builder.Services.AddScoped<IVocabularyService, LexiFlow.API.Services.Vocabulary.VocabularyService>();
 
-// TODO: Fix SyncService namespace conflicts later
-// Register Analytics Services
-builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<IAnalyticsHubService, AnalyticsHubService>();
-
+// Swagger API Explorer
 builder.Services.AddEndpointsApiExplorer();
 
-// 3. ULTIMATE FIX: Minimal Swagger registration ?? tr�nh Content-Length issues
-builder.Services.AddMinimalSwagger();
+// ===== CẤU HÌNH SWAGGER (ENHANCED) =====
+// Swagger với custom styling và enhanced features
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "LexiFlow API",
+        Version = "v1",
+        Description = "API cho ứng dụng học tiếng Nhật LexiFlow",
+        Contact = new OpenApiContact
+        {
+            Name = "LexiFlow Development Team",
+            Email = "dev@lexiflow.com"
+        },
+        License = new OpenApiLicense
+        {
+            Name = "MIT License",
+            Url = new Uri("https://opensource.org/licenses/MIT")
+        }
+    });
 
-// 4. Configure JWT Authentication
+    // Cấu hình JWT Authentication cho Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. \n\nNhập 'Bearer' [space] và token của bạn trong text input bên dưới.\n\nVí dụ: \"Bearer 12345abcdef\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+
+    // Enable XML comments if available
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
+
+// ===== CẤU HÌNH JWT AUTHENTICATION =====
+// Xác thực JWT để bảo vệ API
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -130,30 +149,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
-                throw new InvalidOperationException("JWT Key is not configured")))
-        };
-
-        // Configure SignalR authentication
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
-            }
+                throw new InvalidOperationException("JWT Key chưa được cấu hình")))
         };
     });
 
-// Add Authorization
 builder.Services.AddAuthorization();
 
-// 5. Configure CORS for client applications including SignalR
+// ===== CẤU HÌNH CORS =====
+// Cross-Origin Resource Sharing cho client applications
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -161,220 +164,204 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? new[] { "*" })
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Required for SignalR
-    });
-
-    // Add LANPolicy for local network access (mobile apps)
-    options.AddPolicy("LANPolicy", policy =>
-    {
-        policy.WithOrigins("http://192.168.*.*", "http://10.*.*.*")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
               .AllowCredentials();
     });
 });
 
-// Add Health Checks
+// ===== CẤU HÌNH HEALTH CHECKS =====
+// Kiểm tra sức khỏe ứng dụng
 builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "database", tags: new[] { "database" })
-    .AddCheck("signalr", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("SignalR is running"));
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        name: "database",
+        tags: new[] { "database" });
 
-// Configure HTTP Client factory
+// HTTP Client factory cho external API calls
 builder.Services.AddHttpClient();
 
-// Add Memory Cache for analytics caching
-builder.Services.AddMemoryCache();
-
+// ===== XÂY DỰNG ỨNG DỤNG =====
 var app = builder.Build();
 
-// Create logger ?? s? d?ng trong pipeline configuration
+// Logger để ghi log trong pipeline
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-// Configure pipeline
-if (app.Environment.IsDevelopment())
-{
-    // GI?I PH�P CU?I C�NG: Early response interception
-    // ??t ? v? tr� ??u ti�n ?? intercept tr??c khi Swagger middleware x? l�
-    app.UseSwaggerEarlyResponse();
-    
-    // S?A L?I: S? d?ng minimal Swagger configuration
-    app.UseMinimalSwaggerUI(app.Environment);
-    
-    // CRITICAL: KH�NG S? D?NG ResponseCompression middleware trong development
-    // Services ?� ???c register nh?ng middleware kh�ng ???c s? d?ng
-    logger.LogInformation("Development mode: Response compression services registered but middleware DISABLED, Early response interception ENABLED");
-}
-else
-{
-    // Production: Enable compression nh?ng exclude Swagger ho�n to�n
-    app.UseWhen(
-        context => {
-            var path = context.Request.Path.Value?.ToLower();
-            return !string.IsNullOrEmpty(path) &&
-                   !path.StartsWith("/swagger") &&
-                   !path.Contains("swagger") &&
-                   !path.Equals("/");
-        },
-        appBuilder => appBuilder.UseResponseCompression()
-    );
-    
-    app.UseMinimalSwaggerUI(app.Environment);
-    
-    // Use HTTPS Redirection in production
-    if (builder.Configuration.GetValue<bool>("Security:RequireHttps", true))
-    {
-        app.UseHttpsRedirection();
-    }
-    
-    logger.LogInformation("Production mode: Conditional response compression ENABLED");
-}
+// ===== CẤU HÌNH PIPELINE - ĐÃ SỬA LỖI CONTENT-LENGTH =====
 
-// Configure pipeline - ULTIMATE SWAGGER & COMPRESSION FIX
+// 1. Error handling middleware phải đặt đầu tiên
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
-    // GI?I PH�P CU?I C�NG: Early response interception
-    // ??t ? v? tr� ??u ti�n ?? intercept tr??c khi Swagger middleware x? l�
-    app.UseSwaggerEarlyResponse();
-    
-    // S?A L?I: S? d?ng minimal Swagger configuration
-    app.UseMinimalSwaggerUI(app.Environment);
-    
-    // CRITICAL: KH�NG S? D?NG ResponseCompression middleware trong development
-    // Services ?� ???c register nh?ng middleware kh�ng ???c s? d?ng
-    logger.LogInformation("Development mode: Response compression services registered but middleware DISABLED, Early response interception ENABLED");
-}
-else
-{
-    // Production: Enable compression nh?ng exclude Swagger ho�n to�n
-    app.UseWhen(
-        context => {
-            var path = context.Request.Path.Value?.ToLower();
-            return !string.IsNullOrEmpty(path) &&
-                   !path.StartsWith("/swagger") &&
-                   !path.Contains("swagger") &&
-                   !path.Equals("/");
-        },
-        appBuilder => appBuilder.UseResponseCompression()
-    );
-    
+    // 2. Swagger đặt sớm, TRƯỚC static files và logging
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
         c.RoutePrefix = "swagger";
+        c.DocumentTitle = "LexiFlow API - Japanese Learning Platform";
+        c.DisplayRequestDuration();
+        c.EnableTryItOutByDefault();
+        c.ShowExtensions();
+        c.EnableValidator();
+
+        // BỎ INJECT CSS/JS VÀO SWAGGER UI để tránh xung đột
+        // c.InjectStylesheet("/css/lexiflow-api.css");
+        // c.InjectJavascript("/js/lexiflow-api.js");
+
+        // Custom configuration for better UX
+        c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object>
+        {
+            ["activated"] = true,
+            ["theme"] = "agate"
+        };
     });
-    
-    // Use HTTPS Redirection in production
+
+    logger.LogInformation("Development mode: Enhanced Swagger UI enabled at /swagger");
+}
+else
+{
+    // Production: Standard Swagger
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "LexiFlow API Documentation";
+        // Tạm thời bỏ inject CSS trong production
+        // c.InjectStylesheet("/css/lexiflow-api.css");
+    });
+
+    // Enable HTTPS redirection in production
     if (builder.Configuration.GetValue<bool>("Security:RequireHttps", true))
     {
         app.UseHttpsRedirection();
     }
-    
-    logger.LogInformation("Production mode: Normal Swagger with conditional compression");
+
+    logger.LogInformation("Production mode: Standard Swagger UI");
 }
 
-// S?A L?I: Improved conditional Response Compression - ch? cho API endpoints
-app.UseWhen(
-    context => {
-        var path = context.Request.Path.Value?.ToLower();
-        return !string.IsNullOrEmpty(path) &&
-               path.StartsWith("/api/") &&
-               !path.StartsWith("/swagger");
-    },
-    appBuilder => appBuilder.UseResponseCompression()
-);
+// 3. Static files với cấu hình đơn giản hơn
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Đơn giản hóa cache headers để tránh xung đột
+        var cachePeriod = app.Environment.IsDevelopment() ? "3600" : "86400"; // 1h dev, 1 day prod
+        ctx.Context.Response.Headers.Append("Cache-Control", $"public, max-age={cachePeriod}");
+    }
+});
 
-// Add error handling middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
+// 4. Default files
+app.UseDefaultFiles();
 
-// Enable static files BEFORE Serilog request logging ?? tr�nh spam logs cho static files
-app.UseStaticFiles();
-
-// Use Serilog request logging
+// 5. Request logging với cấu hình tối ưu để tránh xung đột với Swagger
 app.UseSerilogRequestLogging(options =>
 {
-    // S?a l?i: Gi?m log level cho static files ?? tr�nh spam logs
-    options.MessageTemplate = "Handled {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
     options.GetLevel = (httpContext, elapsed, ex) =>
     {
-        // Gi?m log level cho static files v� Swagger
         var path = httpContext.Request.Path.Value?.ToLower();
-        if (path != null && (path.StartsWith("/swagger") || 
-                           path.EndsWith(".css") || 
-                           path.EndsWith(".js") || 
+
+        // TRÁNH LOG SWAGGER REQUESTS để giảm xung đột
+        if (path != null && (path.StartsWith("/swagger") ||
+                           path.Contains("swagger.json") ||
+                           path.EndsWith(".css") ||
+                           path.EndsWith(".js") ||
                            path.EndsWith(".html") ||
-                           path.EndsWith(".ico")))
+                           path.EndsWith(".ico") ||
+                           path.EndsWith(".png")))
         {
-            return Serilog.Events.LogEventLevel.Debug;
+            return Serilog.Events.LogEventLevel.Verbose; // Thay đổi từ Debug sang Verbose
         }
-        return ex != null ? Serilog.Events.LogEventLevel.Error : Serilog.Events.LogEventLevel.Information;
+
+        if (ex != null)
+            return Serilog.Events.LogEventLevel.Error;
+
+        if (httpContext.Response.StatusCode >= 400)
+            return Serilog.Events.LogEventLevel.Warning;
+
+        return Serilog.Events.LogEventLevel.Information;
+    };
+
+    // BỎ QUA một số requests để giảm xung đột
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        var path = httpContext.Request.Path.Value?.ToLower();
+        if (path != null && path.StartsWith("/swagger"))
+        {
+            return; // Không enrich cho Swagger requests
+        }
+
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
     };
 });
 
-// Use CORS
+// 6. CORS
 app.UseCors("CorsPolicy");
 
-// Use Authentication and Authorization
+// 7. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map endpoints
+// 8. Map endpoints cuối cùng
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Map SignalR Hub
-app.MapHub<AnalyticsHub>("/hubs/analytics");
-
-// Database initialization v?i improved error handling
+// ===== KHỞI TẠO DATABASE =====
+// Khởi tạo database với xử lý lỗi cải thiện
 using (var scope = app.Services.CreateScope())
 {
     try
     {
         var dbLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var dbContext = scope.ServiceProvider.GetRequiredService<LexiFlowContext>();
-        
-        dbLogger.LogInformation("Checking database status...");
-        
-        // Check database connection
+
+        dbLogger.LogInformation("Kiểm tra trạng thái database...");
+
+        // Kiểm tra kết nối database
         await dbContext.Database.CanConnectAsync();
-        dbLogger.LogInformation("Database connection established. Checking for migrations...");
-        
-        // Apply pending migrations if any
+        dbLogger.LogInformation("Kết nối database thành công. Kiểm tra migrations...");
+
+        // Áp dụng pending migrations nếu có
         var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
         if (pendingMigrations.Any())
         {
-            dbLogger.LogInformation("Applying {Count} pending migrations...", pendingMigrations.Count());
+            dbLogger.LogInformation("Đang áp dụng {Count} migrations...", pendingMigrations.Count());
             await dbContext.Database.MigrateAsync();
-            dbLogger.LogInformation("Database migrations applied successfully");
+            dbLogger.LogInformation("Migrations đã được áp dụng thành công");
         }
         else
         {
-            dbLogger.LogInformation("Database ?� ???c c?p nh?t.");
+            dbLogger.LogInformation("Database đã được cập nhật");
         }
-        
-        // Seed database
+
+        // Khởi tạo dữ liệu mẫu
         await app.Services.SeedDatabaseAsync();
-        
     }
     catch (Exception ex)
     {
         var dbLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        dbLogger.LogError(ex, "An error occurred while initializing database");
-        
-        // Kh�ng throw exception ?? app v?n c� th? start
-        // throw; // Comment out ?? app kh�ng crash khi database c� v?n ??
+        dbLogger.LogError(ex, "Lỗi khi khởi tạo database");
+
+        // Không throw exception để app vẫn có thể khởi động
+        // throw; // Comment để app không crash khi database có vấn đề
     }
 }
 
+// ===== KHỞI ĐỘNG ỨNG DỤNG =====
 try
 {
-    Log.Information("Starting LexiFlow API with Real-time Analytics");
+    Log.Information("🌸 Khởi động LexiFlow API - Enhanced Mode với Static Files...");
+    Log.Information("🏠 Trang chủ: http://localhost:5117/");
+    Log.Information("📚 Swagger UI: http://localhost:5117/swagger");
+    Log.Information("💚 Health Check: http://localhost:5117/health");
+    Log.Information("Ctrl + C : Shutdown API");
     app.Run();
     return 0;
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Host terminated unexpectedly");
+    Log.Fatal(ex, "⌛ Ứng dụng bị dừng bất ngờ");
     return 1;
 }
 finally

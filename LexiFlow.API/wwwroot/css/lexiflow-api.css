@@ -1,0 +1,108 @@
+/* LexiFlow API Styles */
+/* Custom styles for enhanced API documentation */
+
+:root {
+    --lexiflow-primary: #3498db;
+    --lexiflow-secondary: #9b59b6;
+    --lexiflow-success: #27ae60;
+    --lexiflow-warning: #f39c12;
+    --lexiflow-error: #e74c3c;
+    --lexiflow-dark: #2c3e50;
+    --lexiflow-light: #ecf0f1;
+}
+
+/* Enhanced Swagger UI styling when served as static file */
+.swagger-ui .topbar {
+    background: linear-gradient(45deg, var(--lexiflow-primary), var(--lexiflow-secondary)) !important;
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label {
+    color: white !important;
+}
+
+.swagger-ui .info .title {
+    color: var(--lexiflow-dark);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.swagger-ui .scheme-container {
+    background: var(--lexiflow-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+/* Custom button styles */
+.swagger-ui .btn.authorize {
+    background: var(--lexiflow-success) !important;
+    border-color: var(--lexiflow-success) !important;
+}
+
+.swagger-ui .btn.authorize:hover {
+    background: #229954 !important;
+    border-color: #229954 !important;
+}
+
+/* Method badges */
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+    background: var(--lexiflow-success) !important;
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+    background: var(--lexiflow-primary) !important;
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+    background: var(--lexiflow-warning) !important;
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+    background: var(--lexiflow-error) !important;
+}
+
+/* Response status colors */
+.swagger-ui .responses-inner h4 {
+    color: var(--lexiflow-dark);
+}
+
+/* Custom scrollbar for better UX */
+.swagger-ui ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.swagger-ui ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.swagger-ui ::-webkit-scrollbar-thumb {
+    background: var(--lexiflow-primary);
+    border-radius: 4px;
+}
+
+.swagger-ui ::-webkit-scrollbar-thumb:hover {
+    background: var(--lexiflow-secondary);
+}
+
+/* Loading animation */
+@keyframes lexiflow-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.lexiflow-loading {
+    animation: lexiflow-pulse 1.5s ease-in-out infinite;
+}
+
+/* Custom media queries for responsive design */
+@media (max-width: 768px) {
+    .swagger-ui .wrapper {
+        padding: 0 10px;
+    }
+    
+    .swagger-ui .info {
+        margin: 20px 0;
+    }
+}

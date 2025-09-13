@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 namespace LexiFlow.API.Controllers
 {
     /// <summary>
-    /// Controller qu?n lý file media (audio, image, video)
+    /// Controller qu?n lÃ½ file media (audio, image, video)
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -26,7 +26,7 @@ namespace LexiFlow.API.Controllers
         /// </summary>
         [HttpPost("upload")]
         public async Task<ActionResult<MediaUploadResponseDto>> UploadMedia(
-            [FromForm] IFormFile file,
+            [FromForm] UploadMediaRequest file,
             [FromForm] string mediaType,
             [FromForm] string? entityType = null,
             [FromForm] int? entityId = null,
@@ -34,25 +34,25 @@ namespace LexiFlow.API.Controllers
         {
             try
             {
-                if (file == null || file.Length == 0)
+                if (file == null || file.File.Length == 0)
                 {
                     return BadRequest("No file uploaded");
                 }
 
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "audio/mpeg", "audio/wav", "video/mp4" };
-                if (!allowedTypes.Contains(file.ContentType))
+                if (!allowedTypes.Contains(file.File.ContentType))
                 {
                     return BadRequest("Unsupported file type");
                 }
 
                 const long maxFileSize = 10 * 1024 * 1024; // 10MB
-                if (file.Length > maxFileSize)
+                if (file.File.Length > maxFileSize)
                 {
                     return BadRequest("File size exceeds limit");
                 }
 
                 var userId = GetCurrentUserId();
-                var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+                var fileName = $"{Guid.NewGuid()}_{file.File.FileName}";
                 
                 // TODO: Implement actual file upload to storage
                 
@@ -60,10 +60,10 @@ namespace LexiFlow.API.Controllers
                 {
                     MediaId = new Random().Next(1000, 9999),
                     FileName = fileName,
-                    OriginalFileName = file.FileName,
+                    OriginalFileName = file.File.FileName,
                     MediaType = mediaType,
-                    ContentType = file.ContentType,
-                    FileSize = file.Length,
+                    ContentType = file.File.ContentType,
+                    FileSize = file.File.Length,
                     FilePath = $"/uploads/{mediaType}/{fileName}",
                     PublicUrl = $"https://cdn.lexiflow.com/uploads/{mediaType}/{fileName}",
                     EntityType = entityType,
@@ -94,7 +94,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// L?y danh sách file media
+        /// L?y danh sÃ¡ch file media
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<PaginatedResultDto<MediaFileDto>>> GetMediaFiles(
@@ -283,7 +283,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// C?p nh?t thông tin file media
+        /// C?p nh?t thÃ´ng tin file media
         /// </summary>
         [HttpPut("{mediaId}")]
         public async Task<ActionResult<MediaFileDto>> UpdateMediaFile(int mediaId, [FromBody] UpdateMediaFileDto updateDto)
@@ -316,7 +316,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Xóa file media
+        /// XÃ³a file media
         /// </summary>
         [HttpDelete("{mediaId}")]
         public async Task<ActionResult> DeleteMediaFile(int mediaId)
@@ -335,7 +335,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// X? lý file media (resize image, convert audio, etc.)
+        /// X? lÃ½ file media (resize image, convert audio, etc.)
         /// </summary>
         [HttpPost("{mediaId}/process")]
         public async Task<ActionResult<object>> ProcessMediaFile(int mediaId, [FromBody] ProcessMediaRequestDto processDto)
@@ -405,7 +405,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// L?y th?ng kê media
+        /// L?y th?ng kÃª media
         /// </summary>
         [HttpGet("statistics")]
         public async Task<ActionResult<object>> GetMediaStatistics()
@@ -509,7 +509,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// T?i ?u hóa storage
+        /// T?i ?u hÃ³a storage
         /// </summary>
         [HttpPost("optimize")]
         [Authorize(Roles = "Admin")]
@@ -551,6 +551,12 @@ namespace LexiFlow.API.Controllers
     }
 
     #region DTOs
+
+    public class UploadMediaRequest
+    {
+        public IFormFile File { get; set; }
+        public string Description { get; set; }
+    }
 
     public class MediaFileDto
     {

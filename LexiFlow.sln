@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LexiFlow.Core", "LexiFlow.Core\LexiFlow.Core.csproj", "{8B838424-047C-4F4F-8DDF-C7C1EFB324F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LexiFlow.App", "LexiFlow.Application\LexiFlow.App.csproj", "{D8307B67-77E4-45BD-840D-843ACF8BBC14}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LexiFlow.Infrastructure", "LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj", "{870F0958-644D-4DD4-91E5-9CFD6A13DBD7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LexiFlow.UI", "LexiFlow.UI\LexiFlow.UI.csproj", "{2AA76F0C-8B92-4541-8523-EFAD6D8C4DD2}"
@@ -39,18 +37,6 @@ Global
 		{8B838424-047C-4F4F-8DDF-C7C1EFB324F7}.Release|x64.Build.0 = Release|Any CPU
 		{8B838424-047C-4F4F-8DDF-C7C1EFB324F7}.Release|x86.ActiveCfg = Release|Any CPU
 		{8B838424-047C-4F4F-8DDF-C7C1EFB324F7}.Release|x86.Build.0 = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|x64.Build.0 = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Debug|x86.Build.0 = Debug|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|x64.ActiveCfg = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|x64.Build.0 = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|x86.ActiveCfg = Release|Any CPU
-		{D8307B67-77E4-45BD-840D-843ACF8BBC14}.Release|x86.Build.0 = Release|Any CPU
 		{870F0958-644D-4DD4-91E5-9CFD6A13DBD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{870F0958-644D-4DD4-91E5-9CFD6A13DBD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{870F0958-644D-4DD4-91E5-9CFD6A13DBD7}.Debug|x64.ActiveCfg = Debug|Any CPU
