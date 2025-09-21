@@ -1,4 +1,4 @@
-﻿using LexiFlow.Infrastructure.Data.Repositories.Base;
+using LexiFlow.Infrastructure.Data.Repositories.Base;
 using LexiFlow.Models.Core;
 using LexiFlow.Models.Exam;
 using LexiFlow.Models.Learning.Grammar;
@@ -14,6 +14,7 @@ using LexiFlow.Models.Scheduling;
 using LexiFlow.Models.System;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
+using LexiFlow.Models.Users.UserRelations;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Linq;

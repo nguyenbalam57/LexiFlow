@@ -1,4 +1,4 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Core;
 using LexiFlow.Models.Exam;
 using LexiFlow.Models.Learning.Grammar;
 using LexiFlow.Models.Learning.Kanji;
@@ -14,6 +14,7 @@ using LexiFlow.Models.Sync;
 using LexiFlow.Models.System;
 using LexiFlow.Models.User;
 using LexiFlow.Models.User.UserRelations;
+using LexiFlow.Models.Users.UserRelations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

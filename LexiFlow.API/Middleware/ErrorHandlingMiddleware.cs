@@ -1,4 +1,4 @@
-﻿using LexiFlow.API.DTOs.Auth;
+using LexiFlow.API.DTOs.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
@@ -16,91 +16,53 @@ namespace LexiFlow.API.Middleware
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
         public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Xử lý request
-        /// </summary>
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
+                // BỎ QUA hoàn toàn các Swagger requests
+                var path = context.Request.Path.Value?.ToLower();
+                if (path != null && path.StartsWith("/swagger"))
+                {
+                    await _next(context);
+                    return;
+                }
+
                 await _next(context);
             }
             catch (Exception ex)
             {
-                await HandleExceptionAsync(context, ex);
+                // CHỈ xử lý lỗi khi response chưa start
+                if (!context.Response.HasStarted)
+                {
+                    await HandleExceptionAsync(context, ex);
+                }
+                else
+                {
+                    _logger.LogError(ex, "Cannot handle exception - response already started");
+                }
             }
         }
 
-        /// <summary>
-        /// Xử lý exception
-        /// </summary>
-        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            _logger.LogError(exception, "An unhandled exception occurred");
-
-            var statusCode = HttpStatusCode.InternalServerError;
-            var message = "An unexpected error occurred. Please try again later.";
-            string errorCode = "INTERNAL_SERVER_ERROR";
-
-            // Determine status code and message based on exception type
-            if (exception is UnauthorizedAccessException)
-            {
-                statusCode = HttpStatusCode.Unauthorized;
-                message = "Unauthorized access";
-                errorCode = "UNAUTHORIZED";
-            }
-            else if (exception is ArgumentException)
-            {
-                statusCode = HttpStatusCode.BadRequest;
-                message = exception.Message;
-                errorCode = "BAD_REQUEST";
-            }
-            else if (exception is KeyNotFoundException)
-            {
-                statusCode = HttpStatusCode.NotFound;
-                message = "The requested resource was not found";
-                errorCode = "NOT_FOUND";
-            }
-
-            // Set response details
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)statusCode;
+            context.Response.StatusCode = 500;
 
-            // Create error response
-            var errorResponse = new ErrorResponse
+            var response = new
             {
-                Message = message,
-                ErrorCode = errorCode
+                error = "Internal server error",
+                message = exception.Message
             };
 
-            // Add exception details in development environment
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-            {
-                errorResponse.Details = new
-                {
-                    ExceptionType = exception.GetType().Name,
-                    ExceptionMessage = exception.Message,
-                    StackTrace = exception.StackTrace
-                };
-            }
-
-            // Serialize and write response
-            var jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            var json = JsonSerializer.Serialize(errorResponse, jsonOptions);
-            await context.Response.WriteAsync(json);
+            var jsonResponse = JsonSerializer.Serialize(response);
+            await context.Response.WriteAsync(jsonResponse);
         }
     }
 }

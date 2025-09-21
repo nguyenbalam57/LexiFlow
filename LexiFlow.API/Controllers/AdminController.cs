@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 namespace LexiFlow.API.Controllers
 {
     /// <summary>
-    /// Controller qu?n l� h? th?ng d�nh cho Admin
+    /// Controller qu?n lý h? th?ng dành cho Admin
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -33,7 +33,7 @@ namespace LexiFlow.API.Controllers
                 {
                     SystemStats = new SystemStatsDto
                     {
-                        TotalUsers = 1250,
+                        TotalUsers = 1251,
                         ActiveUsers = 890,
                         NewUsersToday = 15,
                         TotalContent = 5500,
@@ -115,7 +115,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Qu?n l� ng??i d�ng
+        /// Quản lý người dung
         /// </summary>
         [HttpGet("users")]
         public async Task<ActionResult<PaginatedResultDto<AdminUserDto>>> GetUsers(
@@ -209,7 +209,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// C?p nh?t tr?ng th�i ng??i d�ng
+        /// Cập nhật trạng thái người dùng
         /// </summary>
         [HttpPut("users/{userId}/status")]
         public async Task<ActionResult> UpdateUserStatus(int userId, [FromBody] UpdateUserStatusDto updateDto)
@@ -242,7 +242,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Qu?n l� quy?n ng??i d�ng
+        /// Quản lý vai trò người dùng
         /// </summary>
         [HttpPost("users/{userId}/roles")]
         public async Task<ActionResult> AssignRole(int userId, [FromBody] AssignRoleDto assignDto)
@@ -276,7 +276,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Qu?n l� n?i dung ch? duy?t
+        /// Quản lý nội dung chờ duyệt
         /// </summary>
         [HttpGet("content/pending")]
         public async Task<ActionResult<PaginatedResultDto<PendingContentDto>>> GetPendingContent(
@@ -351,7 +351,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Duy?t/t? ch?i n?i dung
+        /// Duyệt hoặc từ chối nội dung
         /// </summary>
         [HttpPost("content/{contentId}/review")]
         public async Task<ActionResult> ReviewContent(int contentId, [FromBody] ContentReviewDto reviewDto)
@@ -386,7 +386,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// B�o c�o h? th?ng
+        /// Báo cáo hệ thống
         /// </summary>
         [HttpGet("reports/system")]
         public async Task<ActionResult<SystemReportDto>> GetSystemReport(
@@ -448,7 +448,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Qu?n l� c�i ??t h? th?ng
+        /// Quản lý cài đặt hệ thống
         /// </summary>
         [HttpGet("settings")]
         public async Task<ActionResult<List<SystemSettingDto>>> GetSystemSettings([FromQuery] string? category = null)
@@ -508,7 +508,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// C?p nh?t c�i ??t h? th?ng
+        /// Cập nhật cài đặt hệ thống
         /// </summary>
         [HttpPut("settings/{settingId}")]
         public async Task<ActionResult> UpdateSystemSetting(int settingId, [FromBody] UpdateSettingDto updateDto)
@@ -542,7 +542,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Logs h? th?ng
+        /// Logs hệ thống
         /// </summary>
         [HttpGet("logs")]
         public async Task<ActionResult<PaginatedResultDto<SystemLogDto>>> GetSystemLogs(
@@ -636,7 +636,7 @@ namespace LexiFlow.API.Controllers
         }
 
         /// <summary>
-        /// Backup d? li?u
+        /// Backup dữ liệu
         /// </summary>
         [HttpPost("backup")]
         public async Task<ActionResult> CreateBackup([FromBody] BackupRequestDto backupDto)

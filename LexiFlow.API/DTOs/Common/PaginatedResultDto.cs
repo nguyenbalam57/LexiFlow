@@ -21,6 +21,7 @@ namespace LexiFlow.API.DTOs.Common
 
         public PaginatedResultDto()
         {
+
         }
 
         public PaginatedResultDto(List<T> items, int totalCount, int pageNumber, int pageSize)

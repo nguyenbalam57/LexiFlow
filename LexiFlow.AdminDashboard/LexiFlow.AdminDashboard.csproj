@@ -31,7 +31,21 @@
     <PackageReference Include="OxyPlot.Core" Version="2.2.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.Json" Version="9.0.7" />
+  </ItemGroup>
+
+  <!-- Configuration Files -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -43,5 +57,12 @@
     <ProjectReference Include="..\LexiFlow.Infrastructure\LexiFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\LexiFlow.Models\LexiFlow.Models.csproj" />
   </ItemGroup>
-
+	<!-- Custom target to ensure config files are copied -->
+	<Target Name="CopyConfigFiles" AfterTargets="Build">
+		<ItemGroup>
+			<ConfigFiles Include="appsettings*.json" />
+		</ItemGroup>
+		<Copy SourceFiles="@(ConfigFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+		<Message Text="Configuration files copied to output directory" Importance="high" />
+	</Target>
 </Project>

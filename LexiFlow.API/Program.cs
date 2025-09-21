@@ -184,76 +184,46 @@ var app = builder.Build();
 // Logger để ghi log trong pipeline
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-// ===== CẤU HÌNH PIPELINE - ĐÃ SỬA LỖI CONTENT-LENGTH =====
+// ===== CẤU HÌNH PIPELINE - THỨ TỰ CHÍNH XÁC =====
 
-// 1. Error handling middleware phải đặt đầu tiên
-app.UseMiddleware<ErrorHandlingMiddleware>();
-
+// 1. SWAGGER PHẢI ĐẶT ĐẦU TIÊN, TRƯỚC TẤT CẢ MIDDLEWARE KHÁC
 if (app.Environment.IsDevelopment())
 {
-    // 2. Swagger đặt sớm, TRƯỚC static files và logging
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
         c.RoutePrefix = "swagger";
-        c.DocumentTitle = "LexiFlow API - Japanese Learning Platform";
-        c.DisplayRequestDuration();
-        c.EnableTryItOutByDefault();
-        c.ShowExtensions();
-        c.EnableValidator();
-
-        // BỎ INJECT CSS/JS VÀO SWAGGER UI để tránh xung đột
-        // c.InjectStylesheet("/css/lexiflow-api.css");
-        // c.InjectJavascript("/js/lexiflow-api.js");
-
-        // Custom configuration for better UX
-        c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object>
-        {
-            ["activated"] = true,
-            ["theme"] = "agate"
-        };
     });
 
-    logger.LogInformation("Development mode: Enhanced Swagger UI enabled at /swagger");
-}
-else
-{
-    // Production: Standard Swagger
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LexiFlow API v1");
-        c.RoutePrefix = "swagger";
-        c.DocumentTitle = "LexiFlow API Documentation";
-        // Tạm thời bỏ inject CSS trong production
-        // c.InjectStylesheet("/css/lexiflow-api.css");
-    });
-
-    // Enable HTTPS redirection in production
-    if (builder.Configuration.GetValue<bool>("Security:RequireHttps", true))
-    {
-        app.UseHttpsRedirection();
-    }
-
-    logger.LogInformation("Production mode: Standard Swagger UI");
+    logger.LogInformation("Development mode: Swagger UI enabled at /swagger");
 }
 
-// 3. Static files với cấu hình đơn giản hơn
+// 2. ERROR HANDLING - đặt SAU Swagger để không can thiệp
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
+// 3. STATIC FILES - cấu hình để không xung đột với Swagger
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        // Đơn giản hóa cache headers để tránh xung đột
-        var cachePeriod = app.Environment.IsDevelopment() ? "3600" : "86400"; // 1h dev, 1 day prod
-        ctx.Context.Response.Headers.Append("Cache-Control", $"public, max-age={cachePeriod}");
+        // Chỉ cache cho non-swagger requests
+        var path = ctx.Context.Request.Path.Value?.ToLower();
+        if (path != null && !path.StartsWith("/swagger"))
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=3600");
+        }
     }
 });
 
-// 4. Default files
-app.UseDefaultFiles();
+// 4. DEFAULT FILES chỉ cho root path, không ảnh hưởng swagger
+app.UseDefaultFiles(new DefaultFilesOptions
+{
+    RequestPath = "",
+    DefaultFileNames = new List<string> { "index.html" }
+});
 
-// 5. Request logging với cấu hình tối ưu để tránh xung đột với Swagger
+// 5. REQUEST LOGGING với filter Swagger
 app.UseSerilogRequestLogging(options =>
 {
     options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
@@ -261,38 +231,15 @@ app.UseSerilogRequestLogging(options =>
     {
         var path = httpContext.Request.Path.Value?.ToLower();
 
-        // TRÁNH LOG SWAGGER REQUESTS để giảm xung đột
-        if (path != null && (path.StartsWith("/swagger") ||
-                           path.Contains("swagger.json") ||
-                           path.EndsWith(".css") ||
-                           path.EndsWith(".js") ||
-                           path.EndsWith(".html") ||
-                           path.EndsWith(".ico") ||
-                           path.EndsWith(".png")))
+        // SILENT logging cho Swagger để tránh spam
+        if (path != null && (path.StartsWith("/swagger") || path.Contains("swagger")))
         {
-            return Serilog.Events.LogEventLevel.Verbose; // Thay đổi từ Debug sang Verbose
+            return Serilog.Events.LogEventLevel.Verbose;
         }
 
-        if (ex != null)
-            return Serilog.Events.LogEventLevel.Error;
-
-        if (httpContext.Response.StatusCode >= 400)
-            return Serilog.Events.LogEventLevel.Warning;
-
+        if (ex != null) return Serilog.Events.LogEventLevel.Error;
+        if (httpContext.Response.StatusCode >= 400) return Serilog.Events.LogEventLevel.Warning;
         return Serilog.Events.LogEventLevel.Information;
-    };
-
-    // BỎ QUA một số requests để giảm xung đột
-    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-    {
-        var path = httpContext.Request.Path.Value?.ToLower();
-        if (path != null && path.StartsWith("/swagger"))
-        {
-            return; // Không enrich cho Swagger requests
-        }
-
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
     };
 });
 
@@ -303,9 +250,12 @@ app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 8. Map endpoints cuối cùng
+// 8. Map endpoints
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// 9. Fallback cho SPA - ĐẶT CUỐI CÙNG
+app.MapFallbackToFile("index.html");
 
 // ===== KHỞI TẠO DATABASE =====
 // Khởi tạo database với xử lý lỗi cải thiện
@@ -355,6 +305,7 @@ try
     Log.Information("🏠 Trang chủ: http://localhost:5117/");
     Log.Information("📚 Swagger UI: http://localhost:5117/swagger");
     Log.Information("💚 Health Check: http://localhost:5117/health");
+    Log.Information("💚 Swagger JSON middleware: http://localhost:5117/swagger/v1/swagger.json");
     Log.Information("Ctrl + C : Shutdown API");
     app.Run();
     return 0;
