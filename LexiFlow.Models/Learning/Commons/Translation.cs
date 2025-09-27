@@ -1,6 +1,9 @@
 using LexiFlow.Models.Cores;
 using LexiFlow.Models.Learning.Grammars;
+using LexiFlow.Models.Learning.Kanjis;
 using LexiFlow.Models.Learning.TechnicalTerms;
+using LexiFlow.Models.Learning.Vocabularys;
+using LexiFlow.Models.Medias;
 using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -24,20 +27,32 @@ namespace LexiFlow.Models.Learning.Commons
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TranslationId { get; set; }
 
-        public int? VocabularyId { get; set; }
-
         public int? GrammarId { get; set; }
+
+        public int? KanjiId { get; set; }
 
         public int? TermId { get; set; }
 
-        public int? KanjiId { get; set; }
+        public int? VocabularyId { get; set; }
+
+        public int? ExampleId { get; set; } // Liên kết đến ví dụ (nếu có)
 
         [Required]
         public string Text { get; set; }
 
+        /// <summary>
+        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// </summary>
+        /// <value>
+        /// Code chuẩn ISO 639-1:
+        /// - "ja": Tiếng Nhật (mặc định)
+        /// - "en": Tiếng Anh
+        /// - "vi": Tiếng Việt
+        /// Mặc định: "ja"
+        /// </value>
         [Required]
         [StringLength(10)]
-        public string LanguageCode { get; set; } = "vi"; // Ngôn ngữ của bản dịch
+        public string LanguageCode { get; set; } = "vi"; // Ngôn ngữ định nghĩa
 
         // Cải tiến: Phân loại và hiển thị
         public bool IsPrimary { get; set; } = false; // Là bản dịch chính
@@ -56,13 +71,6 @@ namespace LexiFlow.Models.Learning.Commons
         [StringLength(255)]
         public string Source { get; set; } // Nguồn tham khảo
 
-        // Cải tiến: Trạng thái
-        public bool IsVerified { get; set; } = false; // Đã được xác minh
-
-        public int? VerifiedBy { get; set; } // Người xác minh
-
-        public DateTime? VerifiedAt { get; set; } // Thời gian phê duyệt
-
         // Cải tiến: Độ tin cậy của bản dịch
         public int Accuracy { get; set; } = 100; // 0-100
 
@@ -70,29 +78,27 @@ namespace LexiFlow.Models.Learning.Commons
         [Range(1, 5)]
         public int? Frequency { get; set; } // Tần suất sử dụng (1-5)
 
-        public bool IsArchaic { get; set; } = false; // Nghĩa cổ, sử dụng cho Kanji
+        public bool IsArchaic { get; set; } = false; // Nghĩa cổ
 
         public bool IsMachineTranslated { get; set; } = false;
-
-        // Navigation properties
-
-        [ForeignKey("KanjiId")]
-        public virtual Kanji Kanji { get; set; }
-
-        [ForeignKey("VocabularyId")]
-        public virtual Vocabulary Vocabulary { get; set; }
 
         // Navigation properties
         [ForeignKey("GrammarId")]
         public virtual Grammar Grammar { get; set; }
 
-        // Navigation properties
+        [ForeignKey("KanjiId")]
+        public virtual Kanji Kanji { get; set; }
+
         [ForeignKey("TermId")]
         public virtual TechnicalTerm Term { get; set; }
 
-        [ForeignKey("VerifiedBy")]
-        public virtual User VerifiedByUser { get; set; }
+        [ForeignKey("VocabularyId")]
+        public virtual Vocabulary Vocabulary { get; set; }
 
-        public ICollection<Example> Examples { get; set; }
+        [ForeignKey("ExampleId")]
+        public virtual Example Example { get; set; }
+
+        public virtual ICollection<MediaFile> MediaFiles { get; set; }
+
     }
 }

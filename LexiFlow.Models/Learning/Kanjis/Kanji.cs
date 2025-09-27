@@ -8,6 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Users;
+using LexiFlow.Models.Medias;
 
 namespace LexiFlow.Models.Learning.Kanjis
 {
@@ -19,7 +22,7 @@ namespace LexiFlow.Models.Learning.Kanjis
     [Index(nameof(JLPTLevel), Name = "IX_Kanji_JLPT")]
     [Index(nameof(StrokeCount), Name = "IX_Kanji_StrokeCount")]
     [Index(nameof(Grade), Name = "IX_Kanji_Grade")]
-    public class Kanji : AuditableEntity
+    public class Kanji : BaseLearning
     {
         /// <summary>
         /// ID duy nhất của ký tự Kanji
@@ -54,6 +57,20 @@ namespace LexiFlow.Models.Learning.Kanjis
         /// </summary>
         [StringLength(200)]
         public string OtherReadings { get; set; }
+
+        /// <summary>
+        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// </summary>
+        /// <value>
+        /// Code chuẩn ISO 639-1:
+        /// - "ja": Tiếng Nhật (mặc định)
+        /// - "en": Tiếng Anh
+        /// - "vi": Tiếng Việt
+        /// Mặc định: "ja"
+        /// </value>
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja"; // Ngôn ngữ định nghĩa
 
         /// <summary>
         /// Số nét của ký tự Kanji
@@ -194,33 +211,11 @@ namespace LexiFlow.Models.Learning.Kanjis
         /// </summary>
         public string ComponentsJson { get; set; }
 
-        // Soft delete fields
-        /// <summary>
-        /// Trạng thái xóa mềm
-        /// </summary>
-        public bool IsDeleted { get; set; } = false;
-
-        /// <summary>
-        /// Thời gian xóa
-        /// </summary>
-        public DateTime? DeletedAt { get; set; }
-
-        /// <summary>
-        /// ID người xóa
-        /// </summary>
-        public int? DeletedBy { get; set; }
-
-        /// <summary>
-        /// Trạng thái của Kanji (Active, Pending, Rejected, etc.)
-        /// </summary>
-        [StringLength(50)]
-        public string Status { get; set; } = "Active";
-
         /// <summary>
         /// Nguồn dữ liệu (Database, User, Import, etc.)
         /// </summary>
         [StringLength(50)]
-        public string DataSource { get; set; } = "Database";
+        public string Source { get; set; } = "Database";
 
         /// <summary>
         /// ID từ nguồn bên ngoài (nếu import)
@@ -269,58 +264,31 @@ namespace LexiFlow.Models.Learning.Kanjis
         public bool NeedsReview { get; set; } = false;
 
         /// <summary>
-        /// Có được kiểm duyệt chưa
-        /// </summary>
-        public bool IsVerified { get; set; } = false;
-
-        /// <summary>
-        /// Thời gian kiểm duyệt
-        /// </summary>
-        public DateTime? VerifiedAt { get; set; }
-
-        /// <summary>
-        /// ID người kiểm duyệt
-        /// </summary>
-        public int? VerifiedBy { get; set; }
-
-        /// <summary>
         /// Ghi chú nội bộ (chỉ admin)
         /// </summary>
         public string InternalNotes { get; set; }
-
-        /// <summary>
-        /// Metadata bổ sung (JSON format)
-        /// </summary>
-        public string MetadataJson { get; set; }
 
         // Navigation properties
         /// <summary>
         /// Danh mục Kanji thuộc về
         /// </summary>
         [ForeignKey("CategoryId")]
-        public virtual Vocabulary.Category Category { get; set; }
-
-        /// <summary>
-        /// Người xóa Kanji
-        /// </summary>
-        [ForeignKey("DeletedBy")]
-        public virtual User.User DeletedByUser { get; set; }
-
-        /// <summary>
-        /// Người kiểm duyệt
-        /// </summary>
-        [ForeignKey("VerifiedBy")]
-        public virtual User.User VerifiedByUser { get; set; }
+        public virtual Category Category { get; set; }
 
         /// <summary>
         /// Danh sách nghĩa của Kanji
         /// </summary>
-        public virtual ICollection<KanjiMeaning> Meanings { get; set; }
+        public virtual ICollection<Translation> Translations { get; set; }
 
         /// <summary>
         /// Danh sách ví dụ sử dụng Kanji
         /// </summary>
-        public virtual ICollection<KanjiExample> Examples { get; set; }
+        public virtual ICollection<Example> Examples { get; set; }
+
+        /// <summary>
+        /// Danh sách định nghĩa chi tiết
+        /// </summary>
+        public virtual ICollection<Definition> Definitions { get; set; }
 
         /// <summary>
         /// Danh sách mapping với các component
@@ -335,7 +303,7 @@ namespace LexiFlow.Models.Learning.Kanjis
         /// <summary>
         /// Danh sách file media liên quan (hình ảnh stroke order, âm thanh, etc.)
         /// </summary>
-        public virtual ICollection<Media.MediaFile> MediaFiles { get; set; }
+        public virtual ICollection<MediaFile> MediaFiles { get; set; }
 
         /// <summary>
         /// Danh sách tiến trình học tập của users
@@ -513,31 +481,6 @@ namespace LexiFlow.Models.Learning.Kanjis
         }
 
         /// <summary>
-        /// Xác thực Kanji
-        /// </summary>
-        /// <param name="verifiedBy">ID người xác thực</param>
-        public virtual void Verify(int verifiedBy)
-        {
-            IsVerified = true;
-            VerifiedAt = DateTime.UtcNow;
-            VerifiedBy = verifiedBy;
-            Status = "Active";
-            UpdateTimestamp();
-        }
-
-        /// <summary>
-        /// Hủy xác thực
-        /// </summary>
-        public virtual void Unverify()
-        {
-            IsVerified = false;
-            VerifiedAt = null;
-            VerifiedBy = null;
-            Status = "Pending";
-            UpdateTimestamp();
-        }
-
-        /// <summary>
         /// Đánh dấu cần xem xét lại
         /// </summary>
         /// <param name="reason">Lý do cần xem xét</param>
@@ -562,41 +505,6 @@ namespace LexiFlow.Models.Learning.Kanjis
             ContentVersion++;
             LastContentUpdate = DateTime.UtcNow;
             UpdateModification(updatedBy, $"Cập nhật nội dung - Version {ContentVersion}");
-        }
-
-        /// <summary>
-        /// Soft delete Kanji
-        /// </summary>
-        /// <param name="deletedBy">ID người xóa</param>
-        /// <param name="reason">Lý do xóa</param>
-        public virtual void SoftDelete(int deletedBy, string reason = null)
-        {
-            IsDeleted = true;
-            DeletedAt = DateTime.UtcNow;
-            DeletedBy = deletedBy;
-            Status = "Deleted";
-            
-            if (!string.IsNullOrEmpty(reason))
-            {
-                InternalNotes = string.IsNullOrEmpty(InternalNotes) 
-                    ? $"Xóa: {reason}" 
-                    : $"{InternalNotes}\nXóa: {reason}";
-            }
-            
-            UpdateModification(deletedBy, $"Xóa Kanji: {reason}");
-        }
-
-        /// <summary>
-        /// Khôi phục Kanji đã xóa
-        /// </summary>
-        /// <param name="restoredBy">ID người khôi phục</param>
-        public virtual void Restore(int restoredBy)
-        {
-            IsDeleted = false;
-            DeletedAt = null;
-            DeletedBy = null;
-            Status = "Active";
-            UpdateModification(restoredBy, "Khôi phục Kanji");
         }
 
         /// <summary>

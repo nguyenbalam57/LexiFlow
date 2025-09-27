@@ -1,4 +1,6 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Medias;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,17 +11,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Learning.Kanji
+namespace LexiFlow.Models.Learning.Kanjis
 {
     /// <summary>
     /// Thành phần cấu tạo của Kanji
     /// </summary>
     [Index(nameof(Character), IsUnique = true, Name = "IX_KanjiComponent_Character")]
-    public class KanjiComponent : BaseEntity
+    public class KanjiComponent : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ComponentId { get; set; }
+        public int KanjiComponentId { get; set; }
 
         [Required]
         [StringLength(10)]
@@ -51,32 +53,21 @@ namespace LexiFlow.Models.Learning.Kanji
         [StringLength(255)]
         public string StrokeOrder { get; set; } // Thứ tự viết nét
 
-        // Cải tiến: Hiển thị và phân loại
-        [StringLength(255)]
-        public string ImageUrl { get; set; } // Đường dẫn hình ảnh
-
         [StringLength(50)]
         public string VariantOf { get; set; } // Biến thể của component khác
 
         public bool IsCommon { get; set; } = true; // Có phải thành phần phổ biến
 
-        // Cải tiến: Thông tin bổ sung
-        [StringLength(255)]
-        public string Example { get; set; } // Ví dụ Kanji chứa thành phần này
-
         [StringLength(100)]
         public string Variants { get; set; } // Các biến thể
 
-        public int CreatedBy { get; set; }
-
-        // Cải tiến: Trạng thái
-        public bool IsActive { get; set; } = true;
         public DateTime? DeprecatedAt { get; set; }
 
         // Navigation properties
-        [ForeignKey("CreatedBy")]
-        public virtual User.User CreatedByUser { get; set; }
-
         public virtual ICollection<KanjiComponentMapping> ComponentMappings { get; set; }
+
+        public virtual ICollection<Example> Examples { get; set; }
+
+        public virtual ICollection<MediaFile> Medias { get; set; }
     }
 }

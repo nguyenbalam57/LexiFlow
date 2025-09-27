@@ -1,7 +1,9 @@
-﻿using LexiFlow.Models.Core;
-using LexiFlow.Models.Learning.Kanji;
-using LexiFlow.Models.Media;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Learning.Kanjis;
+using LexiFlow.Models.Medias;
 using LexiFlow.Models.Progress;
+using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
-namespace LexiFlow.Models.Learning.Vocabulary
+namespace LexiFlow.Models.Learning.Vocabularys
 {
     /// <summary>
     /// Mô hình từ vựng tiếng Nhật - lưu trữ thông tin chi tiết về từ vựng
@@ -19,14 +21,14 @@ namespace LexiFlow.Models.Learning.Vocabulary
     [Index(nameof(CategoryId), Name = "IX_Vocabulary_Category")]
     [Index(nameof(Level), Name = "IX_Vocabulary_Level")]
     [Index(nameof(IsCommon), Name = "IX_Vocabulary_IsCommon")]
-    public class Vocabulary : AuditableEntity, ISoftDeletable
+    public class Vocabulary : BaseLearning
     {
         /// <summary>
         /// ID duy nhất của từ vựng
         /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int VocabularyId { get; set; }
 
         /// <summary>
         /// Từ vựng (bằng tiếng Nhật hoặc ngôn ngữ gốc)
@@ -36,23 +38,28 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public string Term { get; set; }
 
         /// <summary>
-        /// Mã ngôn ngữ (ja = tiếng Nhật, en = tiếng Anh, vi = tiếng Việt)
-        /// </summary>
-        [Required]
-        [StringLength(10)]
-        public string LanguageCode { get; set; } = "ja";
-
-        /// <summary>
         /// Cách đọc của từ (Hiragana/Katakana cho tiếng Nhật)
         /// </summary>
-        [StringLength(200)]
         public string Reading { get; set; }
 
         /// <summary>
         /// Cách đọc phụ (nếu có nhiều cách đọc)
         /// </summary>
-        [StringLength(200)]
         public string AlternativeReadings { get; set; }
+
+        /// <summary>
+        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// </summary>
+        /// <value>
+        /// Code chuẩn ISO 639-1:
+        /// - "ja": Tiếng Nhật (mặc định)
+        /// - "en": Tiếng Anh
+        /// - "vi": Tiếng Việt
+        /// Mặc định: "ja"
+        /// </value>
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja"; // Ngôn ngữ định nghĩa
 
         /// <summary>
         /// Cấp độ JLPT (N5, N4, N3, N2, N1)
@@ -77,12 +84,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// </summary>
         [Range(1, 10)]
         public int FrequencyRank { get; set; } = 5;
-
-        /// <summary>
-        /// Ký hiệu phiên âm quốc tế IPA (nếu có)
-        /// </summary>
-        [StringLength(100)]
-        public string IpaNotation { get; set; }
 
         /// <summary>
         /// Có phải từ thông dụng không
@@ -126,25 +127,28 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// Bối cảnh sử dụng (business, casual, academic, etc.)
         /// </summary>
         [StringLength(100)]
-        public string UsageContext { get; set; }
+        public string Context { get; set; }
 
         /// <summary>
         /// Ghi chú về cách sử dụng
         /// </summary>
-        public string UsageNotes { get; set; }
+        public string Notes { get; set; }
 
         /// <summary>
         /// Từ đồng nghĩa (JSON format)
+        /// Hỗ trợ lưu nhiều từ đồng nghĩa và dạng danh sách Id
         /// </summary>
         public string SynonymsJson { get; set; }
 
         /// <summary>
         /// Từ trái nghĩa (JSON format)
+        /// Hỗ trợ lưu nhiều từ trái nghĩa và dạng danh sách Id
         /// </summary>
         public string AntonymsJson { get; set; }
 
         /// <summary>
         /// Từ liên quan (JSON format)
+        /// Hỗ trợ lưu nhiều từ liên quan và dạng danh sách Id
         /// </summary>
         public string RelatedWordsJson { get; set; }
 
@@ -162,27 +166,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// Từ khóa tìm kiếm bổ sung
         /// </summary>
         public string SearchKeywords { get; set; }
-
-        /// <summary>
-        /// Trạng thái xóa mềm
-        /// </summary>
-        public bool IsDeleted { get; set; } = false;
-
-        /// <summary>
-        /// Thời gian xóa
-        /// </summary>
-        public DateTime? DeletedAt { get; set; }
-
-        /// <summary>
-        /// ID người xóa
-        /// </summary>
-        public int? DeletedBy { get; set; }
-
-        /// <summary>
-        /// Trạng thái của từ vựng (Active, Pending, Rejected, etc.)
-        /// </summary>
-        [StringLength(50)]
-        public string Status { get; set; } = "Active";
 
         /// <summary>
         /// Nguồn gốc của từ (Dictionary, User, Import, etc.)
@@ -222,44 +205,14 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public int RatingCount { get; set; } = 0;
 
         /// <summary>
-        /// Thời gian cập nhật nội dung cuối cùng
-        /// </summary>
-        public DateTime? LastContentUpdate { get; set; }
-
-        /// <summary>
-        /// Phiên bản của nội dung
-        /// </summary>
-        public int ContentVersion { get; set; } = 1;
-
-        /// <summary>
         /// Có cần xem xét lại không
         /// </summary>
         public bool NeedsReview { get; set; } = false;
 
         /// <summary>
-        /// Có được kiểm duyệt chưa
-        /// </summary>
-        public bool IsVerified { get; set; } = false;
-
-        /// <summary>
-        /// Thời gian kiểm duyệt
-        /// </summary>
-        public DateTime? VerifiedAt { get; set; }
-
-        /// <summary>
-        /// ID người kiểm duyệt
-        /// </summary>
-        public int? VerifiedBy { get; set; }
-
-        /// <summary>
         /// Ghi chú nội bộ (chỉ admin)
         /// </summary>
         public string InternalNotes { get; set; }
-
-        /// <summary>
-        /// Metadata bổ sung (JSON format)
-        /// </summary>
-        public string MetadataJson { get; set; }
 
         // Navigation properties
         /// <summary>
@@ -267,18 +220,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// </summary>
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
-
-        /// <summary>
-        /// Người xóa từ vựng
-        /// </summary>
-        [ForeignKey("DeletedBy")]
-        public virtual User.User DeletedByUser { get; set; }
-
-        /// <summary>
-        /// Người kiểm duyệt
-        /// </summary>
-        [ForeignKey("VerifiedBy")]
-        public virtual User.User VerifiedByUser { get; set; }
 
         /// <summary>
         /// Danh sách định nghĩa của từ
@@ -497,31 +438,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         }
 
         /// <summary>
-        /// Xác thực từ vựng
-        /// </summary>
-        /// <param name="verifiedBy">ID người xác thực</param>
-        public virtual void Verify(int verifiedBy)
-        {
-            IsVerified = true;
-            VerifiedAt = DateTime.UtcNow;
-            VerifiedBy = verifiedBy;
-            Status = "Active";
-            UpdateTimestamp();
-        }
-
-        /// <summary>
-        /// Hủy xác thực
-        /// </summary>
-        public virtual void Unverify()
-        {
-            IsVerified = false;
-            VerifiedAt = null;
-            VerifiedBy = null;
-            Status = "Pending";
-            UpdateTimestamp();
-        }
-
-        /// <summary>
         /// Đánh dấu cần xem xét lại
         /// </summary>
         /// <param name="reason">Lý do cần xem xét</param>
@@ -535,52 +451,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
                     : $"{InternalNotes}\nCần xem xét: {reason}";
             }
             UpdateTimestamp();
-        }
-
-        /// <summary>
-        /// Cập nhật nội dung và tăng version
-        /// </summary>
-        /// <param name="updatedBy">ID người cập nhật</param>
-        public virtual void UpdateContent(int updatedBy)
-        {
-            ContentVersion++;
-            LastContentUpdate = DateTime.UtcNow;
-            UpdateModification(updatedBy, $"Cập nhật nội dung - Version {ContentVersion}");
-        }
-
-        /// <summary>
-        /// Soft delete từ vựng
-        /// </summary>
-        /// <param name="deletedBy">ID người xóa</param>
-        /// <param name="reason">Lý do xóa</param>
-        public virtual void SoftDelete(int deletedBy, string reason = null)
-        {
-            IsDeleted = true;
-            DeletedAt = DateTime.UtcNow;
-            DeletedBy = deletedBy;
-            Status = "Deleted";
-            
-            if (!string.IsNullOrEmpty(reason))
-            {
-                InternalNotes = string.IsNullOrEmpty(InternalNotes) 
-                    ? $"Xóa: {reason}" 
-                    : $"{InternalNotes}\nXóa: {reason}";
-            }
-            
-            UpdateModification(deletedBy, $"Xóa từ vựng: {reason}");
-        }
-
-        /// <summary>
-        /// Khôi phục từ vựng đã xóa
-        /// </summary>
-        /// <param name="restoredBy">ID người khôi phục</param>
-        public virtual void Restore(int restoredBy)
-        {
-            IsDeleted = false;
-            DeletedAt = null;
-            DeletedBy = null;
-            Status = "Active";
-            UpdateModification(restoredBy, "Khôi phục từ vựng");
         }
 
         /// <summary>

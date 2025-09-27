@@ -1,5 +1,5 @@
 using LexiFlow.Models.Cores;
-using LexiFlow.Models.Learning.Grammar;
+using LexiFlow.Models.Learning.Commons;
 using LexiFlow.Models.Medias;
 using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
@@ -29,14 +29,14 @@ namespace LexiFlow.Models.Learning.Grammars
     /// </remarks>
     [Index(nameof(Pattern), IsUnique = true, Name = "IX_Grammar_Pattern")]
     [Index(nameof(Level), Name = "IX_Grammar_Level")]
-    public class Grammar : AuditableEntity
+    public class Grammar : BaseLearning
     {
         /// <summary>
         /// Khóa chính của bảng grammar
         /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int GrammarId { get; set; }
 
         #region Thông tin cơ bản
 
@@ -54,20 +54,6 @@ namespace LexiFlow.Models.Learning.Grammars
         [Required]
         [StringLength(255)]
         public string Pattern { get; set; }
-
-        /// <summary>
-        /// Mã ngôn ngữ của pattern ngữ pháp
-        /// </summary>
-        /// <value>
-        /// Code chuẩn ISO 639-1:
-        /// - "ja": Tiếng Nhật (mặc định)
-        /// - "en": Tiếng Anh
-        /// - "vi": Tiếng Việt
-        /// Mặc định: "ja"
-        /// </value>
-        [Required]
-        [StringLength(10)]
-        public string LanguageCode { get; set; } = "ja";
 
         /// <summary>
         /// Cách đọc của pattern ngữ pháp bằng hiragana/katakana
@@ -170,6 +156,20 @@ namespace LexiFlow.Models.Learning.Grammars
         /// Mặc định: false
         /// </value>
         public bool IsPast { get; set; } = false;
+
+        /// <summary>
+        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// </summary>
+        /// <value>
+        /// Code chuẩn ISO 639-1:
+        /// - "ja": Tiếng Nhật (mặc định)
+        /// - "en": Tiếng Anh
+        /// - "vi": Tiếng Việt
+        /// Mặc định: "ja"
+        /// </value>
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja"; // Ngôn ngữ định nghĩa
 
         #endregion
 
@@ -286,22 +286,6 @@ namespace LexiFlow.Models.Learning.Grammars
 
         #endregion
 
-        #region Status
-
-        /// <summary>
-        /// Trạng thái hiện tại của điểm ngữ pháp
-        /// </summary>
-        /// <value>
-        /// Các trạng thái hợp lệ:
-        /// - "Active": Đang hoạt động (mặc định)
-        /// - "Draft": Bản nháp, chưa publish
-        /// - "Review": Đang chờ duyệt
-        /// - "Deprecated": Không còn sử dụng
-        /// </value>
-        public string Status { get; set; } = "Active";
-
-        #endregion
-
         #region Navigation Properties
 
         /// <summary>
@@ -326,19 +310,19 @@ namespace LexiFlow.Models.Learning.Grammars
         /// Danh sách các định nghĩa chi tiết của điểm ngữ pháp
         /// </summary>
         /// <value>Collection chứa định nghĩa bằng nhiều ngôn ngữ khác nhau</value>
-        public virtual ICollection<GrammarDefinition> Definitions { get; set; }
+        public virtual ICollection<Definition> Definitions { get; set; }
 
         /// <summary>
         /// Danh sách các ví dụ minh họa cách sử dụng
         /// </summary>
         /// <value>Collection chứa câu ví dụ với bản dịch và giải thích</value>
-        public virtual ICollection<GrammarExample> Examples { get; set; }
+        public virtual ICollection<Example> Examples { get; set; }
 
         /// <summary>
         /// Danh sách các bản dịch của pattern sang ngôn ngữ khác
         /// </summary>
         /// <value>Collection chứa bản dịch sang tiếng Việt, Anh, v.v.</value>
-        public virtual ICollection<GrammarTranslation> Translations { get; set; }
+        public virtual ICollection<Translation> Translations { get; set; }
 
         /// <summary>
         /// Danh sách file media (âm thanh, hình ảnh) liên quan

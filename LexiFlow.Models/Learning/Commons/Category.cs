@@ -1,15 +1,10 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Cores;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+using LexiFlow.Models.Learning.Vocabularys;
 
-namespace LexiFlow.Models.Learning.Vocabulary
+namespace LexiFlow.Models.Learning.Commons
 {
     /// <summary>
     /// Danh mục từ vựng, tổ chức theo cấu trúc cây phân cấp
@@ -17,7 +12,7 @@ namespace LexiFlow.Models.Learning.Vocabulary
     /// Hỗ trợ cấu trúc cha-con để tạo danh mục lồng nhau
     /// </summary>
     [Index(nameof(CategoryName), Name = "IX_Category_Name")]
-    public class Category : AuditableEntity, IActivatable
+    public class Category : BaseLearning
     {
         /// <summary>
         /// ID duy nhất của danh mục (Primary Key)
@@ -53,50 +48,11 @@ namespace LexiFlow.Models.Learning.Vocabulary
         public string Level { get; set; }
 
         /// <summary>
-        /// Thứ tự hiển thị của danh mục
-        /// Số nhỏ hơn sẽ hiển thị trước, dùng để sắp xếp danh mục
-        /// Có thể null, khi đó sẽ sắp xếp theo tên
-        /// </summary>
-        public int? DisplayOrder { get; set; }
-
-        /// <summary>
-        /// Trạng thái hoạt động của danh mục
-        /// true = đang hoạt động, false = bị ẩn/vô hiệu hóa
-        /// Mặc định là true
-        /// </summary>
-        public bool IsActive { get; set; } = true;
-
-        /// <summary>
-        /// Kích hoạt danh mục - Implementation of IActivatable interface
-        /// </summary>
-        public void Activate()
-        {
-            IsActive = true;
-        }
-
-        /// <summary>
-        /// Vô hiệu hóa danh mục - Implementation of IActivatable interface
-        /// </summary>
-        public void Deactivate()
-        {
-            IsActive = false;
-        }
-
-        /// <summary>
         /// ID của danh mục cha (tùy chọn)
         /// Null = danh mục gốc, có giá trị = danh mục con
         /// Tạo cấu trúc cây phân cấp: Thực phẩm > Đồ ăn > Món Nhật
         /// </summary>
         public int? ParentCategoryId { get; set; }
-
-        /// <summary>
-        /// Đường dẫn đến icon biểu thị danh mục
-        /// Hiển thị icon trực quan cho danh mục trên giao diện
-        /// Ví dụ: "/images/icons/food.png", "/icons/jlpt-n5.svg"
-        /// Tối đa 255 ký tự
-        /// </summary>
-        [StringLength(255)]
-        public string IconPath { get; set; }
 
         /// <summary>
         /// Mã màu sắc đại diện cho danh mục
@@ -131,13 +87,13 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// false = danh mục công khai, mọi user đều có thể truy cập
         /// Mặc định là false
         /// </summary>
-        public bool IsRestricted { get; set; } = false;
+        public bool IsPublic { get; set; } = false;
 
         /// <summary>
-        /// Danh sách vai trò được phép truy cập (khi IsRestricted = true)
+        /// Danh sách vai trò được phép truy cập (khi IsPublic = true)
         /// Lưu trữ dạng chuỗi JSON hoặc phân cách bởi dấu phẩy
         /// Ví dụ: "Admin,Teacher,Premium" hoặc ["Admin","Teacher","Premium"]
-        /// Null khi IsRestricted = false
+        /// Null khi IsPublic = false
         /// </summary>
         public string AllowedRoles { get; set; }
 
@@ -156,13 +112,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
         /// Mặc định là 0
         /// </summary>
         public int? ItemCount { get; set; } = 0;
-
-        /// <summary>
-        /// Thời gian cập nhật nội dung cuối cùng trong danh mục
-        /// Tự động cập nhật khi có thay đổi từ vựng/nội dung bên trong
-        /// Dùng để hiển thị "danh mục mới cập nhật" và sắp xếp
-        /// </summary>
-        public DateTime? LastUpdatedContent { get; set; }
 
         // Navigation properties - Các mối quan hệ với bảng khác
 

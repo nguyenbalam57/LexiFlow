@@ -1,4 +1,5 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,13 +10,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Learning.Vocabulary
+namespace LexiFlow.Models.Learning.Vocabularys
 {
     /// <summary>
     /// Liên kết giữa từ vựng và nhóm với thuộc tính bổ sung
     /// </summary>
     [Index(nameof(GroupId), nameof(VocabularyId), IsUnique = true, Name = "IX_GroupVocabulary_Group_Vocab")]
-    public class GroupVocabularyRelation : BaseEntity
+    public class GroupVocabularyRelation : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,9 +27,6 @@ namespace LexiFlow.Models.Learning.Vocabulary
 
         [Required]
         public int VocabularyId { get; set; }
-
-        // Cải tiến: Thuộc tính quan hệ
-        public int DisplayOrder { get; set; } = 0;
 
         [StringLength(50)]
         public string RelationType { get; set; } // Primary, Secondary, Related

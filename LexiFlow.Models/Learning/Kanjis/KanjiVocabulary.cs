@@ -1,16 +1,17 @@
-﻿using System;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Learning.Vocabularys;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using LexiFlow.Models.Core;
-using Microsoft.EntityFrameworkCore;
 
-namespace LexiFlow.Models.Learning.Kanji
+namespace LexiFlow.Models.Learning.Kanjis
 {
     /// <summary>
     /// Liên kết giữa Kanji và từ vựng
     /// </summary>
     [Index(nameof(KanjiId), nameof(VocabularyId), IsUnique = true, Name = "IX_KanjiVocabulary_Kanji_Vocab")]
-    public class KanjiVocabulary : BaseEntity
+    public class KanjiVocabulary : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -24,14 +25,12 @@ namespace LexiFlow.Models.Learning.Kanji
 
         public int? Position { get; set; }  // Vị trí Kanji trong từ vựng
 
-        // Cải tiến: Chi tiết mối quan hệ
         [StringLength(50)]
         public string ReadingUsed { get; set; } // On, Kun, Special
 
         [StringLength(255)]
         public string ReadingNotes { get; set; } // Ghi chú về cách đọc
 
-        // Cải tiến: Phân loại và sử dụng
         [StringLength(50)]
         public string UsageType { get; set; } // Common, Rare, Technical
 
@@ -40,7 +39,6 @@ namespace LexiFlow.Models.Learning.Kanji
         [StringLength(50)]
         public string MeaningRole { get; set; } // Primary, Secondary, Modifier
 
-        // Cải tiến: Ghi chú học tập
         public string StudyNote { get; set; } // Ghi chú học tập
 
         public int? Difficulty { get; set; } // Mức độ khó khi học
@@ -50,6 +48,6 @@ namespace LexiFlow.Models.Learning.Kanji
         public virtual Kanji Kanji { get; set; }
 
         [ForeignKey("VocabularyId")]
-        public virtual Vocabulary.Vocabulary Vocabulary { get; set; }
+        public virtual Vocabulary Vocabulary { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,23 +10,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Learning.Kanji
+namespace LexiFlow.Models.Learning.Kanjis
 {
     /// <summary>
     /// Ánh xạ giữa Kanji và các thành phần
     /// </summary>
-    [Index(nameof(KanjiId), nameof(ComponentId), IsUnique = true, Name = "IX_KanjiComponentMapping_Kanji_Component")]
-    public class KanjiComponentMapping : BaseEntity
+    [Index(nameof(KanjiId), nameof(KanjiComponentId), IsUnique = true, Name = "IX_KanjiComponentMapping_Kanji_Component")]
+    public class KanjiComponentMapping : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int MappingId { get; set; }
+        public int KanjiComponentMappingId { get; set; }
 
         [Required]
         public int KanjiId { get; set; }
 
         [Required]
-        public int ComponentId { get; set; }
+        public int KanjiComponentId { get; set; }
 
         [StringLength(50)]
         public string Position { get; set; }  // Vị trí thành phần trong Kanji
@@ -33,8 +34,6 @@ namespace LexiFlow.Models.Learning.Kanji
         // Cải tiến: Thông tin chi tiết
         [StringLength(50)]
         public string Role { get; set; } // Primary, Secondary, Phonetic, Semantic
-
-        public int DisplayOrder { get; set; } = 0; // Thứ tự hiển thị
 
         // Cải tiến: Tọa độ vị trí
         public float? X { get; set; } // Tọa độ X (0-1)
@@ -56,7 +55,7 @@ namespace LexiFlow.Models.Learning.Kanji
         [ForeignKey("KanjiId")]
         public virtual Kanji Kanji { get; set; }
 
-        [ForeignKey("ComponentId")]
+        [ForeignKey("KanjiComponentId")]
         public virtual KanjiComponent Component { get; set; }
     }
 }

@@ -1,5 +1,7 @@
-﻿using LexiFlow.Models.Core;
-using LexiFlow.Models.User;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Medias;
+using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,7 +19,7 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
     /// </summary>
     [Index(nameof(Term), nameof(LanguageCode), nameof(Field), Name = "IX_TechnicalTerm_Term_Lang_Field")]
     [Index(nameof(Field), Name = "IX_TechnicalTerm_Field")]
-    public class TechnicalTerm : AuditableEntity, ISoftDeletable
+    public class TechnicalTerm : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -26,10 +28,6 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
         [Required]
         [StringLength(100)]
         public string Term { get; set; }  // Thuật ngữ
-
-        [Required]
-        [StringLength(10)]
-        public string LanguageCode { get; set; } = "ja";
 
         [StringLength(200)]
         public string Reading { get; set; }  // Cách đọc
@@ -40,11 +38,24 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
         [StringLength(100)]
         public string SubField { get; set; }  // Lĩnh vực con
 
+        /// <summary>
+        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// </summary>
+        /// <value>
+        /// Code chuẩn ISO 639-1:
+        /// - "ja": Tiếng Nhật (mặc định)
+        /// - "en": Tiếng Anh
+        /// - "vi": Tiếng Việt
+        /// Mặc định: "ja"
+        /// </value>
+        [Required]
+        [StringLength(10)]
+        public string LanguageCode { get; set; } = "ja"; // Ngôn ngữ định nghĩa
+
         [StringLength(50)]
         public string Abbreviation { get; set; }  // Viết tắt
 
-        [StringLength(100)]
-        public string Department { get; set; }  // Phòng ban liên quan
+        public int? DepartmentId { get; set; }  // Phòng ban liên quan
 
         // Cải tiến: Thông tin chi tiết
         public string Definition { get; set; }  // Định nghĩa thuật ngữ
@@ -56,9 +67,6 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
         // Cải tiến: Phân loại và cấu trúc
         [StringLength(50)]
         public string TermType { get; set; } // Single, Compound, Phrase, Acronym
-
-        [StringLength(50)]
-        public string Origin { get; set; } // Japanese, English, Latin, etc.
 
         [StringLength(255)]
         public string Etymology { get; set; } // Nguồn gốc từ nguyên
@@ -77,27 +85,22 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
 
         public string Tags { get; set; } // Tags
 
-        // Soft delete
-        public bool IsDeleted { get; set; } = false;
-        public DateTime? DeletedAt { get; set; }
-        public int? DeletedBy { get; set; }
-
         public string Status { get; set; } = "Active";
 
         // Navigation properties
         [ForeignKey("CategoryId")]
-        public virtual Vocabulary.Category Category { get; set; }
+        public virtual Category Category { get; set; }
 
-        [ForeignKey("DeletedBy")]
-        public virtual User.User DeletedByUser { get; set; }
+        [ForeignKey("DepartmentId")]
+        public virtual Department Department { get; set; }
 
-        public virtual ICollection<TermExample> Examples { get; set; }
-        public virtual ICollection<TermTranslation> Translations { get; set; }
+        public virtual ICollection<Example> Examples { get; set; }
+        public virtual ICollection<Translation> Translations { get; set; }
         
         [NotMapped]
         public virtual ICollection<TermRelation> Relations { get; set; }
         
-        public virtual ICollection<Media.MediaFile> MediaFiles { get; set; }
+        public virtual ICollection<MediaFile> MediaFiles { get; set; }
         public virtual ICollection<UserTechnicalTerm> UserTechnicalTerms { get; set; }
     }
 }

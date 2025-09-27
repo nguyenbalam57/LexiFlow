@@ -1,4 +1,6 @@
-﻿using LexiFlow.Models.Core;
+using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -15,11 +17,11 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
     /// Mối quan hệ giữa các thuật ngữ kỹ thuật
     /// </summary>
     [Index(nameof(TermId1), nameof(TermId2), IsUnique = true, Name = "IX_TermRelation_Term1_Term2")]
-    public class TermRelation : BaseEntity
+    public class TermRelation : BaseLearning
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int TermRelationId { get; set; }
 
         [Required]
         public int TermId1 { get; set; }
@@ -44,15 +46,7 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
 
         // Cải tiến: Ví dụ và trạng thái
         [StringLength(255)]
-        public string ExampleContext { get; set; } // Ngữ cảnh ví dụ
-
-        public bool IsVerified { get; set; } = false; // Đã được xác minh
-
-        public int? VerifiedBy { get; set; } // Người xác minh
-
-        public int CreatedBy { get; set; }
-
-        public int? UpdatedBy { get; set; }
+        public string Context { get; set; } // Ngữ cảnh ví dụ
 
         // Navigation properties
         [ForeignKey("TermId1")]
@@ -60,14 +54,5 @@ namespace LexiFlow.Models.Learning.TechnicalTerms
 
         [ForeignKey("TermId2")]
         public virtual TechnicalTerm Term2 { get; set; }
-
-        [ForeignKey("CreatedBy")]
-        public virtual User.User CreatedByUser { get; set; }
-
-        [ForeignKey("UpdatedBy")]
-        public virtual User.User UpdatedByUser { get; set; }
-
-        [ForeignKey("VerifiedBy")]
-        public virtual User.User VerifiedByUser { get; set; }
     }
 }
