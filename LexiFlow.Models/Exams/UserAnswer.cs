@@ -1,4 +1,4 @@
-﻿using LexiFlow.Models.Core;
+﻿using LexiFlow.Models.Cores;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,52 +14,74 @@ namespace LexiFlow.Models.Exam
     /// <summary>
     /// Câu trả lời của người dùng
     /// </summary>
-    [Index(nameof(UserExamId), nameof(QuestionId), IsUnique = true, Name = "IX_UserAnswer_Exam_Question")]
-    public class UserAnswer : BaseEntity
+    [Index(nameof(UserExamId), nameof(QuestionAnswerId), IsUnique = true, Name = "IX_UserAnswer_Exam_Question")]
+    public class UserAnswer : AuditableEntity
     {
+        /// <summary>
+        /// Id câu trả lời (Tự tăng)
+        /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int AnswerId { get; set; }
+        public int UserAnswerId { get; set; }
 
+        /// <summary>
+        /// Liên kết đến bài thi của người dùng
+        /// </summary>
         [Required]
         public int UserExamId { get; set; }
 
+        /// <summary>
+        /// Liên kết đến câu hỏi
+        /// Trong đáp án đã được liên kết với câu hỏi
+        /// </summary>
         [Required]
-        public int QuestionId { get; set; }
+        public int QuestionAnswerId { get; set; }
 
-        public int? SelectedOptionId { get; set; }
-
+        /// <summary>
+        /// Đáp án người dùng nhập (cho câu hỏi tự luận)
+        /// </summary>
         public string UserInput { get; set; }
 
-        public bool IsCorrect { get; set; } = false;
+        /// <summary>
+        /// Câu trả lời đúng hay sai
+        /// Dành cho câu hỏi trắc nghiệm
+        /// Khi người dùng chọn đáp án, hệ thống sẽ kiểm tra và đánh dấu đúng sai
+        /// </summary>
+        public bool IsCorrectUserAnswer { get; set; } = false;
 
-        public int? TimeSpent { get; set; }
+        /// <summary>
+        /// Ghi chú thêm (nếu có)
+        /// </summary>
+        public string Note { get; set; }
 
+        /// <summary>
+        /// Lần thử (nếu cho phép làm lại)
+        /// </summary>
         public int? Attempt { get; set; }
 
-        // Cải tiến: Mức độ tự tin
-        [Range(1, 5)]
-        public int? ConfidenceLevel { get; set; }
-
-        // Cải tiến: Thời gian suy nghĩ
-        public int? ThinkingTimeMs { get; set; }
-
-        // Cải tiến: Số lần thay đổi đáp án
-        public int? ChangeCount { get; set; } = 0;
-
-        // Cải tiến: Cờ đánh dấu để xem lại
+        /// <summary>
+        /// Cờ đánh dấu để xem lại
+        /// </summary>
         public bool IsFlagged { get; set; } = false;
 
+        /// <summary>
+        /// Thời gian trả lời câu hỏi
+        /// </summary>
         public DateTime? AnsweredAt { get; set; }
 
         // Navigation properties
+
+        /// <summary>
+        /// Bài thi của người dùng liên kết
+        /// </summary>
         [ForeignKey("UserExamId")]
         public virtual UserExam UserExam { get; set; }
 
-        [ForeignKey("QuestionId")]
-        public virtual Question Question { get; set; }
+        /// <summary>
+        /// Câu hỏi liên kết
+        /// </summary>
+        [ForeignKey("QuestionAnswerId")]
+        public virtual QuestionOption QuestionOption { get; set; }
 
-        [ForeignKey("SelectedOptionId")]
-        public virtual QuestionOption SelectedOption { get; set; }
     }
 }

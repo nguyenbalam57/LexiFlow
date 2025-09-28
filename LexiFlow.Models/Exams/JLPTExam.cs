@@ -1,4 +1,5 @@
-﻿using LexiFlow.Models.Core;
+﻿using LexiFlow.Models.Cores;
+using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -15,69 +16,74 @@ namespace LexiFlow.Models.Exam
     /// Kỳ thi JLPT
     /// </summary>
     [Index(nameof(ExamName), Name = "IX_Exam_Name")]
-    [Index(nameof(Level), nameof(Year), nameof(Month), IsUnique = true, Name = "IX_Exam_Level_Date")]
-    [Index(nameof(CreatedByUserId), Name = "IX_JLPTExam_CreatedBy")]
-    public class JLPTExam : AuditableEntity, IActivatable
+    [Index( nameof(Year), nameof(Month), IsUnique = true, Name = "IX_Exam_Level_Date")]
+    public class JLPTExam : AuditableEntity
     {
+        /// <summary>
+        /// Id kỳ thi (Tự tăng)
+        /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ExamId { get; set; }
+        public int JLPTExamId { get; set; }
 
+        /// <summary>
+        /// Tên kỳ thi
+        /// </summary>
         [Required]
         [StringLength(100)]
         public string ExamName { get; set; }
 
-        [Required]
-        [StringLength(10)]
-        public string Level { get; set; }
-
+        /// <summary>
+        /// Liên kết đến bảng cấp độ JLPT
+        /// </summary>
         public int? LevelId { get; set; }
 
+        /// <summary>
+        /// Năm tổ chức kỳ thi
+        /// </summary>
         public int? Year { get; set; }
 
+        /// <summary>
+        /// Tháng tổ chức kỳ thi (7 hoặc 12)
+        /// </summary>
         [StringLength(20)]
         public string Month { get; set; }
 
+        /// <summary>
+        /// Tổng thời gian làm bài (phút)
+        /// </summary>
         public int? TotalTime { get; set; }
 
+        /// <summary>
+        /// Tổng điểm số
+        /// </summary>
         public int? TotalScore { get; set; }
 
+        /// <summary>
+        /// Tổng số câu hỏi
+        /// </summary>
         public int? TotalQuestions { get; set; }
 
-        // Cải tiến: Điểm đỗ
+        /// <summary>
+        /// Điểm đỗ
+        /// </summary>
         public int? PassingScore { get; set; }
 
-        // Cải tiến: Chi tiết cấu trúc đề thi
-        public bool HasListeningSection { get; set; } = true;
-        public bool HasReadingSection { get; set; } = true;
-        public bool HasVocabularySection { get; set; } = true;
-        public bool HasGrammarSection { get; set; } = true;
-
-        [StringLength(100)]
-        public string ExamVersion { get; set; }
-
-        // Cải tiến: Độ khó
-        [Range(1, 5)]
-        public int Difficulty { get; set; } = 3;
-
-        // Cải tiến: Mô tả và ghi chú
+        /// <summary>
+        /// Mô tả
+        /// </summary>
         public string Description { get; set; }
 
+        /// <summary>
+        /// Ghi chú
+        /// </summary>
         [StringLength(255)]
         public string Notes { get; set; }
 
+        /// <summary>
+        /// Kỳ thi chính thức do JLPT tổ chức
+        /// </summary>
         public bool IsOfficial { get; set; } = false;
-        public bool IsActive { get; set; } = true;
-
-        // IActivatable implementation
-        public void Activate() => IsActive = true;
-        public void Deactivate() => IsActive = false;
-
-        public int? CreatedByUserId { get; set; }
-
-        // Navigation properties
-        [ForeignKey("CreatedByUserId")]
-        public virtual User.User CreatedByUser { get; set; }
 
         [ForeignKey("LevelId")]
         public virtual JLPTLevel JLPTLevel { get; set; }

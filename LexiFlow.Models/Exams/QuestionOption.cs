@@ -1,51 +1,62 @@
-﻿using LexiFlow.Models.Core;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LexiFlow.Models.Exam
 {
     /// <summary>
-    /// Lựa chọn cho câu hỏi
+    /// Bảng trung gian giữa Question và Option.
+    /// Cho phép đánh dấu đáp án đúng cho từng câu hỏi, và ghi đè điểm/thuộc tính khi cần.
+    /// Khóa chính composite (QuestionId, OptionId) cấu hình trong DbContext Fluent API.
     /// </summary>
-    public class QuestionOption : BaseEntity
+    public class QuestionOption
     {
+        /// <summary>
+        /// Id bảng trung gian (Tự tăng)
+        /// </summary>
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int QuestionOptionId { get; set; }
+        public int QuestionAnswerId { get; set; }
 
-        [Required]
-        public int QuestionId { get; set; }
-
-        public string OptionText { get; set; }
-
-        [StringLength(255)]
-        public string OptionImage { get; set; }
-
-        public bool IsCorrect { get; set; } = false;
-
-        public int? DisplayOrder { get; set; }
-
-        // Cải tiến: Giải thích chi tiết
-        public string Explanation { get; set; }
-
-        // Cải tiến: Tỷ lệ chọn đáp án này
-        public double? SelectionRate { get; set; }
-
-        // Cải tiến: Mức độ nhiễu
-        public int? DistractorLevel { get; set; }
-
-        // Navigation properties
+        /// <summary>
+        /// Liên kết đến câu hỏi
+        /// </summary>
+        public int? QuestionId { get; set; }
         [ForeignKey("QuestionId")]
         public virtual Question Question { get; set; }
 
-        public virtual ICollection<UserAnswer> UserAnswers { get; set; }
+        /// <summary>
+        /// Liên kết đến đáp án
+        /// </summary>
+        public int? OptionId { get; set; }
 
-        // Cải tiến: Navigation cho media
-        public virtual ICollection<Media.MediaFile> MediaFiles { get; set; }
+        [ForeignKey("OptionId")]
+        public virtual Option Option { get; set; }
+
+        /// <summary>
+        /// Giải thích đáp án cụ thể cho câu hỏi này (nếu có)
+        /// </summary>
+        public string Explanation { get; set; }
+
+        /// <summary>
+        /// Đánh dấu đáp án này là đúng cho câu hỏi liên kết
+        /// </summary>
+        public bool IsCorrect { get; set; } = false;
+
+        /// <summary>
+        /// Thứ tự hiển thị đáp án trong câu hỏi (nếu có)
+        /// </summary>
+        public int? DisplayOrder { get; set; }
+
+        /// <summary>
+        /// Ghi đè điểm (nếu muốn đáp án này có điểm khác so với Answer.Score)
+        /// </summary>
+        public double? ScoreOverride { get; set; }
+
+        /// <summary>
+        /// Ghi chú thêm về liên kết này (nếu cần)
+        /// </summary>
+        public string Note { get; set; }
+
+        public virtual ICollection<UserAnswer> UserAnswers { get; set; }
     }
 }

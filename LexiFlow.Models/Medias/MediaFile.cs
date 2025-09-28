@@ -186,16 +186,15 @@ namespace LexiFlow.Models.Medias
         public int? KanjiComponentId { get; set; }
 
         /// <summary>
+        /// ID của option mà media này thuộc về
+        /// </summary>
+        public int? OptionId { get; set; }
+
+        /// <summary>
         /// ID của question mà media này thuộc về
         /// </summary>
         /// <value>Null nếu media không thuộc question nào</value>
         public int? QuestionId { get; set; }
-
-        /// <summary>
-        /// ID của question option mà media này thuộc về
-        /// </summary>
-        /// <value>Null nếu media không thuộc question option nào</value>
-        public int? QuestionOptionId { get; set; }
 
         #endregion
 
@@ -328,6 +327,24 @@ namespace LexiFlow.Models.Medias
         public virtual Grammar Grammar { get; set; }
 
         /// <summary>
+        /// Thông tin kanji component mà media này thuộc về
+        /// </summary>
+        [ForeignKey("DefinitionId")]
+        public virtual Definition Definition { get; set; }
+
+        /// <summary>
+        /// Thông tin translation mà media này thuộc về
+        /// </summary>
+        [ForeignKey("TranslationId")]
+        public virtual Translation Translation { get; set; }
+
+        /// <summary>
+        /// Thông tin kanji component mà media này thuộc về
+        /// </summary>
+        [ForeignKey("KanjiComponentId")]
+        public virtual KanjiComponent KanjiComponent { get; set; }
+
+        /// <summary>
         /// Thông tin question mà media này thuộc về
         /// </summary>
         [ForeignKey("QuestionId")]
@@ -336,8 +353,8 @@ namespace LexiFlow.Models.Medias
         /// <summary>
         /// Thông tin question option mà media này thuộc về
         /// </summary>
-        [ForeignKey("QuestionOptionId")]
-        public virtual QuestionOption QuestionOption { get; set; }
+        [ForeignKey("OptionId")]
+        public virtual Option Option { get; set; }
 
         /// <summary>
         /// Thông tin user đã xóa media này
