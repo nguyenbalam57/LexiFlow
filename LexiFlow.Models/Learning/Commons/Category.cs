@@ -156,13 +156,6 @@ namespace LexiFlow.Models.Learning.Commons
         public virtual ICollection<Category> ChildCategories { get; set; }
 
         /// <summary>
-        /// Danh sách từ vựng thuộc danh mục này
-        /// Quan hệ 1-nhiều với bảng Vocabulary
-        /// Một danh mục chứa nhiều từ vựng
-        /// </summary>
-        public virtual ICollection<Vocabulary> Vocabularies { get; set; }
-
-        /// <summary>
         /// Danh sách nhóm từ vựng thuộc danh mục
         /// Quan hệ 1-nhiều với bảng VocabularyGroup
         /// Một danh mục có thể có nhiều nhóm từ vựng con

@@ -162,7 +162,7 @@ namespace LexiFlow.Models.Users
         /// <summary>
         /// Danh sách thành viên tham gia lịch biểu có liên quan đến nhóm.
         /// </summary>
-        public virtual ICollection<Scheduling.ScheduleItemParticipant> ScheduleItemParticipants { get; set; }
+        public virtual ICollection<ScheduleItemParticipant> ScheduleItemParticipants { get; set; }
     }
 }
 
