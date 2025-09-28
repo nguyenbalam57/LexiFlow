@@ -12,13 +12,19 @@ namespace LexiFlow.Models.Learning.Commons
 {
     public abstract class BaseLearning : AuditableEntity
     {
-        
-
-        // Cải tiến: Trạng thái
+        /// <summary>
+        /// Trạng thái đã được xác minh
+        /// </summary>
         public bool IsVerified { get; set; } = false; // Đã được xác minh
 
+        /// <summary>
+        /// Người xác minh
+        /// </summary>
         public int? VerifiedBy { get; set; } // Người xác minh
 
+        /// <summary>
+        /// Thời gian xác minh
+        /// </summary>
         public DateTime? VerifiedAt { get; set; } // Thời gian phê duyệt
 
         /// <summary>
@@ -31,13 +37,16 @@ namespace LexiFlow.Models.Learning.Commons
         /// - "Review": Đang chờ duyệt
         /// - "Deprecated": Không còn sử dụng
         /// </value>
-        public string Status { get; set; } = "Review";
+        public string Status { get; set; } = "Review"; // Active, Draft, Review, Deprecated
 
+        /// <summary>
+        /// Đánh dấu đã xác minh
+        /// </summary>
         [ForeignKey("VerifiedBy")]
         public virtual User VerifiedByUser { get; set; }
 
         /// <summary>
-        /// Xác thực Kanji
+        /// Xác thực 
         /// </summary>
         /// <param name="verifiedBy">ID người xác thực</param>
         public virtual void Verify(int verifiedBy)
@@ -52,13 +61,13 @@ namespace LexiFlow.Models.Learning.Commons
         /// <summary>
         /// Hủy xác thực
         /// </summary>
-        public virtual void Unverify()
+        public virtual void Unverify(int unverifiedBy)
         {
             IsVerified = false;
-            VerifiedAt = null;
-            VerifiedBy = null;
+            VerifiedAt = DateTime.UtcNow;
+            VerifiedBy = unverifiedBy;
             Status = "Pending";
-            UpdateTimestamp();
+            UpdateModification(unverifiedBy, "Hủy xác thực Kanji");
         }
 
         /// <summary>
@@ -68,25 +77,18 @@ namespace LexiFlow.Models.Learning.Commons
         /// <param name="reason">Lý do xóa</param>
         public virtual void SoftDelete(int deletedBy, string reason = null)
         {
-            IsDeleted = true;
-            DeletedAt = DateTime.UtcNow;
-            DeletedBy = deletedBy;
-            Status = "Deleted";
-
-            UpdateModification(deletedBy, $"Xóa Kanji: {reason}");
+            Status = "Deprecated";
+            base.SoftDelete(deletedBy, $"Xóa Kanji: {reason}");
         }
 
         /// <summary>
         /// Khôi phục Kanji đã xóa
         /// </summary>
         /// <param name="restoredBy">ID người khôi phục</param>
-        public virtual void Restore(int restoredBy)
+        public virtual void Restore(int restoredBy, string reason = null)
         {
-            IsDeleted = false;
-            DeletedAt = null;
-            DeletedBy = null;
             Status = "Active";
-            UpdateModification(restoredBy, "Khôi phục Kanji");
+            base.Restore(restoredBy, $"Khôi phục Kanji: {reason}");
         }
     }
 }

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LexiFlow.Models.Learning.Vocabularys;
+using LexiFlow.Models.Users;
+using LexiFlow.Models.Medias;
 
 namespace LexiFlow.Models.Learning.Commons
 {
@@ -24,7 +26,7 @@ namespace LexiFlow.Models.Learning.Commons
 
         /// <summary>
         /// Tên danh mục từ vựng
-        /// Ví dụ: "JLPT N5", "Đồ ăn và đồ uống", "Động từ thường dùng"
+        /// Ví dụ: "JLPT N5", "Đồ ăn và đồ uống", "Động từ thường dùng", "Ngữ pháp cơ bản", "Từ vựng chuyên ngành", etc.
         /// Bắt buộc, tối đa 100 ký tự
         /// </summary>
         [Required]
@@ -53,6 +55,18 @@ namespace LexiFlow.Models.Learning.Commons
         /// Tạo cấu trúc cây phân cấp: Thực phẩm > Đồ ăn > Món Nhật
         /// </summary>
         public int? ParentCategoryId { get; set; }
+
+        /// <summary>
+        /// ID của tệp phương tiện đại diện cho danh mục (nếu có)
+        /// Ví dụ: Hình ảnh biểu tượng, ảnh minh họa cho danh mục
+        /// </summary>
+        public int? MediaFileId { get; set; } // ID tệp phương tiện đại diện cho danh mục (nếu có)
+
+        /// <summary>
+        /// ID của phòng ban liên quan (nếu có)
+        /// Dùng để phân quyền và quản lý theo phòng ban
+        /// </summary>
+        public int? DepartmentId { get; set; }  // Phòng ban liên quan
 
         /// <summary>
         /// Mã màu sắc đại diện cho danh mục
@@ -123,6 +137,17 @@ namespace LexiFlow.Models.Learning.Commons
         [ForeignKey("ParentCategoryId")]
         public virtual Category ParentCategory { get; set; }
 
+        /// <summary>
+        /// Phòng ban liên quan (nếu có)
+        /// </summary>
+        [ForeignKey("DepartmentId")]
+        public virtual Department Department { get; set; }
+
+        /// <summary>
+        /// Tệp phương tiện đại diện cho danh mục (nếu có)
+        /// </summary>
+        [ForeignKey("MediaFileId")]
+        public virtual MediaFile MediaFile { get; set; }
         /// <summary>
         /// Danh sách các danh mục con
         /// Quan hệ 1-nhiều với chính bảng Category

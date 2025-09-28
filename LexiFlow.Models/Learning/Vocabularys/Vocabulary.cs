@@ -18,7 +18,6 @@ namespace LexiFlow.Models.Learning.Vocabularys
     /// Bao gồm đọc âm, nghĩa, cấp độ và các thông tin metadata
     /// </summary>
     [Index(nameof(Term), nameof(LanguageCode), Name = "IX_Vocabulary_Term_Lang")]
-    [Index(nameof(CategoryId), Name = "IX_Vocabulary_Category")]
     [Index(nameof(Level), Name = "IX_Vocabulary_Level")]
     [Index(nameof(IsCommon), Name = "IX_Vocabulary_IsCommon")]
     public class Vocabulary : BaseLearning
@@ -32,9 +31,9 @@ namespace LexiFlow.Models.Learning.Vocabularys
 
         /// <summary>
         /// Từ vựng (bằng tiếng Nhật hoặc ngôn ngữ gốc)
+        /// Max độ dài
         /// </summary>
         [Required]
-        [StringLength(100)]
         public string Term { get; set; }
 
         /// <summary>
@@ -48,7 +47,15 @@ namespace LexiFlow.Models.Learning.Vocabularys
         public string AlternativeReadings { get; set; }
 
         /// <summary>
-        /// Mã ngôn ngữ của pattern ngữ pháp
+        /// Viết tắt
+        /// Sử dụng trong các trường hợp từ dài
+        /// Sử dụng chủ yếu đối với từ vựng chuyên ngành
+        /// </summary>
+        [StringLength(50)]
+        public string Abbreviation { get; set; }
+
+        /// <summary>
+        /// Mã ngôn ngữ của pattern từ vựng
         /// </summary>
         /// <value>
         /// Code chuẩn ISO 639-1:
@@ -67,11 +74,6 @@ namespace LexiFlow.Models.Learning.Vocabularys
         [Required]
         [StringLength(10)]
         public string Level { get; set; }
-
-        /// <summary>
-        /// ID danh mục từ vựng
-        /// </summary>
-        public int? CategoryId { get; set; }
 
         /// <summary>
         /// Mức độ khó của từ (1-5, 1 là khó nhất)
@@ -215,11 +217,12 @@ namespace LexiFlow.Models.Learning.Vocabularys
         public string InternalNotes { get; set; } = "";
 
         // Navigation properties
+
         /// <summary>
-        /// Danh mục từ vựng
+        /// Danh sách liên kết với các danh mục (nhiều-nhiều)
+        /// Thay thế cho CategoryId để hỗ trợ nhiều danh mục
         /// </summary>
-        [ForeignKey("CategoryId")]
-        public virtual Category Category { get; set; }
+        public virtual ICollection<VocabularyCategory> VocabularyCategories { get; set; }
 
         /// <summary>
         /// Danh sách định nghĩa của từ
@@ -233,7 +236,7 @@ namespace LexiFlow.Models.Learning.Vocabularys
 
         /// <summary>
         /// Danh sách bản dịch của từ
-        /// </summary>
+        /// </summary>  
         public virtual ICollection<Translation> Translations { get; set; }
 
         /// <summary>
