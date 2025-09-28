@@ -78,12 +78,6 @@ namespace LexiFlow.Models.Medias
         /// </value>
         public int? ParentCategoryId { get; set; }
 
-        /// <summary>
-        /// Thứ tự hiển thị trong cùng cấp danh mục
-        /// </summary>
-        /// <value>Số nguyên để sắp xếp, số nhỏ hơn hiển thị trước. Mặc định: 0</value>
-        public int DisplayOrder { get; set; } = 0;
-
         #endregion
 
         #region Phân loại và giới hạn media

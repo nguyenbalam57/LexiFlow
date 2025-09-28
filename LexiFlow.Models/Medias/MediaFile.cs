@@ -1,4 +1,9 @@
 using LexiFlow.Models.Cores;
+using LexiFlow.Models.Exam;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Learning.Grammars;
+using LexiFlow.Models.Learning.Kanjis;
+using LexiFlow.Models.Learning.Vocabularys;
 using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -154,16 +159,31 @@ namespace LexiFlow.Models.Medias
         public int? KanjiId { get; set; }
 
         /// <summary>
+        /// ID của grammar mà media này thuộc về
+        /// </summary>
+        /// <value>Null nếu media không thuộc grammar nào</value>
+        public int? GrammarId { get; set; }
+
+        /// <summary>
         /// ID của example mà media này thuộc về
         /// </summary>
         /// <value>Null nếu media không thuộc example nào</value>
         public int? ExampleId { get; set; }
 
         /// <summary>
-        /// ID của grammar mà media này thuộc về
+        /// ID của Definition mà media này thuộc về
         /// </summary>
-        /// <value>Null nếu media không thuộc grammar nào</value>
-        public int? GrammarId { get; set; }
+        public int? DefinitionId { get; set; }
+
+        /// <summary>
+        /// ID của translation mà media này thuộc về
+        /// </summary>
+        public int? TranslationId { get; set; }
+
+        /// <summary>
+        /// ID của kanji component mà media này thuộc về
+        /// </summary>
+        public int? KanjiComponentId { get; set; }
 
         /// <summary>
         /// ID của question mà media này thuộc về
@@ -177,39 +197,9 @@ namespace LexiFlow.Models.Medias
         /// <value>Null nếu media không thuộc question option nào</value>
         public int? QuestionOptionId { get; set; }
 
-        /// <summary>
-        /// ID của grammar example mà media này thuộc về
-        /// </summary>
-        /// <value>Null nếu media không thuộc grammar example nào</value>
-        public int? GrammarExampleId { get; set; }
-
-        /// <summary>
-        /// ID của kanji example mà media này thuộc về
-        /// </summary>
-        /// <value>Null nếu media không thuộc kanji example nào</value>
-        public int? KanjiExampleId { get; set; }
-
-        /// <summary>
-        /// ID của technical term mà media này thuộc về
-        /// </summary>
-        /// <value>Null nếu media không thuộc technical term nào</value>
-        public int? TechnicalTermId { get; set; }
-
-        /// <summary>
-        /// ID của term example mà media này thuộc về
-        /// </summary>
-        /// <value>Null nếu media không thuộc term example nào</value>
-        public int? TermExampleId { get; set; }
-
         #endregion
 
         #region Hiển thị và sắp xếp
-
-        /// <summary>
-        /// Thứ tự hiển thị khi có nhiều media cho cùng một entity
-        /// </summary>
-        /// <value>Số nguyên, số nhỏ hơn hiển thị trước. Mặc định: 0</value>
-        public int DisplayOrder { get; set; } = 0;
 
         /// <summary>
         /// Đánh dấu đây là media chính (thumbnail hoặc audio chính)
@@ -348,30 +338,6 @@ namespace LexiFlow.Models.Medias
         /// </summary>
         [ForeignKey("QuestionOptionId")]
         public virtual QuestionOption QuestionOption { get; set; }
-
-        /// <summary>
-        /// Thông tin grammar example mà media này thuộc về
-        /// </summary>
-        [ForeignKey("GrammarExampleId")]
-        public virtual GrammarExample GrammarExample { get; set; }
-
-        /// <summary>
-        /// Thông tin kanji example mà media này thuộc về
-        /// </summary>
-        [ForeignKey("KanjiExampleId")]
-        public virtual KanjiExample KanjiExample { get; set; }
-
-        /// <summary>
-        /// Thông tin technical term mà media này thuộc về
-        /// </summary>
-        [ForeignKey("TechnicalTermId")]
-        public virtual TechnicalTerm TechnicalTerm { get; set; }
-
-        /// <summary>
-        /// Thông tin term example mà media này thuộc về
-        /// </summary>
-        [ForeignKey("TermExampleId")]
-        public virtual TermExample TermExample { get; set; }
 
         /// <summary>
         /// Thông tin user đã xóa media này
