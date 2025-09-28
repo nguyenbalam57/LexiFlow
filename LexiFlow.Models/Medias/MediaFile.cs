@@ -5,6 +5,7 @@ using LexiFlow.Models.Learning.Grammars;
 using LexiFlow.Models.Learning.Kanjis;
 using LexiFlow.Models.Learning.Vocabularys;
 using LexiFlow.Models.Users;
+using LexiFlow.Models.Notifications;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -196,6 +197,11 @@ namespace LexiFlow.Models.Medias
         /// <value>Null nếu media không thuộc question nào</value>
         public int? QuestionId { get; set; }
 
+        /// <summary>
+        /// ID của notification mà media này thuộc về
+        /// </summary>
+        public int? NotificationId { get; set; }
+
         #endregion
 
         #region Hiển thị và sắp xếp
@@ -357,10 +363,10 @@ namespace LexiFlow.Models.Medias
         public virtual Option Option { get; set; }
 
         /// <summary>
-        /// Thông tin user đã xóa media này
+        /// Thông tin notification mà media này thuộc về
         /// </summary>
-        [ForeignKey("DeletedBy")]
-        public virtual User DeletedByUser { get; set; }
+        [ForeignKey("NotificationId")]
+        public virtual Notification Notification { get; set; }
 
         /// <summary>
         /// Thông tin category mà media này thuộc về
