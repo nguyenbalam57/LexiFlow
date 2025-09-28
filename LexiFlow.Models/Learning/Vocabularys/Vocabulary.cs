@@ -212,7 +212,7 @@ namespace LexiFlow.Models.Learning.Vocabularys
         /// <summary>
         /// Ghi chú nội bộ (chỉ admin)
         /// </summary>
-        public string InternalNotes { get; set; }
+        public string InternalNotes { get; set; } = "";
 
         // Navigation properties
         /// <summary>
