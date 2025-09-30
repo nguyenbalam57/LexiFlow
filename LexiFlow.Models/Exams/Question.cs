@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Câu hỏi thi với các cải tiến về performance và audit

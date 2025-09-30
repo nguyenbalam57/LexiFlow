@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Đáp án có thể tái sử dụng cho nhiều câu hỏi.
@@ -62,10 +62,10 @@ namespace LexiFlow.Models.Exam
         /// <summary>
         /// Nếu đáp án liên quan tới một section cụ thể
         /// </summary>
-        public int? JLPTSectionId { get; set; }
+        public int? SectionId { get; set; }
 
-        [ForeignKey("JLPTSectionId")]
-        public virtual JLPTSection JLPTSection { get; set; }
+        [ForeignKey("SectionId")]
+        public virtual Section Section { get; set; }
 
         /// <summary>
         /// Ghi chú thêm về đáp án

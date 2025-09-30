@@ -1,4 +1,5 @@
-﻿using LexiFlow.Models.Core;
+﻿using LexiFlow.Models.Cores;
+using LexiFlow.Models.Exam;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -67,8 +68,7 @@ namespace LexiFlow.Models.Practice
         /// Dùng để phân loại và thống kê theo từng skill
         /// </summary>
         [Required]
-        [StringLength(50)]
-        public string TestType { get; set; }
+        public string TestType { get; set; } = SectionTypeExtensions.Listening;
 
         /// <summary>
         /// Tên cụ thể của bài test

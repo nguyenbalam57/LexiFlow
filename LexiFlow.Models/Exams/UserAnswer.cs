@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Câu trả lời của người dùng

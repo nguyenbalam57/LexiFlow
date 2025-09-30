@@ -1,4 +1,7 @@
 using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Grammars;
+using LexiFlow.Models.Learning.Kanjis;
+using LexiFlow.Models.Learning.Vocabularys;
 using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,10 +13,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Progress
+namespace LexiFlow.Models.Progresss
 {
     /// <summary>
-    /// Tiến trình học tập từ vựng - theo dõi chi tiết quá trình học từng từ vựng của người dùng
+    /// Tiến trình học tập từ vựng, ngữ pháp, kanji - theo dõi chi tiết quá trình học của người dùng
     /// Sử dụng thuật toán spaced repetition để tối ưu hóa việc ôn tập
     /// </summary>
     [Index(nameof(UserId), nameof(VocabularyId), IsUnique = true, Name = "IX_User_Vocabulary")]
@@ -39,8 +42,17 @@ namespace LexiFlow.Models.Progress
         /// <summary>
         /// ID từ vựng
         /// </summary>
-        [Required]
-        public int VocabularyId { get; set; }
+        public int? VocabularyId { get; set; }
+
+        /// <summary>
+        /// ID Kanji
+        /// </summary>
+        public int? KanjiId { get; set; }
+
+        /// <summary>
+        /// ID ngữ pháp
+        /// </summary>
+        public int? GrammarId { get; set; }
 
         /// <summary>
         /// Tổng số lần học từ này
@@ -278,6 +290,18 @@ namespace LexiFlow.Models.Progress
         /// </summary>
         [ForeignKey("VocabularyId")]
         public virtual Vocabulary Vocabulary { get; set; }
+
+        /// <summary>
+        /// Kanji được học
+        /// </summary>
+        [ForeignKey("KanjiId")]
+        public virtual Kanji Kanji { get; set; }
+
+        /// <summary>
+        /// Ngữ pháp được học
+        /// </summary>
+        [ForeignKey("GrammarId")]
+        public virtual Grammar Grammar { get; set; }
 
         // Computed Properties
         /// <summary>

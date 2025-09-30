@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Phiên làm bài của user với tracking chi tiết
@@ -257,7 +257,6 @@ namespace LexiFlow.Models.Exam
 
     /// <summary>
     /// Constants cho exam status
-    /// 
     /// </summary>
     public static class ExamStatus
     {

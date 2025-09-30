@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Bảng trung gian giữa Question và Option.

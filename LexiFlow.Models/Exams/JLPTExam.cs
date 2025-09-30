@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Exam
+namespace LexiFlow.Models.Exams
 {
     /// <summary>
     /// Kỳ thi JLPT
@@ -88,7 +88,7 @@ namespace LexiFlow.Models.Exam
         [ForeignKey("LevelId")]
         public virtual JLPTLevel JLPTLevel { get; set; }
 
-        public virtual ICollection<JLPTSection> Sections { get; set; }
+        public virtual ICollection<Section> Sections { get; set; }
         public virtual ICollection<UserExam> UserExams { get; set; }
     }
 }
