@@ -1,5 +1,7 @@
 ﻿using LexiFlow.Models.Cores;
-using LexiFlow.Models.Exam;
+using LexiFlow.Models.Exams;
+using LexiFlow.Models.Learning.Commons;
+using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace LexiFlow.Models.Practice
+namespace LexiFlow.Models.Practices
 {
     /// <summary>
     /// Entity lưu trữ kết quả bài kiểm tra của học viên
@@ -235,7 +237,7 @@ namespace LexiFlow.Models.Practice
         /// Quan hệ nhiều-một với bảng User (một user có nhiều test results)
         /// </summary>
         [ForeignKey("UserId")]
-        public virtual User.User User { get; set; }
+        public virtual User User { get; set; }
 
         /// <summary>
         /// Thông tin danh mục/chủ đề mà bài test thuộc về
@@ -243,7 +245,7 @@ namespace LexiFlow.Models.Practice
         /// Có thể null nếu test không thuộc category cụ thể
         /// </summary>
         [ForeignKey("CategoryId")]
-        public virtual Learning.Vocabulary.Category Category { get; set; }
+        public virtual Category Category { get; set; }
 
         /// <summary>
         /// Danh sách chi tiết từng câu hỏi và câu trả lời trong bài test

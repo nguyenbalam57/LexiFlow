@@ -1,5 +1,4 @@
 using LexiFlow.Models.Cores;
-using LexiFlow.Models.Exam;
 using LexiFlow.Models.Learning.Commons;
 using LexiFlow.Models.Learning.Grammars;
 using LexiFlow.Models.Learning.Kanjis;
@@ -16,6 +15,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using LexiFlow.Models.Exams;
 
 namespace LexiFlow.Models.Medias
 {

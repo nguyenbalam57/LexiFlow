@@ -1,4 +1,5 @@
 using LexiFlow.Models.Cores;
+using LexiFlow.Models.Learning.Commons;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,6 @@ namespace LexiFlow.Models.Schedulings
     /// </summary>
     [Index(nameof(StartTime), Name = "IX_ScheduleItem_StartTime")]
     [Index(nameof(ScheduleId), nameof(StartTime), Name = "IX_ScheduleItem_Schedule_StartTime")]
-    [Index(nameof(StudyTaskId), Name = "IX_ScheduleItem_StudyTask")]
     public class ScheduleItem : AuditableEntity
     {
         /// <summary>
@@ -31,6 +31,12 @@ namespace LexiFlow.Models.Schedulings
         /// </summary>
         [Required]
         public int ScheduleId { get; set; }
+
+        /// <summary>
+        /// Lịch trình chứa mục này
+        /// </summary>
+        [ForeignKey("ScheduleId")]
+        public virtual Schedule Schedule { get; set; }
 
         /// <summary>
         /// Tiêu đề của mục lịch trình
@@ -57,27 +63,24 @@ namespace LexiFlow.Models.Schedulings
         /// <summary>
         /// ID loại mục lịch trình
         /// </summary>
-        public int? TypeId { get; set; }
+        public int? ScheduleItemTypeId { get; set; }
+
+        /// <summary>
+        /// Loại mục lịch trình
+        /// </summary>
+        [ForeignKey("ScheduleItemTypeId")]
+        public virtual ScheduleItemType ScheduleItemType { get; set; }
 
         /// <summary>
         /// ID quy tắc lặp lại (nếu có)
         /// </summary>
-        public int? RecurrenceId { get; set; }
+        public int? ScheduleRecurrenceId { get; set; }
 
         /// <summary>
-        /// ID nhiệm vụ học tập liên quan (nếu có)
+        /// Quy tắc lặp lại (nếu có)
         /// </summary>
-        public int? StudyTaskId { get; set; }
-
-        /// <summary>
-        /// ID nhiệm vụ (alias cho StudyTaskId để mapping với Context)
-        /// </summary>
-        [NotMapped]
-        public int? TaskId 
-        { 
-            get => StudyTaskId; 
-            set => StudyTaskId = value; 
-        }
+        [ForeignKey("ScheduleRecurrenceId")]
+        public virtual ScheduleRecurrence ScheduleRecurrence { get; set; }
 
         /// <summary>
         /// Địa điểm tổ chức sự kiện
@@ -145,22 +148,13 @@ namespace LexiFlow.Models.Schedulings
         /// <summary>
         /// ID bài học liên quan (nếu có)
         /// </summary>
-        public int? LessonId { get; set; }
+        public int? CategoryLessonId { get; set; }
 
         /// <summary>
-        /// ID tài liệu liên quan (nếu có)
+        /// Danh mục liên quan đến mục lịch trình (nếu có)
         /// </summary>
-        public int? MaterialId { get; set; }
-
-        /// <summary>
-        /// Loại thực thể liên quan (Vocabulary, Grammar, Kanji, etc.)
-        /// </summary>
-        public string RelatedEntityType { get; set; }
-
-        /// <summary>
-        /// ID thực thể liên quan
-        /// </summary>
-        public int? RelatedEntityId { get; set; }
+        [ForeignKey("CategoryLessonId")]
+        public virtual Category CategoryLesson { get; set; }
 
         /// <summary>
         /// Mức độ ưu tiên (1-5, 5 là ưu tiên cao nhất)
@@ -173,17 +167,6 @@ namespace LexiFlow.Models.Schedulings
         /// </summary>
         [StringLength(20)]
         public string ColorCode { get; set; } = "#2196F3";
-
-        /// <summary>
-        /// ID nguồn tạo ra mục lịch trình
-        /// </summary>
-        public int? SourceId { get; set; }
-
-        /// <summary>
-        /// Loại nguồn (Manual, StudyPlan, Auto, Import, etc.)
-        /// </summary>
-        [StringLength(50)]
-        public string SourceType { get; set; } = "Manual";
 
         /// <summary>
         /// ID từ hệ thống bên ngoài (nếu được import)
@@ -246,29 +229,6 @@ namespace LexiFlow.Models.Schedulings
         public string ChangeHistory { get; set; }
 
         // Navigation properties
-        /// <summary>
-        /// Lịch trình chứa mục này
-        /// </summary>
-        [ForeignKey("ScheduleId")]
-        public virtual Schedule Schedule { get; set; }
-
-        /// <summary>
-        /// Loại mục lịch trình
-        /// </summary>
-        [ForeignKey("TypeId")]
-        public virtual ScheduleItemType Type { get; set; }
-
-        /// <summary>
-        /// Quy tắc lặp lại (nếu có)
-        /// </summary>
-        [ForeignKey("RecurrenceId")]
-        public virtual ScheduleRecurrence Recurrence { get; set; }
-
-        /// <summary>
-        /// Nhiệm vụ học tập liên quan (nếu có)
-        /// </summary>
-        [ForeignKey("StudyTaskId")]
-        public virtual StudyTask StudyTask { get; set; }
 
         /// <summary>
         /// Danh sách người tham gia

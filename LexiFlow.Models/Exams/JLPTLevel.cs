@@ -76,7 +76,6 @@ namespace LexiFlow.Models.Exams
         [ForeignKey("PrerequisiteLevelId")]
         public virtual JLPTLevel PrerequisiteLevel { get; set; }
 
-        public virtual ICollection<Planning.StudyGoal> StudyGoals { get; set; }
         public virtual ICollection<JLPTExam> Exams { get; set; }
     }
 }

@@ -331,10 +331,9 @@ namespace LexiFlow.Models.Learning.Grammars
         public virtual ICollection<MediaFile> MediaFiles { get; set; }
 
         /// <summary>
-        /// Danh sách tiến độ học tập của các user đối với điểm ngữ pháp này
+        /// Danh sách các phân đoạn (segment) trong điểm ngữ pháp này
         /// </summary>
-        /// <value>Collection theo dõi mức độ thành thạo của từng học viên</value>
-        public virtual ICollection<UserGrammarProgress> UserProgresses { get; set; }
+        public virtual ICollection<Segment> Segments { get; set; }
 
         #endregion
     }

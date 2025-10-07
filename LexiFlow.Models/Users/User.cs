@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LexiFlow.Models.Cores;
 using LexiFlow.Models.Medias;
-using LexiFlow.Models.Progress;
+using LexiFlow.Models.Progresss;
 using LexiFlow.Models.Users.UserRelations;
 using Microsoft.EntityFrameworkCore;
 

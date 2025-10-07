@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using LexiFlow.Models.Learning.Vocabularys;
 using LexiFlow.Models.Users;
 using LexiFlow.Models.Medias;
+using LexiFlow.Models.Practices;
 
 namespace LexiFlow.Models.Learning.Commons
 {
@@ -167,6 +168,6 @@ namespace LexiFlow.Models.Learning.Commons
         /// Quan hệ 1-nhiều với bảng TestResult (trong namespace Practice)
         /// Theo dõi kết quả làm bài test của danh mục này
         /// </summary>
-        public virtual ICollection<Practice.TestResult> TestResults { get; set; }
+        public virtual ICollection<TestResult> TestResults { get; set; }
     }
 }

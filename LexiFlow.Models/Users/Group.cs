@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using LexiFlow.Models.Cores;
-using LexiFlow.Models.Notification;
+using LexiFlow.Models.Notifications;
+using LexiFlow.Models.Schedulings;
 using LexiFlow.Models.Users.UserRelations;
 using Microsoft.EntityFrameworkCore;
 

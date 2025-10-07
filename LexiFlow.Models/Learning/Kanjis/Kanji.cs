@@ -305,11 +305,6 @@ namespace LexiFlow.Models.Learning.Kanjis
         /// </summary>
         public virtual ICollection<MediaFile> MediaFiles { get; set; }
 
-        /// <summary>
-        /// Danh sách tiến trình học tập của users
-        /// </summary>
-        public virtual ICollection<Progress.UserKanjiProgress> UserProgresses { get; set; }
-
         // Computed Properties
         /// <summary>
         /// Danh sách thẻ tag

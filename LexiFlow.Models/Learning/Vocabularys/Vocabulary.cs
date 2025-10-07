@@ -2,7 +2,6 @@ using LexiFlow.Models.Cores;
 using LexiFlow.Models.Learning.Commons;
 using LexiFlow.Models.Learning.Kanjis;
 using LexiFlow.Models.Medias;
-using LexiFlow.Models.Progress;
 using LexiFlow.Models.Users;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -243,11 +242,6 @@ namespace LexiFlow.Models.Learning.Vocabularys
         /// Danh sách file media liên quan (âm thanh, hình ảnh)
         /// </summary>
         public virtual ICollection<MediaFile> MediaFiles { get; set; }
-
-        /// <summary>
-        /// Danh sách tiến trình học tập của users
-        /// </summary>
-        public virtual ICollection<LearningProgress> LearningProgresses { get; set; }
 
         /// <summary>
         /// Danh sách liên kết với kanji

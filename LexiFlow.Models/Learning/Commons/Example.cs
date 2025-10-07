@@ -170,5 +170,7 @@ namespace LexiFlow.Models.Learning.Commons
         /// </summary>
         public virtual ICollection<Translation> Translations { get; set; }
 
+        public virtual ICollection<Segment> Segments { get; set; }
+
     }
 }

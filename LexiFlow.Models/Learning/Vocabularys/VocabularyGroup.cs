@@ -112,6 +112,6 @@ namespace LexiFlow.Models.Learning.Vocabularys
 
         // Cải tiến: Relationships mới
         public virtual ICollection<GroupVocabularyRelation> VocabularyRelations { get; set; }
-        public virtual ICollection<Progress.LearningSession> LearningSessions { get; set; }
+
     }
 }

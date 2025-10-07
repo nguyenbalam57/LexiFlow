@@ -1,4 +1,6 @@
 ﻿using LexiFlow.Models.Cores;
+using LexiFlow.Models.Exams;
+using LexiFlow.Models.Learning.Vocabularys;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
