@@ -16,7 +16,7 @@ namespace LexiFlow.Models.Cores
     public abstract class AuditableEntity : BaseEntity
     {
         /// <summary>
-        /// ID của người tạo entity
+        /// ID của người tạo entityy
         /// </summary>
         [Required]
         public int CreatedBy { get; set; }
