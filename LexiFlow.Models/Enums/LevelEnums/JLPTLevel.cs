@@ -53,7 +53,23 @@ namespace LexiFlow.Models.Enums.LevelEnums
         [Display(Name = "N1", ShortName = "Cấp độ N1")]
         [Description("Cấp độ N1 - Cao cấp (Khó nhất)")]
         [Icon("⚫")]
-        N1
+        N1,
+
+        /// <summary>
+        /// Cấp độ không xác định
+        /// </summary>
+        [Display(Name = "Không xác định", ShortName = "Không xác định")]
+        [Description("Cấp độ không xác định")]
+        [Icon("❔")]
+        None = 99,
+
+        /// <summary>
+        /// Cấp độ tất cả
+        /// </summary>
+        [Display(Name = "Tất cả", ShortName = "Tất cả")]
+        [Description("Cấp độ tất cả")]
+        [Icon("🌈")]
+        All = 100,
     }
 
 }

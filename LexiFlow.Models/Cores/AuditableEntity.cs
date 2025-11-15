@@ -24,7 +24,7 @@ namespace LexiFlow.Models.Cores
         /// <summary>
         /// ID của người chỉnh sửa cuối cùng
         /// </summary>
-        public int? ModifiedBy { get; set; }
+        public int? UpdatedBy { get; set; }
 
         /// <summary>
         /// ID của người xóa (soft delete)
@@ -34,39 +34,42 @@ namespace LexiFlow.Models.Cores
         /// <summary>
         /// Lý do thay đổi
         /// </summary>
-        [StringLength(500)]
-        public virtual string ChangeReason { get; set; } = "";
+        public string ChangeReason { get; set; } = "";
 
         /// <summary>
         /// Phiên bản của entity
+        /// Dùng để kiểm soát Version khi thay đổi và để xem lịch sử thay đổi
+        /// Viết version tăng dần mỗi khi entity được chỉnh sửa
         /// </summary>
-        public virtual int Version { get; set; } = 1;
+        public int Version { get; set; } = 1;
 
         /// <summary>
         /// Navigation properties
         /// </summary>
-        [ForeignKey("CreatedBy")]
+        /// 
+
+        [ForeignKey(nameof(CreatedBy))]
         public virtual User CreatedByUser { get; set; }
 
-        [ForeignKey("ModifiedBy")]
-        public virtual User ModifiedByUser { get; set; }
+        [ForeignKey(nameof(UpdatedBy))]
+        public virtual User UpdatedByUser { get; set; }
 
-        [ForeignKey("DeletedBy")]
+        [ForeignKey(nameof(DeletedBy))]
         public virtual User DeletedByUser { get; set; }
 
         /// <summary>
         /// Kiểm tra quyền ownership
         /// </summary>
         public virtual bool IsCreatedBy(int userId) => CreatedBy == userId;
-        public virtual bool IsLastModifiedBy(int userId) => ModifiedBy == userId;
+        public virtual bool IsLastUpdatedBy(int userId) => UpdatedBy == userId;
         public virtual bool IsDeletedBy(int userId) => DeletedBy == userId;
 
         /// <summary>
-        /// Cập nhật thông tin modification
+        /// Cập nhật thông tin
         /// </summary>
-        public virtual void UpdateModification(int modifiedBy, string reason = null)
+        public virtual void SoftUpdate(int updatedBy, string reason = null)
         {
-            ModifiedBy = modifiedBy;
+            UpdatedBy = updatedBy;
             ChangeReason = reason;
             Version++;
             UpdateTimestamp();
@@ -89,7 +92,7 @@ namespace LexiFlow.Models.Cores
         /// <param name="reason"></param>
         public virtual void Restore(int restoredBy, string reason = null)
         {
-            ModifiedBy = restoredBy;
+            UpdatedBy = restoredBy;
             ChangeReason = reason;
             base.Restore();
         }
@@ -101,7 +104,7 @@ namespace LexiFlow.Models.Cores
         /// <param name="reason"></param>
         public virtual void Activate(int activatedBy, string reason = null)
         {
-            ModifiedBy = activatedBy;
+            UpdatedBy = activatedBy;
             ChangeReason = reason;
             base.Activate();
         }
@@ -113,7 +116,7 @@ namespace LexiFlow.Models.Cores
         /// <param name="reason"></param>
         public virtual void Deactivate(int deactivatedBy, string reason = null)
         {
-            ModifiedBy = deactivatedBy;
+            UpdatedBy = deactivatedBy;
             ChangeReason = reason;
             base.Deactivate();
         }
@@ -122,11 +125,13 @@ namespace LexiFlow.Models.Cores
         /// Lấy tên người thực hiện tạo mới
         /// </summary>
         public virtual string GetCreatedByName() => CreatedByUser?.Username ?? "Unknown";
+
         /// <summary>
         /// Lấy tên người thực hiện chỉnh sửa cuối
         /// </summary>
         /// <returns></returns>
-        public virtual string GetModifiedByName() => ModifiedByUser?.Username ?? GetCreatedByName();
+        public virtual string GetModifiedByName() => UpdatedByUser?.Username ?? GetCreatedByName();
+
         /// <summary>
         /// Lấy tên người thực hiện xóa
         /// </summary>

@@ -19,13 +19,6 @@ namespace LexiFlow.Models.Learning.Commons
     public class Definition : BaseLearning
     {
         /// <summary>
-        /// Id định nghĩa (Tự tăng)
-        /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int DefinitionId { get; set; }
-
-        /// <summary>
         /// Liên kết đến từ vựng (nếu có)
         /// </summary>
         public int? VocabularyId { get; set; }

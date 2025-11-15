@@ -6,6 +6,7 @@ using LexiFlow.Models.Learning.Vocabularys;
 using LexiFlow.Models.Users;
 using LexiFlow.Models.Medias;
 using LexiFlow.Models.Practices;
+using LexiFlow.Models.Enums.LevelEnums;
 
 namespace LexiFlow.Models.Learning.Commons
 {
@@ -18,14 +19,6 @@ namespace LexiFlow.Models.Learning.Commons
     public class Category : BaseLearning
     {
         /// <summary>
-        /// ID duy nhất của danh mục (Primary Key)
-        /// Được tự động tạo bởi database
-        /// </summary>
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int CategoryId { get; set; }
-
-        /// <summary>
         /// Tên danh mục từ vựng
         /// Ví dụ: "JLPT N5", "Đồ ăn và đồ uống", "Động từ thường dùng", "Ngữ pháp cơ bản", "Từ vựng chuyên ngành", etc.
         /// Bắt buộc, tối đa 100 ký tự
@@ -35,20 +28,15 @@ namespace LexiFlow.Models.Learning.Commons
         public string CategoryName { get; set; }
 
         /// <summary>
-        /// Mô tả chi tiết về danh mục
-        /// Giải thích nội dung, mục đích sử dụng của danh mục
-        /// Tối đa 255 ký tự, có thể null
+        /// Cấp độ học tập của danh mục
+        /// Ví dụ: "N5", "N4",..
         /// </summary>
-        [StringLength(255)]
-        public string Description { get; set; }
+        public JlptLevel Level { get; set; } = JlptLevel.None;
 
         /// <summary>
-        /// Cấp độ học tập của danh mục
-        /// Ví dụ: "N5", "N4", "Beginner", "Intermediate", "Advanced"
-        /// Tối đa 20 ký tự, có thể null
+        /// Loại hình học tập của danh mục
         /// </summary>
-        [StringLength(20)]
-        public string Level { get; set; }
+        public TypeLearning CategoryType { get; set; } = TypeLearning.None;
 
         /// <summary>
         /// ID của danh mục cha (tùy chọn)
@@ -77,15 +65,6 @@ namespace LexiFlow.Models.Learning.Commons
         /// </summary>
         [StringLength(20)]
         public string ColorCode { get; set; }
-
-        /// <summary>
-        /// Loại danh mục (phân loại theo chức năng)
-        /// Ví dụ: "Grammar" (ngữ pháp), "Vocabulary" (từ vựng), 
-        /// "Kanji" (chữ Hán), "Listening" (nghe), "Reading" (đọc)
-        /// Tối đa 50 ký tự
-        /// </summary>
-        [StringLength(50)]
-        public string CategoryType { get; set; }
 
         /// <summary>
         /// Thẻ tag để gắn nhãn và tìm kiếm danh mục
@@ -135,20 +114,21 @@ namespace LexiFlow.Models.Learning.Commons
         /// Quan hệ nhiều-1 với chính bảng Category (self-reference)
         /// Dùng để tạo cấu trúc cây phân cấp
         /// </summary>
-        [ForeignKey("ParentCategoryId")]
+        [ForeignKey(nameof(ParentCategoryId))]
         public virtual Category ParentCategory { get; set; }
 
         /// <summary>
         /// Phòng ban liên quan (nếu có)
         /// </summary>
-        [ForeignKey("DepartmentId")]
+        [ForeignKey(nameof(DepartmentId))]
         public virtual Department Department { get; set; }
 
         /// <summary>
         /// Tệp phương tiện đại diện cho danh mục (nếu có)
         /// </summary>
-        [ForeignKey("MediaFileId")]
+        [ForeignKey(nameof(MediaFileId))]
         public virtual MediaFile MediaFile { get; set; }
+
         /// <summary>
         /// Danh sách các danh mục con
         /// Quan hệ 1-nhiều với chính bảng Category
@@ -156,18 +136,5 @@ namespace LexiFlow.Models.Learning.Commons
         /// </summary>
         public virtual ICollection<Category> ChildCategories { get; set; }
 
-        /// <summary>
-        /// Danh sách nhóm từ vựng thuộc danh mục
-        /// Quan hệ 1-nhiều với bảng VocabularyGroup
-        /// Một danh mục có thể có nhiều nhóm từ vựng con
-        /// </summary>
-        public virtual ICollection<VocabularyGroup> VocabularyGroups { get; set; }
-
-        /// <summary>
-        /// Danh sách kết quả bài test liên quan đến danh mục
-        /// Quan hệ 1-nhiều với bảng TestResult (trong namespace Practice)
-        /// Theo dõi kết quả làm bài test của danh mục này
-        /// </summary>
-        public virtual ICollection<TestResult> TestResults { get; set; }
     }
 }

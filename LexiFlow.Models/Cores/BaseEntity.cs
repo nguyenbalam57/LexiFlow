@@ -16,6 +16,14 @@ namespace LexiFlow.Models.Cores
     public abstract class BaseEntity
     {
         /// <summary>
+        /// ID duy nhất của danh mục (Primary Key)
+        /// Được tự động tạo bởi database
+        /// </summary>
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        /// <summary>
         /// Trạng thái hoạt động của entity
         /// </summary>
         public bool IsActive { get; set; } = true;
@@ -49,21 +57,28 @@ namespace LexiFlow.Models.Cores
         /// <summary>
         /// Mô tả/ghi chú cho entity
         /// </summary>
-        [StringLength(1000)]
-        public virtual string Description { get; set; } = "";
+        public string Description { get; set; } = "";
 
         /// <summary>
         /// Metadata dạng JSON để lưu trữ thông tin bổ sung
+        /// Có thể sử dụng để lưu trữ các thuộc tính động không cố định
+        /// Cũng có thể dùng thuộc tính Metadata để truy cập dễ dàng hơn
+        /// Bổ sung các thông tin có trong properties chẳng hạn
+        /// Hay quyền truy cập, tags, categories, v.v.
+        /// Cả những lần thay đổi nhỏ không cần tạo cột riêng trong DB
+        /// Hay lưu trữ cấu hình tùy chỉnh cho entity
+        /// Truy cập ngoại lệ thông tin động
         /// </summary>
-        public virtual string MetadataJson { get; set; } = "{}";
+        public string MetadataJson { get; set; } = "{}";
 
         /// <summary>
         /// Thứ tự sắp xếp
         /// </summary>
-        public virtual int? SortOrder { get; set; }
+        public int? SortOrder { get; set; }
 
         /// <summary>
         /// Validate entity trước khi save
+        /// Kiểm tra xem entity có hợp lệ để sử dụng không
         /// </summary>
         public virtual bool IsValid()
         {
@@ -138,10 +153,31 @@ namespace LexiFlow.Models.Cores
         [NotMapped]
         public Dictionary<string, object> Metadata
         {
-            get => string.IsNullOrEmpty(MetadataJson)
-                ? new Dictionary<string, object>()
-                : JsonSerializer.Deserialize<Dictionary<string, object>>(MetadataJson);
-            set => MetadataJson = JsonSerializer.Serialize(value);
+            get
+            {
+                // Xử lý an toàn: Nếu JSON rỗng, null hoặc "null" thì trả về Dictionary mới
+                if (string.IsNullOrEmpty(MetadataJson) || MetadataJson == "null")
+                {
+                    return new Dictionary<string, object>();
+                }
+
+                // Thử deserialize
+                try
+                {
+                    return JsonSerializer.Deserialize<Dictionary<string, object>>(MetadataJson)
+                           ?? new Dictionary<string, object>();
+                }
+                catch (JsonException)
+                {
+                    // Nếu JSON bị lỗi, trả về rỗng để tránh crash
+                    return new Dictionary<string, object>();
+                }
+            }
+            set
+            {
+                // Serialize lại thành chuỗi JSON
+                MetadataJson = JsonSerializer.Serialize(value);
+            }
         }
 
     }
